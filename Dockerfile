@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (including devDependencies for build)
-RUN npm ci
+# Using --legacy-peer-deps because react-helmet-async doesn't support React 19 yet
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
