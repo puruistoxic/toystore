@@ -2,65 +2,29 @@ version: '3.8'
 
 services:
   wainso-web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: wainso-web
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
+    restart: always
     environment:
       - NODE_ENV=production
     volumes:
       - ./logs:/var/log/nginx
     networks:
-      - wainso-network
+      - nginx_proxy
+    labels:
+      - "nginx.proxy=true"
+      - "nginx.proxy.domain=wainso.com"
+      - "nginx.proxy.redirects=www.wainso.com:https://wainso.com"
+    expose:
+      - "80"
+    # Add health check for better reliability
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wainso-web.rule=Host(`wainso.com`)"
-      - "traefik.http.routers.wainso-web.entrypoints=websecure"
-      - "traefik.http.routers.wainso-web.tls.certresolver=letsencrypt"
-
-  # Optional: Add a reverse proxy with SSL termination
-  traefik:
-    image: traefik:v2.10
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=admin@wainso.com"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"  # Traefik dashboard
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./letsencrypt:/letsencrypt
-    networks:
-      - wainso-network
-    profiles:
-      - ssl  # Only start with --profile ssl
 
 networks:
-  wainso-network:
-    driver: bridge
-
-volumes:
-  letsencrypt:
-    driver: local
+  nginx_proxy:
+    external: true
