@@ -28,21 +28,15 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built application from build stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Create nginx user and set permissions
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
-
-# Set proper permissions
+# Set proper permissions (nginx user already exists in nginx:alpine)
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d
-
-# Create nginx pid directory
-RUN mkdir -p /var/run/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
+    mkdir -p /var/run/nginx && \
     chown -R nginx:nginx /var/run/nginx
 
-# Switch to non-root user
+# Switch to non-root user (nginx user already exists in nginx:alpine)
 USER nginx
 
 # Expose port 80
