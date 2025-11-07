@@ -1,146 +1,20 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Camera, 
-  Navigation, 
-  Settings, 
-  Wrench, 
+import {
+  Camera,
+  Navigation,
+  Settings,
+  Wrench,
   MessageCircle,
   Clock,
   CheckCircle,
   ArrowRight
 } from 'lucide-react';
+import { services } from '../data/services';
+import type { Service } from '../types/catalog';
 
 const Services: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-  const services = [
-    {
-      id: '1',
-      name: 'CCTV Installation & Setup',
-      description: 'Professional installation of high-definition surveillance systems with remote monitoring capabilities.',
-      price: 15000,
-      duration: '1-2 Days',
-      category: 'cctv-installation',
-      icon: <Camera className="h-8 w-8" />,
-      features: [
-        'HD IP Cameras',
-        'Remote Mobile Access',
-        'Night Vision',
-        'Motion Detection',
-        'Cloud Storage',
-        'Professional Installation'
-      ],
-      includes: [
-        'Site Survey',
-        'Camera Installation',
-        'DVR/NVR Setup',
-        'Mobile App Configuration',
-        'User Training',
-        '1 Year Warranty'
-      ]
-    },
-    {
-      id: '2',
-      name: 'GPS Vehicle Tracking',
-      description: 'Real-time vehicle tracking with advanced features like geofencing and fuel monitoring.',
-      price: 12000,
-      duration: '1 Day',
-      category: 'gps-installation',
-      icon: <Navigation className="h-8 w-8" />,
-      features: [
-        'Real-time Tracking',
-        'Geofencing Alerts',
-        'Fuel Monitoring',
-        'Driver Behavior Analysis',
-        'Route Optimization',
-        'Mobile App Access'
-      ],
-      includes: [
-        'GPS Device Installation',
-        'SIM Card Setup',
-        'Software Configuration',
-        'User Training',
-        'Monthly Reports',
-        '1 Year Support'
-      ]
-    },
-    {
-      id: '3',
-      name: 'Equipment Maintenance',
-      description: 'Comprehensive maintenance services for CCTV, GPS, and other security equipment.',
-      price: 5000,
-      duration: '2-4 Hours',
-      category: 'maintenance',
-      icon: <Wrench className="h-8 w-8" />,
-      features: [
-        'Preventive Maintenance',
-        'System Health Check',
-        'Software Updates',
-        'Hardware Cleaning',
-        'Performance Optimization',
-        '24/7 Support'
-      ],
-      includes: [
-        'System Inspection',
-        'Cleaning & Calibration',
-        'Software Updates',
-        'Performance Report',
-        'Recommendations',
-        'Emergency Support'
-      ]
-    },
-    {
-      id: '4',
-      name: 'Repair & Troubleshooting',
-      description: 'Expert repair services for all types of security and tracking equipment.',
-      price: 3000,
-      duration: '1-3 Hours',
-      category: 'repair',
-      icon: <Settings className="h-8 w-8" />,
-      features: [
-        'Hardware Repair',
-        'Software Issues',
-        'Network Problems',
-        'Component Replacement',
-        'System Recovery',
-        'Data Backup'
-      ],
-      includes: [
-        'Diagnostic Check',
-        'Repair or Replacement',
-        'System Testing',
-        'Documentation',
-        'Warranty on Repairs',
-        'Follow-up Support'
-      ]
-    },
-    {
-      id: '5',
-      name: 'Security Consultation',
-      description: 'Expert consultation for designing comprehensive security solutions for your business.',
-      price: 8000,
-      duration: '1 Day',
-      category: 'consultation',
-      icon: <MessageCircle className="h-8 w-8" />,
-      features: [
-        'Security Assessment',
-        'Custom Solution Design',
-        'Technology Recommendations',
-        'Cost Analysis',
-        'Implementation Plan',
-        'ROI Calculation'
-      ],
-      includes: [
-        'Site Visit',
-        'Security Audit',
-        'Detailed Report',
-        'Solution Design',
-        'Implementation Timeline',
-        'Budget Planning'
-      ]
-    }
-  ];
 
   const categories = [
     { id: 'all', name: 'All Services' },
@@ -151,9 +25,20 @@ const Services: React.FC = () => {
     { id: 'consultation', name: 'Consultation' }
   ];
 
-  const filteredServices = selectedCategory === 'all' 
-    ? services 
-    : services.filter(service => service.category === selectedCategory);
+  const iconMap: Record<Service['iconName'], React.ReactElement> = {
+    Camera: <Camera className="h-8 w-8" />,
+    Navigation: <Navigation className="h-8 w-8" />,
+    Settings: <Settings className="h-8 w-8" />,
+    Wrench: <Wrench className="h-8 w-8" />,
+    MessageCircle: <MessageCircle className="h-8 w-8" />
+  };
+
+  const filteredServices = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return services;
+    }
+    return services.filter((service) => service.category === selectedCategory);
+  }, [selectedCategory]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -193,12 +78,15 @@ const Services: React.FC = () => {
       {/* Services Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {filteredServices.map((service) => (
-            <div key={service.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-              <div className="p-8">
+          {filteredServices.map((service) => {
+            const quoteLink = `/quote-request?type=service&id=${service.id}`;
+
+            return (
+              <div key={service.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <div className="p-8">
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-primary-600">
-                    {service.icon}
+                      {iconMap[service.iconName]}
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">
@@ -252,15 +140,16 @@ const Services: React.FC = () => {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                   <Link
-                    to="/contact"
+                    to={quoteLink}
                     className="flex-1 border-2 border-primary-600 text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors text-center"
                   >
-                    Get Quote
+                    Request Quote
                   </Link>
                 </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

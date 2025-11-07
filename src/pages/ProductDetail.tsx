@@ -1,48 +1,31 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { ArrowLeft, ShoppingCart, Heart, Star, CheckCircle, Truck, Shield, RotateCcw } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, MessageCircle, Heart, Star, CheckCircle, Truck, Shield, RotateCcw } from 'lucide-react';
+import { products } from '../data/products';
+import type { Product } from '../types/catalog';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
-  // Mock product data - in real app, fetch based on id
-  const product = {
-    id: '1',
-    name: 'HD IP Camera 4MP',
-    description: 'High-definition IP camera with night vision and motion detection capabilities. Perfect for both indoor and outdoor surveillance.',
-    price: 8500,
-    originalPrice: 10000,
-    images: ['/api/placeholder/600/400', '/api/placeholder/600/400', '/api/placeholder/600/400'],
-    category: 'cctv',
-    brand: 'Hikvision',
-    model: 'DS-2CD2143G0-I',
-    inStock: true,
-    stockQuantity: 15,
-    rating: 4.8,
-    reviews: 24,
-    features: [
-      '4MP HD Resolution (2560×1440)',
-      'Night Vision up to 30m with IR LEDs',
-      'Motion Detection with Email Alerts',
-      'Weather Resistant IP67 Rating',
-      'Mobile App Support (Hik-Connect)',
-      'Wide Dynamic Range (WDR)',
-      '3D Digital Noise Reduction',
-      'Built-in Microphone'
-    ],
-    specifications: {
-      'Resolution': '4MP (2560×1440)',
-      'Lens': '2.8mm Fixed Lens',
-      'Night Vision': '30m IR Range',
-      'Storage': 'MicroSD up to 128GB',
-      'Power': '12V DC / PoE',
-      'Network': '10/100 Mbps Ethernet',
-      'Operating Temperature': '-30°C to +60°C',
-      'Dimensions': '70×70×150mm',
-      'Weight': '0.5kg'
-    },
-    warranty: '2 Years Manufacturer Warranty'
-  };
+  const product: Product | undefined = products.find((item) => item.id === id);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Product not found</h1>
+          <p className="text-gray-600 mb-6">The product you are looking for may have been moved or no longer exists.</p>
+          <Link
+            to="/products"
+            className="inline-flex items-center bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Products
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,9 +33,9 @@ const ProductDetail: React.FC = () => {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center space-x-2 text-sm">
-            <a href="/products" className="text-gray-500 hover:text-primary-600">
+            <Link to="/products" className="text-gray-500 hover:text-primary-600">
               Products
-            </a>
+            </Link>
             <span className="text-gray-400">/</span>
             <span className="text-gray-900">{product.name}</span>
           </div>
@@ -64,18 +47,26 @@ const ProductDetail: React.FC = () => {
           {/* Product Images */}
           <div className="space-y-4">
             <div className="bg-white rounded-lg p-4">
-              <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                <div className="text-gray-400 text-center">
-                  <div className="text-6xl mb-2">📷</div>
-                  <p>Product Image</p>
-                </div>
+              <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                {product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="text-gray-400 text-center">
+                    <div className="text-6xl mb-2">📷</div>
+                    <p>Product Image</p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {product.images.map((image, index) => (
-                <div key={index} className="bg-white rounded-lg p-2">
-                  <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded flex items-center justify-center">
-                    <div className="text-gray-400 text-xs">Image {index + 1}</div>
+              {(product.images.length ? product.images : ['/api/placeholder/200/150']).map((image, index) => (
+                <div key={`${image}-${index}`} className="bg-white rounded-lg p-2">
+                  <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                    <img src={image} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
                   </div>
                 </div>
               ))}
@@ -141,17 +132,13 @@ const ProductDetail: React.FC = () => {
             </div>
 
             <div className="flex space-x-4">
-              <button
-                disabled={!product.inStock}
-                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
-                  product.inStock
-                    ? 'bg-primary-600 text-white hover:bg-primary-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+              <Link
+                to={`/quote-request?type=product&id=${product.id}`}
+                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700"
               >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Add to Cart
-              </button>
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Request Quote
+              </Link>
               <button className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
                 <Heart className="h-5 w-5" />
               </button>
@@ -186,12 +173,14 @@ const ProductDetail: React.FC = () => {
             </div>
 
             {/* Warranty */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center">
-                <Shield className="h-5 w-5 text-blue-600 mr-2" />
-                <span className="text-blue-800 font-medium">{product.warranty}</span>
+            {product.warranty && (
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <Shield className="h-5 w-5 text-blue-600 mr-2" />
+                  <span className="text-blue-800 font-medium">{product.warranty}</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

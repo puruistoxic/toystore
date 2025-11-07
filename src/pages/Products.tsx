@@ -1,197 +1,21 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Camera, 
-  Navigation, 
-  Wrench, 
+import {
+  Camera,
+  Navigation,
+  Wrench,
   Search,
-  Filter,
   Star,
-  ShoppingCart,
+  MessageCircle,
   Eye,
   CheckCircle
 } from 'lucide-react';
+import { products } from '../data/products';
+import type { Product } from '../types/catalog';
 
 const Products: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
-
-  const products = [
-    {
-      id: '1',
-      name: 'HD IP Camera 4MP',
-      description: 'High-definition IP camera with night vision and motion detection capabilities.',
-      price: 8500,
-      originalPrice: 10000,
-      images: ['/api/placeholder/300/200'],
-      category: 'cctv',
-      brand: 'Hikvision',
-      model: 'DS-2CD2143G0-I',
-      inStock: true,
-      stockQuantity: 15,
-      rating: 4.8,
-      reviews: 24,
-      features: [
-        '4MP HD Resolution',
-        'Night Vision up to 30m',
-        'Motion Detection',
-        'Weather Resistant',
-        'Mobile App Support'
-      ],
-      specifications: {
-        'Resolution': '4MP (2560×1440)',
-        'Lens': '2.8mm Fixed',
-        'Night Vision': '30m IR Range',
-        'Storage': 'MicroSD up to 128GB',
-        'Power': '12V DC / PoE'
-      }
-    },
-    {
-      id: '2',
-      name: 'GPS Tracker with SIM',
-      description: 'Real-time GPS tracking device with built-in SIM card and long battery life.',
-      price: 4500,
-      originalPrice: 5500,
-      images: ['/api/placeholder/300/200'],
-      category: 'gps',
-      brand: 'Queclink',
-      model: 'GV300',
-      inStock: true,
-      stockQuantity: 8,
-      rating: 4.6,
-      reviews: 18,
-      features: [
-        'Real-time Tracking',
-        'Geofencing',
-        'SOS Button',
-        'Long Battery Life',
-        'Waterproof Design'
-      ],
-      specifications: {
-        'Battery': '5000mAh',
-        'Standby Time': '30 Days',
-        'GPS Accuracy': '3-5 meters',
-        'Network': '2G/3G/4G',
-        'Operating Temperature': '-20°C to +70°C'
-      }
-    },
-    {
-      id: '3',
-      name: 'DVR 8 Channel',
-      description: '8-channel digital video recorder with H.264 compression and remote access.',
-      price: 12000,
-      originalPrice: 15000,
-      images: ['/api/placeholder/300/200'],
-      category: 'cctv',
-      brand: 'Dahua',
-      model: 'DHI-NVR2108-8P-4KS2',
-      inStock: true,
-      stockQuantity: 5,
-      rating: 4.7,
-      reviews: 12,
-      features: [
-        '8 Channel Recording',
-        '4K Resolution Support',
-        'H.264 Compression',
-        'Remote Access',
-        'Mobile App'
-      ],
-      specifications: {
-        'Channels': '8',
-        'Resolution': '4K (3840×2160)',
-        'Storage': 'Up to 6TB HDD',
-        'Compression': 'H.264/H.265',
-        'Network': 'Gigabit Ethernet'
-      }
-    },
-    {
-      id: '4',
-      name: 'Maintenance Kit Pro',
-      description: 'Professional maintenance kit for CCTV and GPS equipment cleaning and calibration.',
-      price: 2500,
-      originalPrice: 3000,
-      images: ['/api/placeholder/300/200'],
-      category: 'maintenance',
-      brand: 'TechCare',
-      model: 'TC-MK-001',
-      inStock: true,
-      stockQuantity: 20,
-      rating: 4.5,
-      reviews: 8,
-      features: [
-        'Professional Tools',
-        'Cleaning Solutions',
-        'Calibration Equipment',
-        'Protective Gear',
-        'Instruction Manual'
-      ],
-      specifications: {
-        'Tools': '15 Professional Tools',
-        'Cleaning Kit': 'Complete Set',
-        'Calibration': 'Digital Tools',
-        'Warranty': '1 Year',
-        'Weight': '2.5 kg'
-      }
-    },
-    {
-      id: '5',
-      name: 'Wireless Camera System',
-      description: 'Complete wireless camera system with 4 cameras and NVR for easy installation.',
-      price: 25000,
-      originalPrice: 30000,
-      images: ['/api/placeholder/300/200'],
-      category: 'cctv',
-      brand: 'Ezviz',
-      model: 'C6N-4PK',
-      inStock: false,
-      stockQuantity: 0,
-      rating: 4.9,
-      reviews: 31,
-      features: [
-        '4 Wireless Cameras',
-        '1080p HD Recording',
-        'Night Vision',
-        'Mobile App',
-        'Cloud Storage'
-      ],
-      specifications: {
-        'Cameras': '4 Units',
-        'Resolution': '1080p',
-        'Range': '100m Wireless',
-        'Storage': '1TB HDD',
-        'Power': 'AC Adapter'
-      }
-    },
-    {
-      id: '6',
-      name: 'Fleet GPS Tracker',
-      description: 'Advanced fleet tracking device with fuel monitoring and driver behavior analysis.',
-      price: 8500,
-      originalPrice: 10000,
-      images: ['/api/placeholder/300/200'],
-      category: 'gps',
-      brand: 'Teltonika',
-      model: 'FMB920',
-      inStock: true,
-      stockQuantity: 3,
-      rating: 4.8,
-      reviews: 15,
-      features: [
-        'Fleet Management',
-        'Fuel Monitoring',
-        'Driver Behavior',
-        'Route Optimization',
-        'Real-time Alerts'
-      ],
-      specifications: {
-        'GPS': 'High Precision',
-        'Fuel Sensor': 'Built-in',
-        'Connectivity': '4G LTE',
-        'Battery': 'Backup Battery',
-        'Installation': 'Professional'
-      }
-    }
-  ];
 
   const categories = [
     { id: 'all', name: 'All Products' },
@@ -201,13 +25,19 @@ const Products: React.FC = () => {
     { id: 'accessories', name: 'Accessories' }
   ];
 
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.brand.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredProducts = useMemo(() => {
+    return products.filter((product: Product) => {
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      const search = searchTerm.toLowerCase();
+      const matchesSearch =
+        product.name.toLowerCase().includes(search) ||
+        product.description.toLowerCase().includes(search) ||
+        product.brand.toLowerCase().includes(search) ||
+        product.model.toLowerCase().includes(search);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [selectedCategory, searchTerm]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -262,8 +92,11 @@ const Products: React.FC = () => {
       {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          {filteredProducts.map((product) => {
+            const quoteLink = `/quote-request?type=product&id=${product.id}`;
+
+            return (
+              <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               {/* Product Image */}
               <div className="relative h-48 bg-gray-200">
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -353,21 +186,18 @@ const Products: React.FC = () => {
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Link>
-                  <button
-                    disabled={!product.inStock}
-                    className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center ${
-                      product.inStock
-                        ? 'bg-primary-600 text-white hover:bg-primary-700'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
+                  <Link
+                    to={quoteLink}
+                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700"
                   >
-                    <ShoppingCart className="h-4 w-4 mr-1" />
-                    Add to Cart
-                  </button>
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    Request Quote
+                  </Link>
                 </div>
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
         {filteredProducts.length === 0 && (

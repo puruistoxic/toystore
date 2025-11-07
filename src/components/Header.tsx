@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Phone, Mail } from 'lucide-react';
+import { MessageCircle, Menu, X, Phone, Mail } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -66,16 +66,14 @@ const Header: React.FC = () => {
             ))}
           </nav>
 
-          {/* Cart and Mobile Menu Button */}
+          {/* Quote CTA and Mobile Menu Button */}
           <div className="flex items-center space-x-4">
             <Link
-              to="/cart"
-              className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors"
+              to="/quote-request"
+              className="hidden md:inline-flex items-center bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
             >
-              <ShoppingCart className="h-6 w-6" />
-              <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
-              </span>
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Request Quote
             </Link>
 
             {/* Mobile menu button */}
@@ -106,6 +104,13 @@ const Header: React.FC = () => {
                   {item.name}
                 </Link>
               ))}
+              <Link
+                to="/quote-request"
+                className="block px-3 py-2 rounded-md text-base font-semibold bg-primary-600 text-white text-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Request Quote
+              </Link>
             </div>
           </div>
         )}
