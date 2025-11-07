@@ -31,10 +31,6 @@ COPY --from=build /app/build /usr/share/nginx/html
 # Set proper permissions (nginx user already exists in nginx:alpine)
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
-    mkdir -p /var/log/nginx && \
-    touch /var/log/nginx/error.log /var/log/nginx/access.log && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chmod -R 755 /var/log/nginx && \
     chown -R nginx:nginx /etc/nginx/conf.d && \
     mkdir -p /var/run/nginx && \
     chown -R nginx:nginx /var/run/nginx

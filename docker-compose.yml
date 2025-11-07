@@ -7,8 +7,9 @@ services:
     restart: always
     environment:
       - NODE_ENV=production
-    volumes:
-      - ./logs:/var/log/nginx
+    # Logs are sent to stdout/stderr and captured by docker logs
+    # volumes:
+    #   - ./logs:/var/log/nginx
     networks:
       - nginx_proxy
     labels:
