@@ -1,11 +1,3 @@
-const simulatedLatency = (min = 350, max = 900) =>
-  new Promise((resolve) => setTimeout(resolve, Math.random() * (max - min) + min));
-
-const verificationStore = new Map<
-  string,
-  { code: string; expiresAt: number; attempts: number; reference: string }
->();
-
 export interface VerificationRequest {
   email: string;
   name: string;
@@ -17,65 +9,83 @@ export interface VerificationRequest {
 export interface VerificationResponse {
   reference: string;
   expiresAt: number;
-  code: string; // only surfaced in stub mode
+  code?: string; // only surfaced in development/stub mode
 }
 
 export type VerificationStatus = 'verified' | 'invalid' | 'expired' | 'not_found';
 
+// API base URL - use environment variable or default to relative path
+// For local development, use localhost:3001, otherwise use the configured API URL
+const getApiBaseUrl = () => {
+  const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
+  return isDevelopment 
+    ? 'http://localhost:3001/api'
+    : (process.env.REACT_APP_API_URL || '/api');
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
 export const sendVerificationCode = async (
   payload: VerificationRequest
 ): Promise<VerificationResponse> => {
-  await simulatedLatency();
+  try {
+    const response = await fetch(`${API_BASE_URL}/verify/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: payload.email,
+        name: payload.name,
+        itemName: payload.itemName,
+        messagePreview: payload.messagePreview
+      }),
+    });
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const reference = `WV-${Date.now().toString(36).toUpperCase()}`;
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to send verification code');
+    }
 
-  verificationStore.set(payload.email.toLowerCase(), {
-    code,
-    expiresAt,
-    attempts: 0,
-    reference
-  });
-
-  // Stub feedback for developers – replace with actual email delivery
-  console.info('[quoteVerification] Email OTP dispatched (stub)', {
-    to: payload.email,
-    reference,
-    code,
-    preview: payload.messagePreview.substring(0, 120)
-  });
-
-  return { reference, expiresAt, code };
+    const data = await response.json();
+    return {
+      reference: data.reference,
+      expiresAt: data.expiresAt,
+      // Don't return code in production for security
+      code: process.env.NODE_ENV === 'development' ? undefined : undefined
+    };
+  } catch (error) {
+    console.error('[quoteVerification] Error sending verification code:', error);
+    throw error;
+  }
 };
 
 export const verifyCode = async (
   email: string,
   code: string
 ): Promise<VerificationStatus> => {
-  await simulatedLatency();
+  try {
+    const response = await fetch(`${API_BASE_URL}/verify/check`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        code
+      }),
+    });
 
-  const record = verificationStore.get(email.toLowerCase());
-  if (!record) {
-    return 'not_found';
-  }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to verify code');
+    }
 
-  if (Date.now() > record.expiresAt) {
-    verificationStore.delete(email.toLowerCase());
-    return 'expired';
-  }
-
-  if (record.code === code.trim()) {
-    verificationStore.delete(email.toLowerCase());
-    return 'verified';
-  }
-
-  record.attempts += 1;
-  if (record.attempts >= 5) {
-    verificationStore.delete(email.toLowerCase());
+    const data = await response.json();
+    return data.status as VerificationStatus;
+  } catch (error) {
+    console.error('[quoteVerification] Error verifying code:', error);
     return 'invalid';
   }
-
-  return 'invalid';
 };
 

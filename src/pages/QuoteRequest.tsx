@@ -319,9 +319,10 @@ const QuoteRequest: React.FC = () => {
       setVerificationStatus('sent');
       setVerificationReference(response.reference);
       setVerificationExpiry(response.expiresAt);
-      setGeneratedCode(response.code);
+      // Don't set generatedCode - code is only sent via email for security
+      setGeneratedCode(null);
       setFeedbackMessage(
-        `Verification code sent to ${formData.email.trim()}. Enter it below to continue.`
+        `Verification code sent to ${formData.email.trim()}. Please check your email and enter the code below.`
       );
     } catch (error) {
       console.error('[quoteVerification] failed to dispatch code', error);
@@ -799,11 +800,6 @@ const QuoteRequest: React.FC = () => {
                     </button>
                   </div>
 
-                  {generatedCode && verificationStatus !== 'verified' && (
-                    <p className="text-xs text-gray-400">
-                      (Stub) Verification code: {generatedCode}. Replace this with server-side email delivery in production.
-                    </p>
-                  )}
 
                   {verificationStatus === 'verified' && (
                     <div className="flex items-center text-sm text-green-600">

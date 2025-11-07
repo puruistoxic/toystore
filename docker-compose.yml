@@ -1,12 +1,37 @@
 version: '3.8'
 
 services:
+  wainso-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: wainso-api
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - SMTP_HOST=smtp.zeptomail.eu
+      - SMTP_PORT=587
+      - SMTP_USER=emailapikey
+      - SMTP_PASSWORD=yA6KbHtb4gihy2xRREVuhJKC+4sx/q0xiiSy4CHhfpYleNiz3KE20BFqINPuJ2CI0YfY5atVb45AI4266IsPfJlmPYUFLJTGTuv4P2uV48xh8ciEYNYkjJWuBrkWGqFPdx8jDioyQvMgWA==
+    networks:
+      - nginx_proxy
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   wainso-web:
     build: .
     container_name: wainso-web
     restart: always
     environment:
       - NODE_ENV=production
+      - REACT_APP_API_URL=/api
     # Logs are sent to stdout/stderr and captured by docker logs
     # volumes:
     #   - ./logs:/var/log/nginx
@@ -18,6 +43,8 @@ services:
       - "nginx.proxy.redirects=www.wainso.com:https://wainso.com"
     expose:
       - "80"
+    depends_on:
+      - wainso-api
     # Add health check for better reliability
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]

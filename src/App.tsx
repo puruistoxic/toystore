@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import EnquiryPopup, { useEnquiryPopup } from './components/EnquiryPopup';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Products from './pages/Products';
@@ -18,30 +19,41 @@ import Refund from './pages/Refund';
 
 const queryClient = new QueryClient();
 
+function AppContent() {
+  const { showPopup, handleClose } = useEnquiryPopup();
+
+  return (
+    <>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/services/:slug" element={<ServiceDetail />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:slug" element={<ProductDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/quote-request" element={<QuoteRequest />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/refund" element={<Refund />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+      {showPopup && <EnquiryPopup onClose={handleClose} />}
+    </>
+  );
+}
+
 function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Header />
-            <main>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/services/:slug" element={<ServiceDetail />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/:slug" element={<ProductDetail />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/quote-request" element={<QuoteRequest />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/refund" element={<Refund />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
+          <AppContent />
         </Router>
       </QueryClientProvider>
     </HelmetProvider>
