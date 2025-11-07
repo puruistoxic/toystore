@@ -273,7 +273,7 @@ Thumbs.db
 
 # Docker volumes
 volumes/
-data/
+# Note: src/data/ is NOT ignored - it contains application data files
 
 # Deployment specific
 deployments/
