@@ -1,33 +1,52 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Heart, Star, CheckCircle, Truck, Shield, RotateCcw } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Heart, Star, CheckCircle, Truck, Shield, RotateCcw, MapPin } from 'lucide-react';
 import { products } from '../data/products';
 import type { Product } from '../types/catalog';
+import SEO from '../components/SEO';
+import { generateProductMetaDescription, generatePageTitle } from '../utils/seo';
 
 const ProductDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
 
-  const product: Product | undefined = products.find((item) => item.id === id);
+  const product: Product | undefined = products.find((item) => item.slug === slug);
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Product not found</h1>
-          <p className="text-gray-600 mb-6">The product you are looking for may have been moved or no longer exists.</p>
-          <Link
-            to="/products"
-            className="inline-flex items-center bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back to Products
-          </Link>
+      <>
+        <SEO
+          title="Product Not Found | WAINSO"
+          description="The product you are looking for may have been moved or no longer exists."
+          path="/products/not-found"
+        />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Product not found</h1>
+            <p className="text-gray-600 mb-6">The product you are looking for may have been moved or no longer exists.</p>
+            <Link
+              to="/products"
+              className="inline-flex items-center bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Back to Products
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
+  const metaDescription = generateProductMetaDescription(product.name, product.brand);
+  const pageTitle = generatePageTitle(`${product.name} - ${product.brand}`, 'Ramgarh, Jharkhand');
+
   return (
+    <>
+      <SEO
+        title={pageTitle}
+        description={metaDescription}
+        path={`/products/${product.slug}`}
+        type="product"
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
       <div className="bg-white border-b">
@@ -131,10 +150,18 @@ const ProductDetail: React.FC = () => {
               )}
             </div>
 
+            {/* Location Badge */}
+            <div className="flex items-center mb-4">
+              <div className="flex items-center text-sm text-gray-700 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+                <MapPin className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
+                <span className="font-medium">Available in Ramgarh, Jharkhand</span>
+              </div>
+            </div>
+
             <div className="flex space-x-4">
               <Link
                 to={`/quote-request?type=product&id=${product.id}`}
-                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700"
+                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Request Quote
@@ -210,6 +237,7 @@ const ProductDetail: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

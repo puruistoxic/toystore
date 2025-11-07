@@ -111,6 +111,12 @@ const QuoteRequest: React.FC = () => {
     company: '',
     itemName: target?.data.name ?? '',
     itemType: target ? (target.kind === 'product' ? 'Product' : 'Service') : '',
+    selectedItemId: target ? `${target.kind}-${target.data.id}` : '',
+    category: target?.kind === 'product' ? (target.data as Product).category : (target?.kind === 'service' ? (target.data as Service).category : ''),
+    budget: '',
+    timeline: '',
+    location: '',
+    industry: '',
     quantity: quantityFromUrl || '1',
     notes: notesFromUrl || target?.data.description || ''
   });
@@ -121,11 +127,62 @@ const QuoteRequest: React.FC = () => {
         ...prev,
         itemName: target.data.name,
         itemType: target.kind === 'product' ? 'Product' : 'Service',
+        selectedItemId: `${target.kind}-${target.data.id}`,
+        category: target.kind === 'product' ? (target.data as Product).category : (target.data as Service).category,
         quantity: quantityFromUrl || prev.quantity || '1',
         notes: notesFromUrl || target.data.description
       }));
     }
   }, [target, quantityFromUrl, notesFromUrl]);
+
+  const handleItemSelection = (value: string) => {
+    if (!value || value === '') {
+      setFormData((prev) => ({
+        ...prev,
+        selectedItemId: '',
+        itemName: '',
+        itemType: '',
+        category: ''
+      }));
+      return;
+    }
+
+    if (value === 'custom') {
+      setFormData((prev) => ({
+        ...prev,
+        selectedItemId: 'custom',
+        itemName: '',
+        itemType: '',
+        category: ''
+      }));
+      return;
+    }
+
+    const [type, id] = value.split('-');
+    if (type === 'product') {
+      const product = products.find((p) => p.id === id);
+      if (product) {
+        setFormData((prev) => ({
+          ...prev,
+          selectedItemId: value,
+          itemName: product.name,
+          itemType: 'Product',
+          category: product.category
+        }));
+      }
+    } else if (type === 'service') {
+      const service = services.find((s) => s.id === id);
+      if (service) {
+        setFormData((prev) => ({
+          ...prev,
+          selectedItemId: value,
+          itemName: service.name,
+          itemType: 'Service',
+          category: service.category
+        }));
+      }
+    }
+  };
 
   const [preferredChannel, setPreferredChannel] = useState<QuoteChannel>('whatsapp');
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sent' | 'verified'>('idle');
@@ -148,6 +205,30 @@ const QuoteRequest: React.FC = () => {
   );
 
   const quoteMessage = useMemo(() => {
+    const getBudgetLabel = (value: string) => {
+      const labels: Record<string, string> = {
+        'under-25000': 'Under ₹25,000',
+        '25000-50000': '₹25,000 - ₹50,000',
+        '50000-100000': '₹50,000 - ₹1,00,000',
+        '100000-250000': '₹1,00,000 - ₹2,50,000',
+        '250000-500000': '₹2,50,000 - ₹5,00,000',
+        'over-500000': 'Over ₹5,00,000',
+        'custom': 'Custom / Enterprise'
+      };
+      return labels[value] || value;
+    };
+
+    const getTimelineLabel = (value: string) => {
+      const labels: Record<string, string> = {
+        'urgent': 'Urgent (Within 1 week)',
+        'soon': 'Soon (1-2 weeks)',
+        'normal': 'Normal (2-4 weeks)',
+        'flexible': 'Flexible (1-2 months)',
+        'planning': 'Planning Phase (3+ months)'
+      };
+      return labels[value] || value;
+    };
+
     const lines = [
       'Hello WAINSO Team,',
       '',
@@ -157,7 +238,12 @@ const QuoteRequest: React.FC = () => {
         const categoryLabel = formData.itemType || (target ? (target.kind === 'product' ? 'Product' : 'Service') : '');
         return categoryLabel ? `• Category: ${sanitiseLine(categoryLabel)}` : null;
       })(),
+      formData.category ? `• Service Category: ${sanitiseLine(formData.category)}` : null,
       ...detailLines,
+      formData.budget ? `• Budget Range: ${getBudgetLabel(formData.budget)}` : null,
+      formData.timeline ? `• Timeline: ${getTimelineLabel(formData.timeline)}` : null,
+      formData.location ? `• Location: ${sanitiseLine(formData.location)}` : null,
+      formData.industry ? `• Industry: ${sanitiseLine(formData.industry)}` : null,
       formData.notes ? `• Additional details: ${sanitiseLine(formData.notes)}` : null,
       '',
       'Contact details:',
@@ -175,7 +261,7 @@ const QuoteRequest: React.FC = () => {
   }, [formData, target, detailLines]);
 
   const handleInputChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
@@ -413,8 +499,37 @@ const QuoteRequest: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                  <label htmlFor="selectedItemId" className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Item / Service *
+                  </label>
+                  <select
+                    id="selectedItemId"
+                    name="selectedItemId"
+                    value={formData.selectedItemId}
+                    onChange={(e) => handleItemSelection(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">-- Select an item or service --</option>
+                    <optgroup label="Products">
+                      {products.map((product) => (
+                        <option key={`product-${product.id}`} value={`product-${product.id}`}>
+                          {product.name} - {product.brand} ({formatCurrency(product.price)})
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Services">
+                      {services.map((service) => (
+                        <option key={`service-${service.id}`} value={`service-${service.id}`}>
+                          {service.name} ({formatCurrency(service.price)})
+                        </option>
+                      ))}
+                    </optgroup>
+                    <option value="custom">Custom Requirement (Specify below)</option>
+                  </select>
+                </div>
+                <div>
                   <label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
-                    Item / Service *
+                    Item / Service Name *
                   </label>
                   <input
                     id="itemName"
@@ -427,26 +542,31 @@ const QuoteRequest: React.FC = () => {
                     placeholder="e.g. HD IP Camera 4MP"
                   />
                 </div>
-                <div>
-                  <label htmlFor="itemType" className="block text-sm font-medium text-gray-700 mb-2">
-                    Category / Type
-                  </label>
-                  <input
-                    id="itemType"
-                    name="itemType"
-                    type="text"
-                    value={formData.itemType}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Product, Service, Maintenance..."
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                    Category
+                  </label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">-- Select category --</option>
+                    <option value="cctv">CCTV / Surveillance</option>
+                    <option value="gps">GPS Tracking</option>
+                    <option value="maintenance">Maintenance & Repair</option>
+                    <option value="consultation">Consultation</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
                   <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
-                    Quantity
+                    Quantity / Units
                   </label>
                   <input
                     id="quantity"
@@ -455,25 +575,123 @@ const QuoteRequest: React.FC = () => {
                     value={formData.quantity}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="1"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                    Additional Notes
-                  </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    rows={4}
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Share installation details, timelines, or any specific requirement"
+                    placeholder="e.g. 5 units, 10 cameras"
                   />
                 </div>
               </div>
-            </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-2">
+                    Budget Range
+                  </label>
+                  <select
+                    id="budget"
+                    name="budget"
+                    value={formData.budget}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">-- Select budget range --</option>
+                    <option value="under-25000">Under ₹25,000</option>
+                    <option value="25000-50000">₹25,000 - ₹50,000</option>
+                    <option value="50000-100000">₹50,000 - ₹1,00,000</option>
+                    <option value="100000-250000">₹1,00,000 - ₹2,50,000</option>
+                    <option value="250000-500000">₹2,50,000 - ₹5,00,000</option>
+                    <option value="over-500000">Over ₹5,00,000</option>
+                    <option value="custom">Custom / Enterprise (Contact for quote)</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="timeline" className="block text-sm font-medium text-gray-700 mb-2">
+                    Timeline / Urgency
+                  </label>
+                  <select
+                    id="timeline"
+                    name="timeline"
+                    value={formData.timeline}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">-- Select timeline --</option>
+                    <option value="urgent">Urgent (Within 1 week)</option>
+                    <option value="soon">Soon (1-2 weeks)</option>
+                    <option value="normal">Normal (2-4 weeks)</option>
+                    <option value="flexible">Flexible (1-2 months)</option>
+                    <option value="planning">Planning Phase (3+ months)</option>
+                  </select>
+          </div>
+                    </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                    Location / Region
+                  </label>
+                  <select
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">-- Select location --</option>
+                    <option value="delhi-ncr">Delhi NCR</option>
+                    <option value="mumbai">Mumbai</option>
+                    <option value="bangalore">Bangalore</option>
+                    <option value="hyderabad">Hyderabad</option>
+                    <option value="chennai">Chennai</option>
+                    <option value="pune">Pune</option>
+                    <option value="kolkata">Kolkata</option>
+                    <option value="ahmedabad">Ahmedabad</option>
+                    <option value="jaipur">Jaipur</option>
+                    <option value="other">Other City</option>
+                    <option value="multiple">Multiple Locations</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-2">
+                    Industry / Business Type
+                  </label>
+                  <select
+                    id="industry"
+                    name="industry"
+                    value={formData.industry}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">-- Select industry --</option>
+                    <option value="retail">Retail / Shopping</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="logistics">Logistics / Transportation</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="education">Education</option>
+                    <option value="hospitality">Hospitality / Hotels</option>
+                    <option value="real-estate">Real Estate</option>
+                    <option value="banking">Banking / Finance</option>
+                    <option value="warehouse">Warehouse / Storage</option>
+                    <option value="office">Office / Corporate</option>
+                    <option value="residential">Residential</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                      </div>
+
+              <div className="mt-6">
+                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                  Additional Notes / Requirements
+                </label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  rows={4}
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Share installation details, specific requirements, site conditions, or any other relevant information"
+                />
+                      </div>
+                    </div>
 
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Choose Your Channel</h2>
@@ -499,7 +717,7 @@ const QuoteRequest: React.FC = () => {
                     </div>
                   </div>
                   {preferredChannel === 'whatsapp' && <CheckCircle className="h-5 w-5 text-primary-600" />}
-                </button>
+                      </button>
 
                 <button
                   type="button"
@@ -522,7 +740,7 @@ const QuoteRequest: React.FC = () => {
                   </div>
                   {preferredChannel === 'email' && <CheckCircle className="h-5 w-5 text-primary-600" />}
                 </button>
-              </div>
+                    </div>
 
               {preferredChannel === 'whatsapp' && (
                 <div className="mt-6 rounded-lg border border-green-100 bg-green-50 px-4 py-4 text-sm text-green-700">
@@ -543,8 +761,8 @@ const QuoteRequest: React.FC = () => {
                       <p>
                         To prevent spam we require email verification. Request a one-time code below, enter it, and verify before sending your quote request.
                       </p>
+                      </div>
                     </div>
-                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <button
@@ -646,8 +864,8 @@ const QuoteRequest: React.FC = () => {
                   </div>
                   <span className="text-xs font-semibold uppercase px-3 py-1 rounded-full bg-primary-100 text-primary-700">
                     {target.kind === 'product' ? 'Product' : 'Service'}
-                  </span>
-                </div>
+                    </span>
+                  </div>
                 <p className="text-sm text-gray-600 border border-dashed border-gray-200 rounded-lg p-3 bg-gray-50">
                   {target.data.description}
                 </p>
@@ -703,8 +921,8 @@ const QuoteRequest: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quote Preview</h3>
               <div className="bg-gray-900 text-gray-100 rounded-lg p-4 text-sm font-mono whitespace-pre-wrap">
                 {quoteMessage}
-              </div>
-            </div>
+                    </div>
+                  </div>
 
             <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">What Happens Next?</h3>
@@ -715,7 +933,7 @@ const QuoteRequest: React.FC = () => {
               <div className="flex items-start text-sm text-gray-600">
                 <Building2 className="h-5 w-5 text-primary-600 mr-3 mt-0.5" />
                 <span>For enterprise projects, mention your organisation to receive tailored pricing.</span>
-              </div>
+                </div>
               <div className="flex items-start text-sm text-gray-600">
                 <ShieldCheck className="h-5 w-5 text-primary-600 mr-3 mt-0.5" />
                 <span>Verified email requests help us avoid spam and prioritise genuine enquiries.</span>

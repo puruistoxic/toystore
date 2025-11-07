@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -44,7 +45,7 @@ const Contact: React.FC = () => {
     {
       icon: <Phone className="h-6 w-6" />,
       title: 'Phone',
-      details: ['+91 98998 60975'],
+      details: ['+91 98998 60975', '+91 82927 17044'],
       description: 'Call us for immediate assistance'
     },
     {
@@ -56,13 +57,13 @@ const Contact: React.FC = () => {
     {
       icon: <MapPin className="h-6 w-6" />,
       title: 'Address',
-      details: ['Shop No. 6, Yadav Complex', 'Block Chowk, Ramgarh Cantt - 829122'],
+      details: ['Room No-9, 1st Floor, Yadav Complex', 'Near Block Chawck, Block Chowk', 'Ramgarh Cantt - 829122', 'Jharkhand, India'],
       description: 'Visit our office'
     },
     {
       icon: <Clock className="h-6 w-6" />,
       title: 'Business Hours',
-      details: ['Mon - Fri: 9:00 AM - 6:00 PM', 'Sat: 9:00 AM - 4:00 PM'],
+      details: ['Monday - Saturday: 9:00 AM - 6:30 PM', 'Sunday: Closed'],
       description: 'We are here to help'
     }
   ];
@@ -77,7 +78,13 @@ const Contact: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEO
+        title="Contact WAINSO GPS & Security System in Ramgarh, Jharkhand"
+        description="Get in touch with WAINSO GPS & Security System in Ramgarh Cantt, Jharkhand. Call +91 98998 60975 or email wainsogps@gmail.com for CCTV installation, GPS tracking, and security solutions."
+        path="/contact"
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -268,13 +275,26 @@ const Contact: React.FC = () => {
               <div className="text-center text-gray-400">
                 <MapPin className="h-12 w-12 mx-auto mb-2" />
                 <p>Interactive Map</p>
-                <p className="text-sm">Shop No. 6, Yadav Complex, Block Chowk, Ramgarh Cantt - 829122</p>
+                <p className="text-sm">Room No-9, 1st Floor, Yadav Complex</p>
+                <p className="text-sm">Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122</p>
+              </div>
+            </div>
+
+            {/* GSTIN Information */}
+            <div className="bg-primary-50 rounded-lg p-6 border border-primary-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Business Information</h3>
+              <div className="space-y-2 text-sm text-gray-700">
+                <p><span className="font-medium">GSTIN:</span> 20AACFW6441P1ZY</p>
+                <p><span className="font-medium">Years in Business:</span> 8+ Years (Est. 2017)</p>
+                <p><span className="font-medium">Rating:</span> 4.9/5 (45+ Reviews)</p>
+                <p><span className="font-medium">Website:</span> wainso.com</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 };
 

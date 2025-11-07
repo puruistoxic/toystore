@@ -104,23 +104,28 @@ const Footer: React.FC = () => {
               <div className="flex items-start">
                 <MapPin className="h-5 w-5 text-primary-400 mt-0.5 mr-3 flex-shrink-0" />
                 <span className="text-gray-300">
-                  Shop No. 6, Yadav Complex,<br />
-                  Block Chowk, Ramgarh Cantt - 829122
+                  Room No-9, 1st Floor, Yadav Complex,<br />
+                  Near Block Chawck, Block Chowk,<br />
+                  Ramgarh Cantt - 829122, Jharkhand
                 </span>
               </div>
               <div className="flex items-center">
                 <Phone className="h-5 w-5 text-primary-400 mr-3 flex-shrink-0" />
-                <span className="text-gray-300">+91 98998 60975</span>
+                <div className="text-gray-300">
+                  <div>+91 98998 60975</div>
+                  <div className="text-xs">+91 82927 17044</div>
+                </div>
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 text-primary-400 mr-3 flex-shrink-0" />
-                <span className="text-gray-300">wainsogps@gmail.com</span>
+                <div className="text-gray-300">
+                  <div>wainsogps@gmail.com</div>
+                </div>
               </div>
               <div className="flex items-start">
                 <Clock className="h-5 w-5 text-primary-400 mt-0.5 mr-3 flex-shrink-0" />
                 <div className="text-gray-300">
-                  <div>Mon - Fri: 9:00 AM - 6:00 PM</div>
-                  <div>Sat: 9:00 AM - 4:00 PM</div>
+                  <div>Mon - Sat: 9:00 AM - 6:30 PM</div>
                   <div>Sun: Closed</div>
                 </div>
               </div>
@@ -131,9 +136,10 @@ const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              © 2024 WAINSO. All rights reserved.
-            </p>
+            <div className="text-gray-400 text-sm">
+              <p>© 2024 WAINSO GPS & Security System. All rights reserved.</p>
+              <p className="mt-1 text-xs">GSTIN: 20AACFW6441P1ZY | Est. 2017 | 8+ Years in Business</p>
+            </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
                 Privacy Policy

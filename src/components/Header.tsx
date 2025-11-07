@@ -19,20 +19,24 @@ const Header: React.FC = () => {
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
       {/* Top Bar */}
-      <div className="bg-primary-600 text-white py-2">
+      <div className="bg-primary-600 text-white py-2.5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
-                <Phone className="h-4 w-4 mr-1" />
-                <span>+91 98998 60975</span>
+                <Phone className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                <a href="tel:+919899860975" className="hover:underline">+91 98998 60975</a>
+              </div>
+              <div className="hidden sm:flex items-center">
+                <Phone className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                <a href="tel:+918292717044" className="hover:underline">+91 82927 17044</a>
               </div>
               <div className="flex items-center">
-                <Mail className="h-4 w-4 mr-1" />
-                <span>wainsogps@gmail.com</span>
+                <Mail className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                <a href="mailto:wainsogps@gmail.com" className="hover:underline">wainsogps@gmail.com</a>
               </div>
             </div>
-            <div className="text-sm">
+            <div className="text-sm hidden md:block">
               Professional CCTV, GPS & Maintenance Solutions
             </div>
           </div>
@@ -41,7 +45,7 @@ const Header: React.FC = () => {
 
       {/* Main Navigation */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center py-4 border-b border-gray-100">
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <div className="text-2xl font-bold text-primary-600">

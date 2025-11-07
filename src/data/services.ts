@@ -1,9 +1,11 @@
 import { Service } from '../types/catalog';
+import { generateSlug } from '../utils/seo';
 
 export const services: Service[] = [
   {
     id: '1',
     name: 'CCTV Installation & Setup',
+    slug: generateSlug('CCTV Installation & Setup'),
     description: 'Professional installation of high-definition surveillance systems with remote monitoring capabilities.',
     price: 15000,
     duration: '1-2 Days',
@@ -29,6 +31,7 @@ export const services: Service[] = [
   {
     id: '2',
     name: 'GPS Vehicle Tracking',
+    slug: generateSlug('GPS Vehicle Tracking'),
     description: 'Real-time vehicle tracking with advanced features like geofencing and fuel monitoring.',
     price: 12000,
     duration: '1 Day',
@@ -54,6 +57,7 @@ export const services: Service[] = [
   {
     id: '3',
     name: 'Equipment Maintenance',
+    slug: generateSlug('Equipment Maintenance'),
     description: 'Comprehensive maintenance services for CCTV, GPS, and other security equipment.',
     price: 5000,
     duration: '2-4 Hours',
@@ -79,6 +83,7 @@ export const services: Service[] = [
   {
     id: '4',
     name: 'Repair & Troubleshooting',
+    slug: generateSlug('Repair & Troubleshooting'),
     description: 'Expert repair services for all types of security and tracking equipment.',
     price: 3000,
     duration: '1-3 Hours',
@@ -104,6 +109,7 @@ export const services: Service[] = [
   {
     id: '5',
     name: 'Security Consultation',
+    slug: generateSlug('Security Consultation'),
     description: 'Expert consultation for designing comprehensive security solutions for your business.',
     price: 8000,
     duration: '1 Day',

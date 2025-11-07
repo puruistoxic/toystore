@@ -1,6 +1,7 @@
 export interface Product {
   id: string;
   name: string;
+  slug: string;
   description: string;
   price: number;
   originalPrice?: number;
@@ -20,6 +21,7 @@ export interface Product {
 export interface Service {
   id: string;
   name: string;
+  slug: string;
   description: string;
   price: number;
   duration: string;

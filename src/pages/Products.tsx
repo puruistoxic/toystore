@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { products } from '../data/products';
 import type { Product } from '../types/catalog';
+import SEO from '../components/SEO';
 
 const Products: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -21,6 +22,7 @@ const Products: React.FC = () => {
     { id: 'all', name: 'All Products' },
     { id: 'cctv', name: 'CCTV Equipment' },
     { id: 'gps', name: 'GPS Trackers' },
+    { id: 'security', name: 'Security Systems' },
     { id: 'maintenance', name: 'Maintenance' },
     { id: 'accessories', name: 'Accessories' }
   ];
@@ -40,16 +42,22 @@ const Products: React.FC = () => {
   }, [selectedCategory, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEO
+        title="Security Products - CCTV Cameras, GPS Trackers, Security Systems in Ramgarh, Jharkhand"
+        description="Buy CCTV cameras, GPS trackers, security lockers, video door phones from CP Plus, Hikvision, Panasonic, Godrej in Ramgarh, Jharkhand. Authorized dealers with warranty."
+        path="/products"
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
               Our Products
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              High-quality security and tracking equipment from leading brands
+            <p className="text-xl text-primary-100 max-w-2xl mx-auto">
+              High-quality security and tracking equipment from leading brands - CP Plus, Hikvision, Panasonic, Godrej, and more
             </p>
           </div>
         </div>
@@ -180,15 +188,15 @@ const Products: React.FC = () => {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <Link
-                    to={`/products/${product.id}`}
-                    className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center flex items-center justify-center"
+                    to={`/products/${product.slug}`}
+                    className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center flex items-center justify-center shadow-sm hover:shadow-md"
                   >
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Link>
                   <Link
                     to={quoteLink}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700"
+                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700 shadow-md hover:shadow-lg"
                   >
                     <MessageCircle className="h-4 w-4 mr-1" />
                     Request Quote
@@ -215,6 +223,7 @@ const Products: React.FC = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

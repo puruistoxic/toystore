@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { services } from '../data/services';
 import type { Service } from '../types/catalog';
+import SEO from '../components/SEO';
 
 const Services: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -41,16 +42,22 @@ const Services: React.FC = () => {
   }, [selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEO
+        title="Professional Security & Tracking Services in Ramgarh, Jharkhand"
+        description="Expert CCTV installation, GPS tracking, and maintenance services in Ramgarh, Hazaribagh, Ranchi, and across Jharkhand. Professional technicians, quality guaranteed."
+        path="/services"
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
               Our Services
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Professional security, tracking, and maintenance solutions tailored to your business needs
+            <p className="text-xl text-primary-100 max-w-2xl mx-auto">
+              Comprehensive security, tracking, and maintenance solutions in Ramgarh, Jharkhand and across India
             </p>
           </div>
         </div>
@@ -82,26 +89,28 @@ const Services: React.FC = () => {
             const quoteLink = `/quote-request?type=service&id=${service.id}`;
 
             return (
-              <div key={service.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <div key={service.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
                 <div className="p-8">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="text-primary-600">
+                  <div className="text-primary-600 group-hover:scale-110 transition-transform">
                       {iconMap[service.iconName]}
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">
                       ₹{service.price.toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-500 flex items-center">
+                    <div className="text-sm text-gray-500 flex items-center justify-end">
                       <Clock className="h-4 w-4 mr-1" />
                       {service.duration}
                     </div>
                   </div>
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  {service.name}
-                </h3>
+                <Link to={`/services/${service.slug}`}>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 hover:text-primary-600 transition-colors">
+                    {service.name}
+                  </h3>
+                </Link>
                 <p className="text-gray-600 mb-6">
                   {service.description}
                 </p>
@@ -133,8 +142,8 @@ const Services: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
-                    to={`/services/${service.id}`}
-                    className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors text-center flex items-center justify-center"
+                    to={`/services/${service.slug}`}
+                    className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors text-center flex items-center justify-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
                   >
                     View Details
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -172,6 +181,7 @@ const Services: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
