@@ -104,17 +104,17 @@ const Footer: React.FC = () => {
               <div className="flex items-start">
                 <MapPin className="h-5 w-5 text-primary-400 mt-0.5 mr-3 flex-shrink-0" />
                 <span className="text-gray-300">
-                  123 Business District,<br />
-                  Mumbai, Maharashtra 400001
+                  Shop No. 6, Yadav Complex,<br />
+                  Block Chowk, Ramgarh Cantt - 829122
                 </span>
               </div>
               <div className="flex items-center">
                 <Phone className="h-5 w-5 text-primary-400 mr-3 flex-shrink-0" />
-                <span className="text-gray-300">+91 98765 43210</span>
+                <span className="text-gray-300">+91 98998 60975</span>
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 text-primary-400 mr-3 flex-shrink-0" />
-                <span className="text-gray-300">info@wainso.com</span>
+                <span className="text-gray-300">wainsogps@gmail.com</span>
               </div>
               <div className="flex items-start">
                 <Clock className="h-5 w-5 text-primary-400 mt-0.5 mr-3 flex-shrink-0" />

@@ -236,11 +236,11 @@ const ServiceDetail: React.FC = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center text-gray-600">
                   <span className="font-medium">Phone:</span>
-                  <span className="ml-2">+91 98765 43210</span>
+                  <span className="ml-2">+91 98998 60975</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <span className="font-medium">Email:</span>
-                  <span className="ml-2">info@wainso.com</span>
+                  <span className="ml-2">wainsogps@gmail.com</span>
                 </div>
               </div>
             </div>

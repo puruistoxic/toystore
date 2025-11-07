@@ -44,19 +44,19 @@ const Contact: React.FC = () => {
     {
       icon: <Phone className="h-6 w-6" />,
       title: 'Phone',
-      details: ['+91 98765 43210', '+91 98765 43211'],
+      details: ['+91 98998 60975'],
       description: 'Call us for immediate assistance'
     },
     {
       icon: <Mail className="h-6 w-6" />,
       title: 'Email',
-      details: ['info@wainso.com', 'support@wainso.com'],
+      details: ['wainsogps@gmail.com'],
       description: 'Send us an email anytime'
     },
     {
       icon: <MapPin className="h-6 w-6" />,
       title: 'Address',
-      details: ['123 Business District', 'Mumbai, Maharashtra 400001'],
+      details: ['Shop No. 6, Yadav Complex', 'Block Chowk, Ramgarh Cantt - 829122'],
       description: 'Visit our office'
     },
     {
@@ -140,7 +140,7 @@ const Contact: React.FC = () => {
                       value={formData.phone}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="+91 98765 43210"
+                      placeholder="+91 98998 60975"
                     />
                   </div>
                 </div>
@@ -268,7 +268,7 @@ const Contact: React.FC = () => {
               <div className="text-center text-gray-400">
                 <MapPin className="h-12 w-12 mx-auto mb-2" />
                 <p>Interactive Map</p>
-                <p className="text-sm">123 Business District, Mumbai</p>
+                <p className="text-sm">Shop No. 6, Yadav Complex, Block Chowk, Ramgarh Cantt - 829122</p>
               </div>
             </div>
           </div>
