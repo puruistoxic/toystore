@@ -5,6 +5,9 @@ import { HelmetProvider } from 'react-helmet-async';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import EnquiryPopup, { useEnquiryPopup } from './components/EnquiryPopup';
+import ScrollToTop from './components/ScrollToTop';
+import ScrollToTopButton from './components/ScrollToTopButton';
+import WhatsAppButton from './components/WhatsAppButton';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Products from './pages/Products';
@@ -24,6 +27,7 @@ function AppContent() {
 
   return (
     <>
+      <ScrollToTop />
       <div className="min-h-screen bg-gray-50">
         <Header />
         <main>
@@ -43,6 +47,8 @@ function AppContent() {
         </main>
         <Footer />
       </div>
+      <WhatsAppButton />
+      <ScrollToTopButton />
       {showPopup && <EnquiryPopup onClose={handleClose} />}
     </>
   );

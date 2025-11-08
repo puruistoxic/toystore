@@ -44,8 +44,8 @@ const Services: React.FC = () => {
   return (
     <>
       <SEO
-        title="Professional Security & Tracking Services in Ramgarh, Jharkhand"
-        description="Expert CCTV installation, GPS tracking, and maintenance services in Ramgarh, Hazaribagh, Ranchi, and across Jharkhand. Professional technicians, quality guaranteed."
+        title="Professional Security & Tracking Services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jharkhand | India"
+        description="Expert CCTV installation, GPS tracking, and maintenance services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jamshedpur, and across Jharkhand, India. Professional technicians, quality guaranteed. Free consultation available."
         path="/services"
       />
       <div className="min-h-screen bg-gray-50">
@@ -57,7 +57,7 @@ const Services: React.FC = () => {
               Our Services
             </h1>
             <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-              Comprehensive security, tracking, and maintenance solutions in Ramgarh, Jharkhand and across India
+              Comprehensive security, tracking, and maintenance solutions in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India
             </p>
           </div>
         </div>

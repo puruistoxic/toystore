@@ -13,12 +13,13 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
-    email: ''
+    email: '',
+    location: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -50,7 +51,8 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
         body: JSON.stringify({
           name: formData.name.trim(),
           mobile: formData.mobile.trim(),
-          email: formData.email.trim() || undefined
+          email: formData.email.trim() || undefined,
+          location: formData.location.trim() || undefined
         }),
       });
 
@@ -158,6 +160,33 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="your.email@example.com"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="popup-location" className="block text-sm font-medium text-gray-700 mb-2">
+                  Location / City
+                </label>
+                <select
+                  id="popup-location"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">Select location</option>
+                  <optgroup label="Ramgarh & Nearby Areas">
+                    <option value="ramgarh">Ramgarh, Jharkhand</option>
+                    <option value="ramgarh-cantt">Ramgarh Cantt, Jharkhand</option>
+                    <option value="hazaribagh">Hazaribagh, Jharkhand</option>
+                    <option value="ranchi">Ranchi, Jharkhand</option>
+                    <option value="dhanbad">Dhanbad, Jharkhand</option>
+                    <option value="bokaro">Bokaro, Jharkhand</option>
+                  </optgroup>
+                  <optgroup label="Other Cities">
+                    <option value="other-jharkhand">Other City in Jharkhand</option>
+                    <option value="other">Other City in India</option>
+                  </optgroup>
+                </select>
               </div>
 
               <p className="text-xs text-gray-500">

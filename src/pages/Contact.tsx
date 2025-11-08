@@ -9,7 +9,8 @@ const Contact: React.FC = () => {
     phone: '',
     subject: '',
     message: '',
-    service: ''
+    service: '',
+    location: ''
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -36,7 +37,8 @@ const Contact: React.FC = () => {
         phone: '',
         subject: '',
         message: '',
-        service: ''
+        service: '',
+        location: ''
       });
     }, 3000);
   };
@@ -80,8 +82,8 @@ const Contact: React.FC = () => {
   return (
     <>
       <SEO
-        title="Contact WAINSO GPS & Security System in Ramgarh, Jharkhand"
-        description="Get in touch with WAINSO GPS & Security System in Ramgarh Cantt, Jharkhand. Call +91 98998 60975 or email wainsogps@gmail.com for CCTV installation, GPS tracking, and security solutions."
+        title="Contact WAINSO GPS & Security System in Ramgarh, Ramgarh Cantt, Jharkhand | India"
+        description="Get in touch with WAINSO GPS & Security System in Ramgarh Cantt, Jharkhand. Serving Ramgarh, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across India. Call +91 98998 60975 or email wainsogps@gmail.com for CCTV installation, GPS tracking, and security solutions."
         path="/contact"
       />
       <div className="min-h-screen bg-gray-50">
@@ -168,24 +170,57 @@ const Contact: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Interested In
-                  </label>
-                  <select
-                    id="service"
-                    name="service"
-                    value={formData.service}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="">Select a service</option>
-                    {services.map((service) => (
-                      <option key={service} value={service}>
-                        {service}
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
+                      Service Interested In
+                    </label>
+                    <select
+                      id="service"
+                      name="service"
+                      value={formData.service}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="">Select a service</option>
+                      {services.map((service) => (
+                        <option key={service} value={service}>
+                          {service}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                      Location / City
+                    </label>
+                    <select
+                      id="location"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="">Select location</option>
+                      <optgroup label="Ramgarh & Nearby Areas">
+                        <option value="ramgarh">Ramgarh, Jharkhand</option>
+                        <option value="ramgarh-cantt">Ramgarh Cantt, Jharkhand</option>
+                        <option value="hazaribagh">Hazaribagh, Jharkhand</option>
+                        <option value="ranchi">Ranchi, Jharkhand</option>
+                        <option value="dhanbad">Dhanbad, Jharkhand</option>
+                        <option value="bokaro">Bokaro, Jharkhand</option>
+                        <option value="jamshedpur">Jamshedpur, Jharkhand</option>
+                      </optgroup>
+                      <optgroup label="Other Cities">
+                        <option value="other-jharkhand">Other City in Jharkhand</option>
+                        <option value="delhi-ncr">Delhi NCR</option>
+                        <option value="mumbai">Mumbai</option>
+                        <option value="bangalore">Bangalore</option>
+                        <option value="kolkata">Kolkata</option>
+                        <option value="other">Other City in India</option>
+                      </optgroup>
+                    </select>
+                  </div>
                 </div>
 
                 <div>

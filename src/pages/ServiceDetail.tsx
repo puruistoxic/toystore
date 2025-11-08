@@ -143,7 +143,7 @@ const ServiceDetail: React.FC = () => {
     );
   }
 
-  const serviceLocations = ['Ramgarh', 'Hazaribagh', 'Ranchi', 'Dhanbad', 'Bokaro', 'Jharkhand'];
+  const serviceLocations = ['Ramgarh', 'Ramgarh Cantt', 'Hazaribagh', 'Ranchi', 'Dhanbad', 'Bokaro', 'Jamshedpur', 'Giridih', 'Deoghar', 'Jharkhand', 'India'];
   const metaDescription = generateServiceMetaDescription(service.name, 'Ramgarh, Jharkhand');
   const pageTitle = generatePageTitle(service.name, 'Ramgarh, Jharkhand');
 
@@ -362,7 +362,7 @@ const ServiceDetail: React.FC = () => {
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Our experts are here to help you choose the right solution for your needs in Ramgarh, Jharkhand and surrounding areas.
+                Our experts are here to help you choose the right solution for your needs in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India.
               </p>
               <div className="space-y-3 text-sm">
                 <a

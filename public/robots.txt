@@ -1,0 +1,26 @@
+# robots.txt for wainso.com
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Disallow admin and API endpoints
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /
+Allow: /services
+Allow: /products
+Allow: /about
+Allow: /contact
+Allow: /quote-request
+
+# Sitemap location
+Sitemap: https://wainso.com/sitemap.xml
+
+# Crawl-delay (optional - adjust if needed)
+# Crawl-delay: 1
+

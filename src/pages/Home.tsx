@@ -37,7 +37,7 @@ const Home: React.FC = () => {
       id: '1',
       title: 'Professional Security &',
       subtitle: 'Tracking Solutions',
-      description: 'Secure your business with our advanced CCTV surveillance, GPS tracking, and comprehensive maintenance services in Ramgarh, Jharkhand. Trusted by 500+ businesses with 4.9-star rating.',
+      description: 'Secure your business with our advanced CCTV surveillance, GPS tracking, and comprehensive maintenance services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India. Trusted by 500+ businesses with 4.9-star rating.',
       image: '/images/hero/hero-main.jpg',
       imageAlt: 'Professional security and tracking solutions',
       primaryButton: { text: 'Our Services', link: '/services' },
@@ -136,8 +136,8 @@ const Home: React.FC = () => {
     },
     {
       icon: <MapPin className="h-6 w-6" />,
-      title: 'Nationwide Service',
-      description: 'Professional installation and support across India'
+      title: 'Wide Service Coverage',
+      description: 'Serving Ramgarh, Ramgarh Cantt, and across Jharkhand, India with professional installation and support'
     },
     {
       icon: <Wrench className="h-6 w-6" />,
@@ -181,8 +181,8 @@ const Home: React.FC = () => {
   return (
     <>
       <SEO
-        title="WAINSO GPS & Security System - CCTV, GPS Tracking & Security Solutions in Ramgarh, Jharkhand"
-        description="Professional CCTV installation, GPS tracking, and security solutions in Ramgarh, Jharkhand. Authorized dealers for CP Plus, Hikvision, Panasonic, Godrej. 8+ years experience, 4.9-star rating. Call +91 98998 60975."
+        title="WAINSO GPS & Security System - CCTV, GPS Tracking & Security Solutions in Ramgarh, Ramgarh Cantt, Jharkhand | India"
+        description="Professional CCTV installation, GPS tracking, and security solutions in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jamshedpur, and across Jharkhand, India. Authorized dealers for CP Plus, Hikvision, Panasonic, Godrej. 8+ years experience, 4.9-star rating. Call +91 98998 60975."
         path="/"
       />
       <div className="min-h-screen">
@@ -323,7 +323,7 @@ const Home: React.FC = () => {
               Our Services
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Comprehensive solutions for all your security, tracking, and maintenance needs in Ramgarh, Jharkhand and across India
+              Comprehensive solutions for all your security, tracking, and maintenance needs in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India
             </p>
           </div>
 
@@ -425,7 +425,7 @@ const Home: React.FC = () => {
               Why Choose WAINSO?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We deliver excellence through innovation, reliability, and customer satisfaction
+              We deliver excellence through innovation, reliability, and customer satisfaction. Serving Ramgarh, Ramgarh Cantt, and across Jharkhand, India.
             </p>
           </div>
 
@@ -482,6 +482,49 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Service Areas Section */}
+      <section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-block mb-4">
+              <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Our Service Areas</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Serving Ramgarh & Across Jharkhand, India
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We provide professional security and tracking solutions in multiple cities across Jharkhand and India
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            {['Ramgarh', 'Ramgarh Cantt', 'Hazaribagh', 'Ranchi', 'Dhanbad', 'Bokaro', 'Jamshedpur', 'Giridih', 'Deoghar', 'Gumla', 'Chatra', 'Koderma'].map((city) => (
+              <div
+                key={city}
+                className="bg-white rounded-lg p-4 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+              >
+                <MapPin className="h-5 w-5 text-primary-600 mx-auto mb-2" />
+                <span className="text-sm font-semibold text-gray-900">{city}</span>
+                <span className="block text-xs text-gray-500 mt-1">Jharkhand</span>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              <span className="font-semibold text-primary-600">+ More cities across India</span> - We also serve major cities nationwide including Delhi, Mumbai, Bangalore, Kolkata, and more.
+            </p>
+            <Link
+              to="/contact"
+              className="inline-flex items-center text-primary-600 font-semibold hover:text-primary-700 transition-colors"
+            >
+              <span>Check if we serve your area</span>
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-primary-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -489,18 +532,18 @@ const Home: React.FC = () => {
             Ready to Secure Your Business?
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Get a free consultation and quote for your security and tracking needs
+            Get a free consultation and quote for your security and tracking needs in Ramgarh, Ramgarh Cantt, and across Jharkhand, India
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/quote-request"
-              className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+              className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
             >
               Get Free Quote
             </Link>
             <Link
               to="/products"
-              className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary-600 transition-colors"
+              className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary-600 transition-colors backdrop-blur-sm bg-white/10"
             >
               View Products
             </Link>

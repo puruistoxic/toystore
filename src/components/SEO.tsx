@@ -35,7 +35,7 @@ interface SEOProps {
 
 const SEO: React.FC<SEOProps> = ({
   title = 'WAINSO - Professional Security & Tracking Solutions',
-  description = 'Professional CCTV installation, GPS tracking, and maintenance services in Ramgarh, Jharkhand and across India. Expert technicians, quality guaranteed.',
+  description = 'Professional CCTV installation, GPS tracking, and maintenance services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jamshedpur, and across Jharkhand, India. Expert technicians, quality guaranteed. Call +91 98998 60975.',
   path = '/',
   image = 'https://wainso.com/images/og-image.jpg',
   type = 'website',
@@ -120,9 +120,10 @@ const SEO: React.FC<SEOProps> = ({
 
       {/* Location-specific meta tags */}
       <meta name="geo.region" content="IN-JH" />
-      <meta name="geo.placename" content="Ramgarh, Jharkhand" />
+      <meta name="geo.placename" content="Ramgarh, Ramgarh Cantt, Jharkhand, India" />
       <meta name="geo.position" content="23.6345;85.3803" />
       <meta name="ICBM" content="23.6345, 85.3803" />
+      <meta name="keywords" content="CCTV installation Ramgarh, GPS tracking Ramgarh, Security systems Ramgarh Cantt, CCTV Ramgarh Jharkhand, GPS tracker Hazaribagh, Security cameras Ranchi, CCTV installation Dhanbad, GPS tracking Bokaro, Security solutions Jharkhand, CCTV India, GPS tracking India" />
 
       {/* Business Information */}
       <meta name="business:contact_data:street_address" content="Ramgarh, Jharkhand" />
@@ -159,11 +160,19 @@ const SEO: React.FC<SEOProps> = ({
           },
           areaServed: [
             { '@type': 'City', name: 'Ramgarh' },
+            { '@type': 'City', name: 'Ramgarh Cantt' },
             { '@type': 'City', name: 'Hazaribagh' },
             { '@type': 'City', name: 'Ranchi' },
             { '@type': 'City', name: 'Dhanbad' },
             { '@type': 'City', name: 'Bokaro' },
-            { '@type': 'State', name: 'Jharkhand' }
+            { '@type': 'City', name: 'Jamshedpur' },
+            { '@type': 'City', name: 'Giridih' },
+            { '@type': 'City', name: 'Deoghar' },
+            { '@type': 'City', name: 'Gumla' },
+            { '@type': 'City', name: 'Chatra' },
+            { '@type': 'City', name: 'Koderma' },
+            { '@type': 'State', name: 'Jharkhand' },
+            { '@type': 'Country', name: 'India' }
           ],
           url: 'https://wainso.com',
           priceRange: '₹₹',

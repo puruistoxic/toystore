@@ -274,8 +274,8 @@ const About: React.FC = () => {
   return (
     <>
       <SEO
-        title="About WAINSO GPS & Security System - 8+ Years of Excellence in Ramgarh, Jharkhand"
-        description="Established in 2017, WAINSO GPS & Security System is a trusted name in CCTV installation, GPS tracking, and security solutions in Ramgarh, Jharkhand. Authorized dealers for CP Plus, Hikvision, Panasonic, Godrej, and Concox."
+        title="About WAINSO GPS & Security System - 8+ Years of Excellence in Ramgarh, Ramgarh Cantt, Jharkhand | India"
+        description="Established in 2017, WAINSO GPS & Security System is a trusted name in CCTV installation, GPS tracking, and security solutions in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India. Authorized dealers for CP Plus, Hikvision, Panasonic, Godrej, and Concox. 500+ satisfied customers, 4.9-star rating."
         path="/about"
       />
       <div className="min-h-screen bg-gray-50">

@@ -637,17 +637,40 @@ const QuoteRequest: React.FC = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                   >
                     <option value="">-- Select location --</option>
-                    <option value="delhi-ncr">Delhi NCR</option>
-                    <option value="mumbai">Mumbai</option>
-                    <option value="bangalore">Bangalore</option>
-                    <option value="hyderabad">Hyderabad</option>
-                    <option value="chennai">Chennai</option>
-                    <option value="pune">Pune</option>
-                    <option value="kolkata">Kolkata</option>
-                    <option value="ahmedabad">Ahmedabad</option>
-                    <option value="jaipur">Jaipur</option>
-                    <option value="other">Other City</option>
-                    <option value="multiple">Multiple Locations</option>
+                    <optgroup label="Ramgarh & Nearby Areas (Primary Service Area)">
+                      <option value="ramgarh">Ramgarh, Jharkhand</option>
+                      <option value="ramgarh-cantt">Ramgarh Cantt, Jharkhand</option>
+                      <option value="hazaribagh">Hazaribagh, Jharkhand</option>
+                      <option value="ranchi">Ranchi, Jharkhand</option>
+                      <option value="dhanbad">Dhanbad, Jharkhand</option>
+                      <option value="bokaro">Bokaro, Jharkhand</option>
+                      <option value="jamshedpur">Jamshedpur, Jharkhand</option>
+                      <option value="giridih">Giridih, Jharkhand</option>
+                      <option value="deoghar">Deoghar, Jharkhand</option>
+                      <option value="gumla">Gumla, Jharkhand</option>
+                      <option value="chatra">Chatra, Jharkhand</option>
+                      <option value="koderma">Koderma, Jharkhand</option>
+                    </optgroup>
+                    <optgroup label="Other Cities in Jharkhand">
+                      <option value="other-jharkhand">Other City in Jharkhand</option>
+                    </optgroup>
+                    <optgroup label="Major Cities in India">
+                      <option value="delhi-ncr">Delhi NCR</option>
+                      <option value="mumbai">Mumbai, Maharashtra</option>
+                      <option value="bangalore">Bangalore, Karnataka</option>
+                      <option value="hyderabad">Hyderabad, Telangana</option>
+                      <option value="chennai">Chennai, Tamil Nadu</option>
+                      <option value="pune">Pune, Maharashtra</option>
+                      <option value="kolkata">Kolkata, West Bengal</option>
+                      <option value="ahmedabad">Ahmedabad, Gujarat</option>
+                      <option value="jaipur">Jaipur, Rajasthan</option>
+                      <option value="lucknow">Lucknow, Uttar Pradesh</option>
+                      <option value="patna">Patna, Bihar</option>
+                    </optgroup>
+                    <optgroup label="Other Options">
+                      <option value="other">Other City in India</option>
+                      <option value="multiple">Multiple Locations</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>

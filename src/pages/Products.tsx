@@ -44,8 +44,8 @@ const Products: React.FC = () => {
   return (
     <>
       <SEO
-        title="Security Products - CCTV Cameras, GPS Trackers, Security Systems in Ramgarh, Jharkhand"
-        description="Buy CCTV cameras, GPS trackers, security lockers, video door phones from CP Plus, Hikvision, Panasonic, Godrej in Ramgarh, Jharkhand. Authorized dealers with warranty."
+        title="Security Products - CCTV Cameras, GPS Trackers, Security Systems in Ramgarh, Ramgarh Cantt, Jharkhand | India"
+        description="Buy CCTV cameras, GPS trackers, security lockers, video door phones from CP Plus, Hikvision, Panasonic, Godrej in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India. Authorized dealers with warranty. Free shipping available."
         path="/products"
       />
       <div className="min-h-screen bg-gray-50">
@@ -57,7 +57,7 @@ const Products: React.FC = () => {
               Our Products
             </h1>
             <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-              High-quality security and tracking equipment from leading brands - CP Plus, Hikvision, Panasonic, Godrej, and more
+              High-quality security and tracking equipment from leading brands - CP Plus, Hikvision, Panasonic, Godrej, and more. Available in Ramgarh, Ramgarh Cantt, and across Jharkhand, India
             </p>
           </div>
         </div>
