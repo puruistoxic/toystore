@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { locations } from '../data/locations';
 import { 
   Shield, 
   MapPin, 
@@ -554,15 +555,16 @@ const Home: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-            {['Ramgarh', 'Ramgarh Cantt', 'Hazaribagh', 'Ranchi', 'Dhanbad', 'Bokaro', 'Jamshedpur', 'Giridih', 'Deoghar', 'Gumla', 'Chatra', 'Koderma'].map((city) => (
-              <div
-                key={city}
-                className="bg-white rounded-lg p-4 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+            {locations.slice(0, 7).map((location) => (
+              <Link
+                key={location.id}
+                to={`/locations/${location.slug}`}
+                className="bg-white rounded-lg p-4 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100 group"
               >
-                <MapPin className="h-5 w-5 text-primary-600 mx-auto mb-2" />
-                <span className="text-sm font-semibold text-gray-900">{city}</span>
-                <span className="block text-xs text-gray-500 mt-1">Jharkhand</span>
-              </div>
+                <MapPin className="h-5 w-5 text-primary-600 mx-auto mb-2 group-hover:text-primary-700" />
+                <span className="text-sm font-semibold text-gray-900 group-hover:text-primary-600">{location.name}</span>
+                <span className="block text-xs text-gray-500 mt-1">{location.state}</span>
+              </Link>
             ))}
           </div>
           
@@ -570,13 +572,22 @@ const Home: React.FC = () => {
             <p className="text-gray-600 mb-4">
               <span className="font-semibold text-primary-600">+ More cities across India</span> - We also serve major cities nationwide including Delhi, Mumbai, Bangalore, Kolkata, and more.
             </p>
-            <Link
-              to="/contact"
-              className="inline-flex items-center text-primary-600 font-semibold hover:text-primary-700 transition-colors"
-            >
-              <span>Check if we serve your area</span>
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/locations"
+                className="inline-flex items-center text-primary-600 font-semibold hover:text-primary-700 transition-colors"
+              >
+                <span>View All Service Areas</span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+              <Link
+                to="/contact"
+                className="inline-flex items-center text-primary-600 font-semibold hover:text-primary-700 transition-colors"
+              >
+                <span>Check if we serve your area</span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

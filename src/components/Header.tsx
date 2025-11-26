@@ -1,58 +1,220 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MessageCircle, Menu, X, Phone, Mail, ChevronDown, ArrowUpRight, Globe } from 'lucide-react';
+import { MessageCircle, Menu, X, Phone, Mail, ChevronRight, ArrowUpRight, Globe, Camera, Navigation, Wrench, Settings, Shield, Video, MapPin } from 'lucide-react';
+import { services } from '../data/services';
+import { products } from '../data/products';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
-
-  const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Services', href: '/services' },
-    { name: 'Products', href: '/products' },
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
-  ];
 
   const isActive = (path: string) => location.pathname === path;
   const isHomePage = location.pathname === '/';
 
-  return (
-    <header className={`${isHomePage ? 'absolute' : 'sticky'} top-0 left-0 right-0 z-50 ${isHomePage ? 'bg-black/40 backdrop-blur-sm' : 'bg-white shadow-lg'}`}>
-      {/* Main Navigation */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          {/* Logo with Tagline */}
-          <Link to="/" className="flex flex-col">
-            <div className={`text-xl sm:text-2xl font-bold ${isHomePage ? 'text-white' : 'text-primary-600'}`}>
-              WAINSO
-            </div>
-            <div className={`text-[10px] sm:text-xs mt-0.5 ${isHomePage ? 'text-white/80' : 'text-gray-600'}`}>
-              Security first. Technology fast.
-            </div>
-          </Link>
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`flex items-center px-3 py-2 text-sm font-medium transition-colors ${
-                  isHomePage
-                    ? isActive(item.href)
-                      ? 'text-white'
-                      : 'text-white/90 hover:text-white'
-                    : isActive(item.href)
-                    ? 'text-primary-600'
-                    : 'text-gray-700 hover:text-primary-600'
-                }`}
-              >
-                {item.name}
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Link>
-            ))}
-          </nav>
+  // Group services by category
+  const servicesByCategory = {
+    'cctv-installation': services.filter(s => s.category === 'cctv-installation'),
+    'gps-installation': services.filter(s => s.category === 'gps-installation'),
+    'maintenance': services.filter(s => s.category === 'maintenance'),
+    'repair': services.filter(s => s.category === 'repair'),
+    'consultation': services.filter(s => s.category === 'consultation'),
+  };
+
+  // Group products by category
+  const productsByCategory = {
+    'cctv': products.filter(p => p.category === 'cctv'),
+    'gps': products.filter(p => p.category === 'gps'),
+    'security': products.filter(p => p.category === 'security'),
+    'maintenance': products.filter(p => p.category === 'maintenance'),
+  };
+
+  const navigation = [
+    { 
+      name: 'Home', 
+      href: '/',
+      hasDropdown: false
+    },
+    { 
+      name: 'Services', 
+      href: '/services',
+      hasDropdown: true,
+      dropdown: {
+        type: 'solutions', // 3-column layout with categories, services, and industries
+        categories: [
+          {
+            name: 'CCTV Installation',
+            icon: Camera,
+            services: servicesByCategory['cctv-installation']
+          },
+          {
+            name: 'GPS Tracking',
+            icon: Navigation,
+            services: servicesByCategory['gps-installation']
+          },
+          {
+            name: 'Maintenance & Support',
+            icon: Wrench,
+            services: [...servicesByCategory['maintenance'], ...servicesByCategory['repair']]
+          }
+        ],
+        industries: [
+          { name: 'Business Security', icon: Shield, link: '/services?category=cctv-installation' },
+          { name: 'Fleet Management', icon: Navigation, link: '/services?category=gps-installation' },
+          { name: 'System Maintenance', icon: Wrench, link: '/services?category=maintenance' },
+          { name: 'Security Consultation', icon: MessageCircle, link: '/services?category=consultation' }
+        ]
+      }
+    },
+    { 
+      name: 'Products', 
+      href: '/products',
+      hasDropdown: true,
+      dropdown: {
+        type: 'list', // Simple 2-column list
+        items: [
+          { name: 'CCTV Cameras', link: '/products?category=cctv' },
+          { name: 'GPS Trackers', link: '/products?category=gps' },
+          { name: 'Security Systems', link: '/products?category=security' },
+          { name: 'Maintenance Tools', link: '/products?category=maintenance' },
+          { name: 'DVR & NVR Systems', link: '/products?category=cctv' },
+          { name: 'Accessories', link: '/products' }
+        ]
+      }
+    },
+    { 
+      name: 'About', 
+      href: '/about',
+      hasDropdown: true,
+      dropdown: {
+        type: 'company', // Left: black boxes, Right: text links
+        boxes: [
+          {
+            title: 'Who We Are',
+            link: '/about'
+          },
+          {
+            title: 'Service Areas',
+            link: '/locations'
+          },
+          {
+            title: 'Our Brands',
+            link: '/brands'
+          }
+        ],
+        links: [
+          {
+            title: 'Our Story',
+            description: '8+ years of security solutions excellence',
+            link: '/about'
+          },
+          {
+            title: 'Industries We Serve',
+            description: 'Specialized solutions for various industries',
+            link: '/industries'
+          },
+          {
+            title: 'Case Studies',
+            description: 'Real success stories from our clients',
+            link: '/case-studies'
+          }
+        ]
+      }
+    },
+    { 
+      name: 'Contact', 
+      href: '/contact',
+      hasDropdown: false
+    },
+  ];
+
+  return (
+    <>
+      <header 
+        className={`${isHomePage ? 'absolute' : 'sticky'} top-0 left-0 right-0 z-50 ${isHomePage ? 'bg-black/40 backdrop-blur-sm' : 'bg-white shadow-lg'}`}
+        onMouseLeave={(e) => {
+          // Only close if we're not moving to the dropdown
+          // Check if the related target is not within the dropdown
+          const relatedTarget = e.relatedTarget;
+          if (!relatedTarget || !(relatedTarget instanceof HTMLElement) || !relatedTarget.closest('.dropdown-container')) {
+            hoverTimeoutRef.current = setTimeout(() => {
+              setHoveredMenu(null);
+            }, 200);
+          }
+        }}
+      >
+        {/* Main Navigation */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            {/* Logo with Tagline */}
+            <Link to="/" className="flex flex-col">
+              <div className={`text-xl sm:text-2xl font-bold ${isHomePage ? 'text-white' : 'text-primary-600'}`}>
+                WAINSO
+              </div>
+              <div className={`text-[10px] sm:text-xs mt-0.5 ${isHomePage ? 'text-white/80' : 'text-gray-600'}`}>
+                Security first. Technology fast.
+              </div>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-6 relative">
+              {navigation.map((item) => (
+                <div
+                  key={item.name}
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (hoverTimeoutRef.current) {
+                      clearTimeout(hoverTimeoutRef.current);
+                      hoverTimeoutRef.current = null;
+                    }
+                    if (item.hasDropdown) {
+                      setHoveredMenu(item.name);
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    // Only start timeout if not moving to dropdown
+                    const relatedTarget = e.relatedTarget;
+                    if (!relatedTarget || !(relatedTarget instanceof HTMLElement) || !relatedTarget.closest('.dropdown-container')) {
+                      hoverTimeoutRef.current = setTimeout(() => {
+                        setHoveredMenu(null);
+                      }, 200);
+                    }
+                  }}
+                >
+                  <Link
+                    to={item.href}
+                    className={`flex items-center px-3 py-2 text-sm font-medium transition-colors ${
+                      isHomePage
+                        ? isActive(item.href)
+                          ? 'text-white'
+                          : 'text-white/90 hover:text-white'
+                        : isActive(item.href)
+                        ? 'text-primary-600'
+                        : 'text-gray-700 hover:text-primary-600'
+                    }`}
+                  >
+                    {item.name}
+                    {item.hasDropdown && (
+                      <ChevronRight 
+                        className={`h-3 w-3 ml-1 transition-transform ${
+                          hoveredMenu === item.name ? 'rotate-90' : ''
+                        }`} 
+                      />
+                    )}
+                  </Link>
+                </div>
+              ))}
+            </nav>
 
           {/* CTA and Language Selector */}
           <div className="flex items-center space-x-4">
@@ -101,7 +263,9 @@ const Header: React.FC = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
-                  <ChevronDown className="h-4 w-4 ml-1" />
+                  {item.hasDropdown && (
+                    <ChevronRight className="h-4 w-4 ml-1 rotate-90" />
+                  )}
                 </Link>
               ))}
               <Link
@@ -121,6 +285,215 @@ const Header: React.FC = () => {
         )}
       </div>
     </header>
+    
+    {/* Dropdown Menu - Positioned relative to viewport, starts after header */}
+    {hoveredMenu && (() => {
+      const item = navigation.find(i => i.name === hoveredMenu && i.hasDropdown);
+      if (!item || !item.dropdown) return null;
+      
+      return (
+        <div 
+          className="dropdown-container fixed left-1/2 -translate-x-1/2 w-full max-w-7xl z-40"
+          style={{ top: '73px' }}
+          onMouseEnter={() => {
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = null;
+            }
+            setHoveredMenu(hoveredMenu);
+          }}
+          onMouseLeave={() => {
+            hoverTimeoutRef.current = setTimeout(() => {
+              setHoveredMenu(null);
+            }, 200);
+          }}
+        >
+          {/* Transparent bridge area that extends upward to catch mouse movement */}
+          <div 
+            className="h-12 -mt-12 bg-transparent pointer-events-auto"
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+                hoverTimeoutRef.current = null;
+              }
+              setHoveredMenu(hoveredMenu);
+            }}
+          ></div>
+          {/* Dropdown content */}
+          <div className="bg-white" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+            <div className="px-4 sm:px-6 lg:px-8 pt-10 pb-6">
+            {/* Services Dropdown - 3 Column Layout */}
+            {item.name === 'Services' && item.dropdown.type === 'solutions' && (
+              <div className="grid grid-cols-3 gap-12">
+                {/* Left Column - Categories (Clickable list) */}
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 mb-4">Services</h3>
+                  <div className="space-y-0">
+                    {item.dropdown.categories?.map((category, idx) => {
+                      const hasServices = 'services' in category;
+                      const categorySlug = hasServices && category.services.length > 0 
+                        ? category.services[0].category 
+                        : '';
+                      return (
+                        <Link
+                          key={idx}
+                          to={`/services?category=${categorySlug}`}
+                          className="block py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                        >
+                          {category.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Middle Column - Services grouped by category */}
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 mb-4">Enterprise Solutions</h3>
+                  <div className="space-y-4">
+                    {item.dropdown.categories?.map((category, idx) => {
+                      const hasServices = 'services' in category;
+                      if (!hasServices || category.services.length === 0) return null;
+                      return (
+                        <div key={idx}>
+                          <div className="text-sm font-bold text-gray-500 uppercase mb-2.5">
+                            {category.name === 'CCTV Installation' ? 'Surveillance' : 
+                             category.name === 'GPS Tracking' ? 'Tracking' : 
+                             'Support'}
+                          </div>
+                          <div className="space-y-0">
+                            {category.services.map((service, serviceIdx) => (
+                              <Link
+                                key={serviceIdx}
+                                to={`/services/${service.slug}`}
+                                className="block py-2 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                              >
+                                {service.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right Column - Industries with icons */}
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 mb-4">Applications</h3>
+                  <div className="space-y-0">
+                    {item.dropdown.industries?.map((industry, idx) => (
+                      <Link
+                        key={idx}
+                        to={industry.link}
+                        className="flex items-center space-x-2.5 py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                      >
+                        <industry.icon className="h-5 w-5 flex-shrink-0" />
+                        <span>{industry.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Products Dropdown - Simple 2 Column List */}
+            {item.name === 'Products' && item.dropdown.type === 'list' && (
+              <div className="grid grid-cols-2 gap-16">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 mb-4">Products</h3>
+                  <div className="space-y-0">
+                    {item.dropdown.items?.map((product, idx) => (
+                      <Link
+                        key={idx}
+                        to={product.link}
+                        className="block py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                      >
+                        {product.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 mb-4">Categories</h3>
+                  <div className="space-y-0">
+                    {/* Empty for now - can add category links if needed */}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* About Dropdown - Company Style (Black boxes + Text links) */}
+            {item.name === 'About' && item.dropdown.type === 'company' && (
+              <div className="grid grid-cols-2 gap-12">
+                {/* Left Column - Black Boxes */}
+                <div className="space-y-3">
+                  {item.dropdown.boxes?.map((box, idx) => (
+                    <Link
+                      key={idx}
+                      to={box.link}
+                      className="block group"
+                    >
+                                <div className="bg-black text-white p-6 rounded-lg hover:bg-gray-900 transition-colors relative min-h-[110px] flex flex-col">
+                                  <div className="text-lg font-bold mb-auto">{box.title}</div>
+                        <div className="absolute bottom-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center group-hover:bg-primary-600 transition-colors">
+                          <ChevronRight className="h-5 w-5 text-black group-hover:text-white" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Right Column - Text Links */}
+                <div className="space-y-5">
+                  {item.dropdown.links?.map((link, idx) => (
+                    <Link
+                      key={idx}
+                      to={link.link}
+                      className="block group"
+                    >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="text-base font-bold text-gray-900 group-hover:text-primary-600 transition-colors mb-1.5">
+                                      {link.title}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      {link.description}
+                                    </div>
+                                  </div>
+                        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-primary-600 ml-4 flex-shrink-0 mt-1" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+            {/* Bottom CTA Section - Full Width */}
+            <div className="bg-gray-50 border-t border-gray-200">
+              <div className="px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-700">
+                  <Video className="h-4 w-4" />
+                  <span>Want to talk to our experts?</span>
+                  <Link to="/contact" className="text-primary-600 hover:text-primary-700 font-semibold">
+                    Schedule a call
+                  </Link>
+                </div>
+                <Link
+                  to="/quote-request"
+                  className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded font-semibold hover:bg-primary-700 transition-colors"
+                >
+                  Let's Talk
+                  <ArrowUpRight className="h-4 w-4 ml-1" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
+    </>
   );
 };
 

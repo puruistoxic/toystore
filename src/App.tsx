@@ -19,6 +19,14 @@ import QuoteRequest from './pages/QuoteRequest';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Refund from './pages/Refund';
+import Locations from './pages/Locations';
+import LocationDetail from './pages/LocationDetail';
+import Brands from './pages/Brands';
+import BrandDetail from './pages/BrandDetail';
+import Industries from './pages/Industries';
+import IndustryDetail from './pages/IndustryDetail';
+import CaseStudies from './pages/CaseStudies';
+import CaseStudyDetail from './pages/CaseStudyDetail';
 
 const queryClient = new QueryClient();
 
@@ -37,6 +45,14 @@ function AppContent() {
             <Route path="/services/:slug" element={<ServiceDetail />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
+            <Route path="/locations" element={<Locations />} />
+            <Route path="/locations/:slug" element={<LocationDetail />} />
+            <Route path="/brands" element={<Brands />} />
+            <Route path="/brands/:slug" element={<BrandDetail />} />
+            <Route path="/industries" element={<Industries />} />
+            <Route path="/industries/:slug" element={<IndustryDetail />} />
+            <Route path="/case-studies" element={<CaseStudies />} />
+            <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/quote-request" element={<QuoteRequest />} />
