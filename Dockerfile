@@ -1,6 +1,9 @@
 # Multi-stage build for React application
 FROM node:18-alpine AS build
 
+# Install ffmpeg for video optimization
+RUN apk add --no-cache ffmpeg
+
 # Set working directory
 WORKDIR /app
 
@@ -13,6 +16,9 @@ RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
+
+# Optimize assets (videos/images) before build
+RUN npm run optimize || echo "Asset optimization skipped (ffmpeg may not be available)"
 
 # Build the application
 RUN npm run build

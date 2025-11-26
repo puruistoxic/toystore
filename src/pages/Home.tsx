@@ -36,7 +36,7 @@ const Home: React.FC = () => {
   const heroSlides: HeroSlide[] = [
     {
       id: '1',
-      title: 'Professional Security &',
+      title: 'Security &',
       subtitle: 'Tracking Solutions',
       description: 'Trusted security solutions across Jharkhand. 8+ years of excellence in CCTV, GPS tracking, and maintenance services.',
       image: '/images/hero/hero-main.jpg',
@@ -46,8 +46,8 @@ const Home: React.FC = () => {
     },
     {
       id: '2',
-      title: 'Advanced CCTV Systems',
-      subtitle: '24/7 Surveillance Protection',
+      title: 'CCTV Systems',
+      subtitle: '24/7 Surveillance',
       description: 'HD IP cameras with night vision, motion detection, and mobile access. Professional installation included.',
       image: '/images/hero/cctv-systems.jpg',
       imageAlt: 'CCTV surveillance systems',
@@ -57,8 +57,8 @@ const Home: React.FC = () => {
     },
     {
       id: '3',
-      title: 'Real-Time GPS Tracking',
-      subtitle: 'Fleet & Vehicle Management',
+      title: 'GPS Tracking',
+      subtitle: 'Fleet Management',
       description: 'Monitor vehicles in real-time with GPS tracking, fuel monitoring, and driver analytics. Reduce costs, boost efficiency.',
       image: '/images/hero/gps-tracking.jpg',
       imageAlt: 'GPS tracking solutions',
@@ -68,8 +68,8 @@ const Home: React.FC = () => {
     },
     {
       id: '4',
-      title: 'Expert Maintenance Services',
-      subtitle: 'Keep Your Systems Running',
+      title: 'Maintenance',
+      subtitle: 'Expert Services',
       description: 'Complete maintenance, repair, and troubleshooting for all security equipment. 24/7 support available.',
       image: '/images/hero/maintenance-services.jpg',
       imageAlt: 'Maintenance and repair services',
@@ -209,6 +209,13 @@ const Home: React.FC = () => {
             preload="metadata"
             className="w-full h-full object-cover"
             poster="/videos/banner-background-poster.jpg"
+            onError={(e) => {
+              // Fallback if video fails to load
+              const target = e.target as HTMLVideoElement;
+              if (target) {
+                target.style.display = 'none';
+              }
+            }}
             onLoadedData={() => {
               // Ensure video plays
               if (videoRef.current) {
