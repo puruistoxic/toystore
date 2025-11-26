@@ -31,24 +31,24 @@ const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const heroSlides: HeroSlide[] = [
     {
       id: '1',
       title: 'Professional Security &',
       subtitle: 'Tracking Solutions',
-      description: 'Secure your business with our advanced CCTV surveillance, GPS tracking, and comprehensive maintenance services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India. Trusted by 500+ businesses with 4.9-star rating.',
+      description: 'Trusted security solutions across Jharkhand. 8+ years of excellence in CCTV, GPS tracking, and maintenance services.',
       image: '/images/hero/hero-main.jpg',
       imageAlt: 'Professional security and tracking solutions',
-      primaryButton: { text: 'Our Services', link: '/services' },
-      secondaryButton: { text: 'Request Quote', link: '/quote-request' },
+      primaryButton: { text: 'Learn More', link: '/services' },
       overlay: 'dark'
     },
     {
       id: '2',
       title: 'Advanced CCTV Systems',
       subtitle: '24/7 Surveillance Protection',
-      description: 'State-of-the-art HD IP cameras with night vision, motion detection, and remote mobile access. Professional installation and support included.',
+      description: 'HD IP cameras with night vision, motion detection, and mobile access. Professional installation included.',
       image: '/images/hero/cctv-systems.jpg',
       imageAlt: 'CCTV surveillance systems',
       primaryButton: { text: 'View CCTV Solutions', link: '/services?category=cctv-installation' },
@@ -59,7 +59,7 @@ const Home: React.FC = () => {
       id: '3',
       title: 'Real-Time GPS Tracking',
       subtitle: 'Fleet & Vehicle Management',
-      description: 'Monitor your vehicles in real-time with advanced GPS tracking, fuel monitoring, and driver behavior analysis. Reduce costs and improve efficiency.',
+      description: 'Monitor vehicles in real-time with GPS tracking, fuel monitoring, and driver analytics. Reduce costs, boost efficiency.',
       image: '/images/hero/gps-tracking.jpg',
       imageAlt: 'GPS tracking solutions',
       primaryButton: { text: 'Explore GPS Solutions', link: '/services?category=gps-installation' },
@@ -70,7 +70,7 @@ const Home: React.FC = () => {
       id: '4',
       title: 'Expert Maintenance Services',
       subtitle: 'Keep Your Systems Running',
-      description: 'Comprehensive maintenance, repair, and troubleshooting services for all your security and tracking equipment. 24/7 support available.',
+      description: 'Complete maintenance, repair, and troubleshooting for all security equipment. 24/7 support available.',
       image: '/images/hero/maintenance-services.jpg',
       imageAlt: 'Maintenance and repair services',
       primaryButton: { text: 'View Services', link: '/services?category=maintenance' },
@@ -88,6 +88,16 @@ const Home: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [isAutoPlaying, heroSlides.length]);
+
+  // Ensure video plays on mount
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch((error) => {
+        // Autoplay was prevented, which is fine - user interaction will start it
+        console.log('Video autoplay prevented:', error);
+      });
+    }
+  }, []);
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
@@ -187,9 +197,40 @@ const Home: React.FC = () => {
       />
       <div className="min-h-screen">
       {/* Hero Carousel Section */}
-      <section className="relative h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
+      <section className="relative h-screen overflow-hidden">
+        {/* Video Background */}
+        <div className="absolute inset-0 z-0">
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-cover"
+            poster="/videos/banner-background-poster.jpg"
+            onLoadedData={() => {
+              // Ensure video plays
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {
+                  // Handle autoplay restrictions
+                });
+              }
+            }}
+          >
+            {/* WebM format (better compression, smaller file size) */}
+            <source src="/videos/banner-background.webm" type="video/webm" />
+            {/* MP4 format (fallback for older browsers) */}
+            <source src="/videos/banner-background.mp4" type="video/mp4" />
+            {/* Fallback to gradient if video fails to load */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-800" />
+          </video>
+          {/* Dark overlay on video */}
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
         {/* Slides Container */}
-        <div className="relative h-full w-full">
+        <div className="relative h-full w-full z-10">
           {heroSlides.map((slide, index) => (
             <div
               key={slide.id}
@@ -197,51 +238,29 @@ const Home: React.FC = () => {
                 index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
               }`}
             >
-              {/* Background Image */}
-              {slide.image && !imageErrors.has(slide.image) ? (
-                <div className="absolute inset-0">
-                  <img
-                    src={slide.image}
-                    alt={slide.imageAlt || slide.title}
-                    className="w-full h-full object-cover"
-                    onError={() => handleImageError(slide.image!)}
-                    loading="lazy"
-                  />
-                  <div className={`absolute inset-0 ${getOverlayClass(slide.overlay)}`} />
-                </div>
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-800" />
-              )}
+              {/* Note: Video background is now the primary background for all slides */}
 
-              {/* Content */}
-              <div className="relative z-20 h-full flex items-center">
+              {/* Content - Left Aligned */}
+              <div className="relative z-20 h-full flex items-center pt-20 pb-32 md:pt-0 md:pb-0">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                  <div className="max-w-3xl">
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+                  <div className="max-w-3xl pr-12 sm:pr-16 md:pr-0">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 sm:mb-4 leading-tight break-words">
                       {slide.title}
                       {slide.subtitle && (
-                        <span className="block text-primary-200 mt-2">{slide.subtitle}</span>
+                        <span className="block mt-1 sm:mt-2 break-words">{slide.subtitle}</span>
                       )}
                     </h1>
-                    <p className="text-lg md:text-xl lg:text-2xl text-white/90 mb-8 leading-relaxed">
+                    <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white/90 mb-6 sm:mb-8 leading-relaxed max-w-2xl break-words">
                       {slide.description}
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <Link
                         to={slide.primaryButton.link}
-                        className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        className="border border-white text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded text-sm sm:text-base font-semibold hover:bg-white/10 transition-all duration-300 flex items-center justify-center w-full sm:w-fit"
                       >
-                        {slide.primaryButton.text}
-                        <ArrowRight className="ml-2 h-5 w-5" />
+                        Learn More
+                        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                       </Link>
-                      {slide.secondaryButton && (
-                        <Link
-                          to={slide.secondaryButton.link}
-                          className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300 flex items-center justify-center backdrop-blur-sm bg-white/10"
-                        >
-                          {slide.secondaryButton.text}
-                        </Link>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -253,29 +272,59 @@ const Home: React.FC = () => {
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 sm:p-3 rounded-full transition-all duration-300 hover:scale-110 hidden sm:flex items-center justify-center"
           aria-label="Previous slide"
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 sm:p-3 rounded-full transition-all duration-300 hover:scale-110 hidden sm:flex items-center justify-center"
           aria-label="Next slide"
         >
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
 
-        {/* Slide Indicators */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+        {/* Bottom Slide Titles Navigation - Desktop */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 hidden lg:flex items-center gap-4 xl:gap-6 text-white px-4 max-w-[90vw] overflow-x-auto scrollbar-hide">
+          {heroSlides.map((slide, index) => {
+            // Create a compact title for display
+            const displayTitle = slide.subtitle 
+              ? `${slide.title.replace(' &', '')} ${slide.subtitle}`
+              : slide.title;
+            
+            return (
+              <React.Fragment key={slide.id}>
+                {index > 0 && <div className="h-4 w-px bg-white/50 flex-shrink-0"></div>}
+                <button
+                  onClick={() => goToSlide(index)}
+                  className={`text-xs xl:text-sm font-medium transition-all duration-300 relative whitespace-nowrap flex-shrink-0 ${
+                    index === currentSlide
+                      ? 'text-white font-semibold'
+                      : 'text-white/70 hover:text-white/90'
+                  }`}
+                  aria-label={`Go to slide: ${displayTitle}`}
+                >
+                  {displayTitle}
+                  {index === currentSlide && (
+                    <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-white"></div>
+                  )}
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* Bottom Slide Indicators - Mobile (Dots/Lines) */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 lg:hidden flex gap-2">
           {heroSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${
+              className={`rounded-full transition-all duration-300 ${
                 index === currentSlide
-                  ? 'w-8 bg-white'
-                  : 'w-2 bg-white/50 hover:bg-white/75'
+                  ? 'w-8 h-2 bg-white'
+                  : 'w-2 h-2 bg-white/50 hover:bg-white/75'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
