@@ -467,31 +467,47 @@ app.post('/api/enquiry', async (req, res) => {
 (async () => {
   try {
     // Initialize database first
-    console.log('[Email API] Initializing database...');
-    await initDatabase();
-    console.log('[Email API] Database initialized successfully');
-    
-    // Test database connection
-    const dbConnected = await testConnection();
-    if (dbConnected) {
-      console.log(
-        `[Email API] Database connected: ${process.env.MYSQL_HOST || '192.168.1.210'}/${process.env.MYSQL_DATABASE || 'wainsodb'}`
-      );
-    } else {
-      console.error(`[Email API] WARNING: Database connection test failed!`);
+    console.log('[Server] Initializing database...');
+    try {
+      await initDatabase();
+      console.log('[Server] ✅ Database initialized successfully');
+      
+      // Test database connection
+      const dbConnected = await testConnection();
+      if (dbConnected) {
+        console.log(
+          `[Server] ✅ Database connected: ${process.env.MYSQL_HOST || '192.168.1.210'}/${process.env.MYSQL_DATABASE || 'wainsodb'}`
+        );
+      } else {
+        console.error(`[Server] ⚠️  WARNING: Database connection test failed!`);
+        console.error(`[Server] The server will start but database operations may fail.`);
+      }
+    } catch (dbError) {
+      console.error('[Server] ❌ Database initialization failed:', dbError.message);
+      console.error('[Server] ⚠️  The server will start but database operations will fail.');
+      console.error('[Server] Please check your database configuration and restart the server.');
     }
     
-    // Start server
-    app.listen(PORT, () => {
-      console.log(`[Email API] Server running on port ${PORT}`);
-      console.log(`[Email API] SMTP Host: ${process.env.SMTP_HOST || 'smtp.zeptomail.eu'}`);
-      console.log(`[Email API] Available endpoints:`);
+    // Start server - bind to 0.0.0.0 to accept connections from Docker network
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[Server] ✅ Server running on 0.0.0.0:${PORT}`);
+      console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`[Server] SMTP Host: ${process.env.SMTP_HOST || 'smtp.zeptomail.eu'}`);
+      console.log(`[Server] Available endpoints:`);
+      console.log(`  - POST /api/admin/login`);
+      console.log(`  - GET /api/admin/verify`);
       console.log(`  - POST /api/quote-request`);
       console.log(`  - POST /api/enquiry`);
       console.log(`  - GET /health`);
+      console.log(`  - All /api/content/* routes`);
+      console.log(`  - All /api/upload/* routes`);
     });
   } catch (error) {
-    console.error('[Email API] Failed to initialize:', error);
+    console.error('[Server] ❌ Failed to start server:', error);
+    console.error('[Server] Error details:', {
+      message: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
 })();

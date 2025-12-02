@@ -123,10 +123,6 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Default credentials: username: <strong>admin</strong>, password: <strong>admin123</strong></p>
-          <p className="mt-2 text-xs text-gray-500">Please change the default password after first login</p>
-        </div>
       </div>
     </div>
   );
