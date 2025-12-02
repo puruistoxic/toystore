@@ -6,17 +6,12 @@ import {
   Phone,
   Building2,
   ShieldCheck,
-  ClipboardCheck,
-  Send,
   CheckCircle
 } from 'lucide-react';
 import { products } from '../data/products';
 import { services } from '../data/services';
 import type { Product, Service } from '../types/catalog';
-import {
-  sendVerificationCode,
-  verifyCode as verifyEmailCode
-} from '../api/quoteVerification';
+import api from '../utils/api';
 
 type QuoteChannel = 'whatsapp' | 'email';
 
@@ -185,19 +180,13 @@ const QuoteRequest: React.FC = () => {
   };
 
   const [preferredChannel, setPreferredChannel] = useState<QuoteChannel>('whatsapp');
-  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sent' | 'verified'>('idle');
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const [enteredCode, setEnteredCode] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [submission, setSubmission] = useState<{
     channel: QuoteChannel;
     timestamp: string;
     reference: string;
   } | null>(null);
-  const [verificationReference, setVerificationReference] = useState<string | null>(null);
-  const [verificationExpiry, setVerificationExpiry] = useState<number | null>(null);
-  const [isSendingVerification, setIsSendingVerification] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
 
   const detailLines = useMemo(
     () => buildDetailLines(target, formData.quantity),
@@ -301,92 +290,41 @@ const QuoteRequest: React.FC = () => {
     setFeedbackMessage('We opened WhatsApp with your quote request. Please review and send it to finish.');
   };
 
-  const handleSendVerification = async () => {
-    if (!formData.email.trim()) {
-      setFeedbackMessage('Please enter an email address before requesting verification.');
-      return;
-    }
-
-    try {
-      setIsSendingVerification(true);
-      const response = await sendVerificationCode({
-        email: formData.email.trim(),
-        name: formData.name || 'Prospect',
-        itemName: formData.itemName,
-        channel: 'email',
-        messagePreview: quoteMessage.slice(0, 200)
-      });
-      setVerificationStatus('sent');
-      setVerificationReference(response.reference);
-      setVerificationExpiry(response.expiresAt);
-      // Don't set generatedCode - code is only sent via email for security
-      setGeneratedCode(null);
-      setFeedbackMessage(
-        `Verification code sent to ${formData.email.trim()}. Please check your email and enter the code below.`
-      );
-    } catch (error) {
-      console.error('[quoteVerification] failed to dispatch code', error);
-      setFeedbackMessage('Unable to send verification code right now. Please try again in a moment.');
-    } finally {
-      setIsSendingVerification(false);
-    }
-  };
-
-  const handleVerifyCode = async () => {
-    if (!formData.email.trim()) {
-      setFeedbackMessage('Enter the email address used for verification, then try again.');
-      return;
-    }
-
-    if (!enteredCode.trim()) {
-      setFeedbackMessage('Please enter the verification code you received.');
-      return;
-    }
-
-    try {
-      setIsVerifying(true);
-      const status = await verifyEmailCode(formData.email.trim(), enteredCode.trim());
-
-      if (status === 'verified') {
-        setVerificationStatus('verified');
-        setFeedbackMessage('Email verified successfully. You can now send your quote request via email.');
-        setGeneratedCode(null);
-        setEnteredCode('');
-      } else if (status === 'expired') {
-        setVerificationStatus('idle');
-        setVerificationReference(null);
-        setVerificationExpiry(null);
-        setFeedbackMessage('That verification code has expired. Request a new code to continue.');
-      } else if (status === 'not_found') {
-        setVerificationStatus('idle');
-        setFeedbackMessage('No verification request found for this email. Please request a new code.');
-      } else {
-        setFeedbackMessage('Incorrect verification code. Please double-check and try again.');
-      }
-    } catch (error) {
-      console.error('[quoteVerification] failed to verify code', error);
-      setFeedbackMessage('We could not verify the code. Please try again.');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
     if (!hasRequiredBasics()) {
       setFeedbackMessage('Please fill in your name, phone number, and item/service details before sending the quote request.');
       return;
     }
 
-    if (verificationStatus !== 'verified') {
-      setFeedbackMessage('Please verify your email before sending the quote request.');
-      return;
-    }
+    setIsSendingEmail(true);
+    setFeedbackMessage(null);
 
-    const subject = encodeURIComponent(`Quote Request - ${sanitiseLine(formData.itemName || 'WAINSO')}`);
-    const body = encodeURIComponent(quoteMessage);
-    window.location.href = `mailto:wainsogps@gmail.com?subject=${subject}&body=${body}`;
-    confirmSubmission('email');
-    setFeedbackMessage('Your email client should now be open with a pre-filled quote request. Send it to complete the process.');
+    try {
+      const response = await api.post('/quote-request', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        itemName: formData.itemName,
+        itemType: formData.itemType,
+        category: formData.category,
+        budget: formData.budget,
+        timeline: formData.timeline,
+        location: formData.location,
+        industry: formData.industry,
+        quantity: formData.quantity,
+        notes: formData.notes,
+        message: quoteMessage
+      });
+
+      confirmSubmission('email');
+      setFeedbackMessage('Quote request sent successfully! Our team will get back to you soon.');
+    } catch (error: any) {
+      console.error('Error sending quote request:', error);
+      setFeedbackMessage(error.message || 'Failed to send quote request. Please try again or use WhatsApp instead.');
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   const submissionTimestamp = submission
@@ -759,7 +697,7 @@ const QuoteRequest: React.FC = () => {
                     <MailCheck className="h-5 w-5 mr-3" />
                     <div className="text-left">
                       <div className="font-semibold">Email</div>
-                      <div className="text-xs text-gray-500">Verification required before sending</div>
+                      <div className="text-xs text-gray-500">Send quote request via email</div>
                     </div>
                   </div>
                   {preferredChannel === 'email' && <CheckCircle className="h-5 w-5 text-primary-600" />}
@@ -778,66 +716,13 @@ const QuoteRequest: React.FC = () => {
               )}
 
               {preferredChannel === 'email' && (
-                <div className="mt-6 space-y-4">
-                  <div className="rounded-lg border border-yellow-100 bg-yellow-50 px-4 py-4 text-sm text-yellow-700">
-                    <div className="flex items-start">
-                      <ClipboardCheck className="h-5 w-5 mr-3 mt-0.5" />
-                      <p>
-                        To prevent spam we require email verification. Request a one-time code below, enter it, and verify before sending your quote request.
-                      </p>
-                      </div>
-                    </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <button
-                      type="button"
-                      onClick={handleSendVerification}
-                      disabled={isSendingVerification}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center ${
-                        isSendingVerification
-                          ? 'bg-primary-300 text-white cursor-not-allowed'
-                          : 'bg-primary-600 text-white hover:bg-primary-700'
-                      }`}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      {isSendingVerification ? 'Sending…' : 'Send verification code'}
-                    </button>
-                    <input
-                      type="text"
-                      value={enteredCode}
-                      onChange={(event) => setEnteredCode(event.target.value)}
-                      placeholder="Enter 6-digit code"
-                      className="md:col-span-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyCode}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                        generatedCode
-                          ? 'border border-primary-600 text-primary-600 hover:bg-primary-50'
-                          : 'border border-gray-300 text-gray-400'
-                      } ${isVerifying ? 'cursor-not-allowed opacity-70' : ''}`}
-                      disabled={!generatedCode || isVerifying}
-                    >
-                      {isVerifying ? 'Verifying…' : 'Verify email'}
-                    </button>
-                  </div>
-
-
-                  {verificationStatus === 'verified' && (
-                    <div className="flex items-center text-sm text-green-600">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Email verified. You can now send your quote via email.
-                    </div>
-                  )}
-                  {verificationReference && verificationStatus === 'sent' && (
-                    <p className="text-xs text-gray-500">
-                      Reference {verificationReference}
-                      {verificationExpiry
-                        ? ` • Expires ${new Date(verificationExpiry).toLocaleTimeString()}`
-                        : ''}
+                <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50 px-4 py-4 text-sm text-blue-700">
+                  <div className="flex items-start">
+                    <MailCheck className="h-5 w-5 mr-3 mt-0.5" />
+                    <p>
+                      Your quote request will be sent directly to our team via email. We'll get back to you soon!
                     </p>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -860,15 +745,13 @@ const QuoteRequest: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSendEmail}
-                disabled={verificationStatus !== 'verified'}
-                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
-                  verificationStatus === 'verified'
-                    ? 'border border-primary-600 text-primary-600 hover:bg-primary-50'
-                    : 'border border-gray-300 text-gray-400 cursor-not-allowed'
+                disabled={isSendingEmail}
+                className={`flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center ${
+                  isSendingEmail ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
                 <MailCheck className="h-5 w-5 mr-2" />
-                Send via Email
+                {isSendingEmail ? 'Sending...' : 'Send via Email'}
               </button>
             </div>
           </div>

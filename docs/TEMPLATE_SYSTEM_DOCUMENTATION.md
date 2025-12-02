@@ -242,3 +242,6 @@ src/
 
 This architecture ensures your website is maintainable, scalable, and follows industry best practices! 🚀
 
+
+
+

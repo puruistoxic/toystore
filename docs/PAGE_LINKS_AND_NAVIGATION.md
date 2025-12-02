@@ -189,3 +189,6 @@ Detail Pages (Automatic)
 
 All pages are now interconnected and easily discoverable! 🎉
 
+
+
+

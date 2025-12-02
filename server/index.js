@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const { initDatabase, getPool, testConnection } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -10,8 +12,17 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// In-memory store for verification codes
-const verificationStore = new Map();
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// API Routes
+const adminRoutes = require('./routes/admin');
+const contentRoutes = require('./routes/content');
+const uploadRoutes = require('./routes/upload');
+
+app.use('/api/admin', adminRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Create SMTP transporter
 const createTransporter = () => {
@@ -33,194 +44,307 @@ const createTransporter = () => {
 };
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'wainso-email-api' });
+app.get('/health', async (req, res) => {
+  const dbStatus = await testConnection();
+  res.json({ 
+    status: 'ok', 
+    service: 'wainso-email-api',
+    database: dbStatus ? 'connected' : 'disconnected'
+  });
 });
 
-// Send verification code endpoint
-app.post('/api/verify/send', async (req, res) => {
-  try {
-    const { email, name, itemName, messagePreview } = req.body;
 
-    if (!email || !name) {
-      return res.status(400).json({ 
-        error: 'Email and name are required' 
+// Quote request submission endpoint
+app.post('/api/quote-request', async (req, res) => {
+  try {
+    const { name, email, phone, company, itemName, itemType, category, budget, timeline, location, industry, quantity, notes, message } = req.body;
+
+    if (!name || !phone || !itemName) {
+      return res.status(400).json({
+        error: 'Name, phone number, and item/service name are required'
       });
     }
 
-    // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const reference = `WV-${Date.now().toString(36).toUpperCase()}`;
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-    // Store verification data
-    verificationStore.set(email.toLowerCase(), {
-      code,
-      expiresAt,
-      attempts: 0,
-      reference,
-      name,
-      itemName
-    });
-
-    // Send email
+    // Send quote request email to business
     const transporter = createTransporter();
     
-    const mailOptions = {
+    // Format the message as HTML with better structure
+    const formatMessageForEmail = (msg) => {
+      return msg
+        .split('\n')
+        .map(line => {
+          if (line.trim().startsWith('•')) {
+            return `<li style="margin: 8px 0;">${line.replace('•', '').trim()}</li>`;
+          } else if (line.trim() === '') {
+            return '<br>';
+          } else {
+            return `<p style="margin: 8px 0;">${line}</p>`;
+          }
+        })
+        .join('');
+    };
+    
+    const htmlMessage = formatMessageForEmail(message);
+    
+    // Email to business
+    const businessMailOptions = {
       from: `"WAINSO GPS & Security System" <noreply@wainso.com>`,
-      to: email,
-      subject: 'Your Quote Request Verification Code',
+      to: 'wainsogps@gmail.com', // Business email
+      replyTo: email || undefined,
+      subject: `New Quote Request - ${itemName || 'WAINSO'}`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Verification Code</title>
+          <title>New Quote Request</title>
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
           <div style="background: linear-gradient(135deg, #006767 0%, #004d4d 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">WAINSO</h1>
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">WAINSO</h1>
             <p style="color: #e6f7f7; margin: 10px 0 0 0; font-size: 14px;">GPS & Security System</p>
+            <h2 style="color: #ffffff; margin: 20px 0 0 0; font-size: 20px; font-weight: normal;">New Quote Request</h2>
           </div>
           
-          <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
-            <h2 style="color: #006767; margin-top: 0;">Email Verification</h2>
-            
-            <p>Hello ${name},</p>
-            
-            <p>Thank you for requesting a quote for <strong>${itemName || 'our services'}</strong>.</p>
-            
-            <p>Please use the verification code below to complete your quote request:</p>
-            
-            <div style="background: #f5f5f5; border: 2px dashed #006767; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
-              <div style="font-size: 36px; font-weight: bold; color: #006767; letter-spacing: 8px; font-family: 'Courier New', monospace;">
-                ${code}
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #006767;">
+              <div style="font-size: 15px; line-height: 1.8; color: #333;">
+                ${htmlMessage}
               </div>
             </div>
             
-            <p style="color: #666; font-size: 14px;">
-              <strong>This code will expire in 10 minutes.</strong>
-            </p>
+            <h3 style="color: #006767; margin-top: 0; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #006767; padding-bottom: 10px;">Contact Information</h3>
             
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              If you didn't request this code, please ignore this email.
-            </p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <tr>
+                <td style="padding: 12px; font-weight: bold; width: 150px; border-bottom: 1px solid #e0e0e0; background-color: #f8f9fa;">Name:</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">${name}</td>
+              </tr>
+              ${company ? `
+              <tr>
+                <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #e0e0e0; background-color: #f8f9fa;">Company:</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">${company}</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #e0e0e0; background-color: #f8f9fa;">Phone:</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;"><a href="tel:${phone}" style="color: #006767; text-decoration: none;">${phone}</a></td>
+              </tr>
+              ${email ? `
+              <tr>
+                <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #e0e0e0; background-color: #f8f9fa;">Email:</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;"><a href="mailto:${email}" style="color: #006767; text-decoration: none;">${email}</a></td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #e0e0e0; background-color: #f8f9fa;">Source:</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">Website Quote Request Form</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; font-weight: bold; background-color: #f8f9fa;">Time:</td>
+                <td style="padding: 12px;">${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+              </tr>
+            </table>
             
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-            
-            <p style="color: #999; font-size: 12px; margin: 0;">
-              <strong>WAINSO GPS & Security System</strong><br>
-              Room No-9, 1st Floor, Yadav Complex<br>
-              Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand<br>
-              Phone: +91 98998 60975 | Email: wainsogps@gmail.com<br>
-              Website: <a href="https://wainso.com" style="color: #006767;">wainso.com</a>
-            </p>
+            <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #e6f7f7 0%, #d4f1f1 100%); border-left: 4px solid #006767; border-radius: 4px;">
+              <p style="margin: 0; font-size: 15px; color: #004d4d; font-weight: bold;">
+                ⚡ Action Required
+              </p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #006767;">
+                Please review this quote request and contact the prospect to provide pricing and next steps.
+              </p>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+            <p>WAINSO GPS & Security System | <a href="https://wainso.com" style="color: #006767;">wainso.com</a></p>
           </div>
         </body>
         </html>
       `,
-      text: `
-        WAINSO GPS & Security System
-        
-        Email Verification
-        
-        Hello ${name},
-        
-        Thank you for requesting a quote for ${itemName || 'our services'}.
-        
-        Please use the verification code below to complete your quote request:
-        
-        Verification Code: ${code}
-        
-        This code will expire in 10 minutes.
-        
-        If you didn't request this code, please ignore this email.
-        
-        ---
-        WAINSO GPS & Security System
-        Room No-9, 1st Floor, Yadav Complex
-        Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand
-        Phone: +91 98998 60975 | Email: wainsogps@gmail.com
-        Website: https://wainso.com
-      `
+      text: message
     };
 
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail(businessMailOptions);
+    
+    // Send confirmation email to the sender (if email provided)
+    if (email && email.trim()) {
+      const confirmationMailOptions = {
+        from: `"WAINSO GPS & Security System" <noreply@wainso.com>`,
+        to: email,
+        subject: `Thank you for your quote request - ${itemName || 'WAINSO'}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Quote Request Confirmation</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+            <div style="background: linear-gradient(135deg, #006767 0%, #004d4d 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">WAINSO</h1>
+              <p style="color: #e6f7f7; margin: 10px 0 0 0; font-size: 14px;">GPS & Security System</p>
+            </div>
+            
+            <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <h2 style="color: #006767; margin-top: 0;">Thank You for Your Quote Request!</h2>
+              
+              <p>Dear ${name},</p>
+              
+              <p>We have successfully received your quote request for <strong>${itemName || 'our services'}</strong>.</p>
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #006767;">
+                <h3 style="color: #006767; margin-top: 0; font-size: 16px;">Request Summary</h3>
+                <ul style="margin: 10px 0; padding-left: 20px; color: #555;">
+                  ${itemName ? `<li><strong>Item/Service:</strong> ${itemName}</li>` : ''}
+                  ${itemType ? `<li><strong>Type:</strong> ${itemType}</li>` : ''}
+                  ${budget ? `<li><strong>Budget:</strong> ${budget}</li>` : ''}
+                  ${timeline ? `<li><strong>Timeline:</strong> ${timeline}</li>` : ''}
+                  ${location ? `<li><strong>Location:</strong> ${location}</li>` : ''}
+                </ul>
+              </div>
+              
+              <p><strong>What happens next?</strong></p>
+              <ol style="color: #555; line-height: 1.8;">
+                <li>Our team will review your requirements</li>
+                <li>We'll prepare a detailed quote based on your specifications</li>
+                <li>You'll receive a response within 24-48 hours</li>
+                <li>For urgent requests, we'll prioritize and respond faster</li>
+              </ol>
+              
+              <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #e6f7f7 0%, #d4f1f1 100%); border-radius: 8px; text-align: center;">
+                <p style="margin: 0; font-size: 14px; color: #006767;">
+                  <strong>Need immediate assistance?</strong><br>
+                  Call us at <a href="tel:+919899860975" style="color: #004d4d; font-weight: bold; text-decoration: none;">+91 98998 60975</a>
+                </p>
+              </div>
+              
+              <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                If you have any questions or need to modify your request, please don't hesitate to contact us.
+              </p>
+              
+              <p style="margin-top: 20px;">
+                Best regards,<br>
+                <strong>WAINSO GPS & Security System</strong>
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px; padding: 20px; background: #ffffff; border-radius: 10px;">
+              <p style="margin: 5px 0;"><strong>WAINSO GPS & Security System</strong></p>
+              <p style="margin: 5px 0;">Room No-9, 1st Floor, Yadav Complex</p>
+              <p style="margin: 5px 0;">Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand</p>
+              <p style="margin: 5px 0;">
+                Phone: <a href="tel:+919899860975" style="color: #006767;">+91 98998 60975</a> | 
+                <a href="tel:+918292717044" style="color: #006767;">+91 82927 17044</a>
+              </p>
+              <p style="margin: 5px 0;">
+                Email: <a href="mailto:wainsogps@gmail.com" style="color: #006767;">wainsogps@gmail.com</a>
+              </p>
+              <p style="margin: 5px 0;">
+                Website: <a href="https://wainso.com" style="color: #006767;">wainso.com</a>
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `
+          WAINSO GPS & Security System
+          
+          Thank You for Your Quote Request!
+          
+          Dear ${name},
+          
+          We have successfully received your quote request for ${itemName || 'our services'}.
+          
+          Request Summary:
+          ${itemName ? `- Item/Service: ${itemName}` : ''}
+          ${itemType ? `- Type: ${itemType}` : ''}
+          ${budget ? `- Budget: ${budget}` : ''}
+          ${timeline ? `- Timeline: ${timeline}` : ''}
+          ${location ? `- Location: ${location}` : ''}
+          
+          What happens next?
+          1. Our team will review your requirements
+          2. We'll prepare a detailed quote based on your specifications
+          3. You'll receive a response within 24-48 hours
+          4. For urgent requests, we'll prioritize and respond faster
+          
+          Need immediate assistance?
+          Call us at +91 98998 60975
+          
+          If you have any questions or need to modify your request, please don't hesitate to contact us.
+          
+          Best regards,
+          WAINSO GPS & Security System
+          
+          ---
+          WAINSO GPS & Security System
+          Room No-9, 1st Floor, Yadav Complex
+          Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand
+          Phone: +91 98998 60975 | +91 82927 17044
+          Email: wainsogps@gmail.com
+          Website: https://wainso.com
+        `
+      };
+      
+      try {
+        await transporter.sendMail(confirmationMailOptions);
+        console.log(`[Email API] Confirmation email sent to ${email}`);
+      } catch (confirmationError) {
+        // Don't fail the main request if confirmation email fails
+        console.error('[Email API] Failed to send confirmation email (non-critical):', confirmationError);
+      }
+    }
 
-    console.log(`[Email API] Verification code sent to ${email}, reference: ${reference}`);
+    // Store quote request in database
+    const pool = getPool();
+    try {
+      await pool.execute(
+        `INSERT INTO quote_requests 
+         (name, email, phone, company, item_name, item_type, category, budget, timeline, location, industry, quantity, notes, message, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          name,
+          email || null,
+          phone,
+          company || null,
+          itemName,
+          itemType || null,
+          category || null,
+          budget || null,
+          timeline || null,
+          location || null,
+          industry || null,
+          quantity || null,
+          notes || null,
+          message || null,
+          'Website Quote Request Form'
+        ]
+      );
+      console.log(`[Email API] Quote request saved to database and email sent successfully from ${name} (${phone}) to wainsogps@gmail.com`);
+    } catch (dbError) {
+      // Log error but don't fail the request if database insert fails
+      console.error('[Email API] Database error (non-critical):', dbError);
+      console.log(`[Email API] Email sent successfully but database save failed for ${name} (${phone})`);
+    }
 
     res.json({
       success: true,
-      reference,
-      expiresAt,
-      message: 'Verification code sent successfully'
+      message: 'Quote request sent successfully'
     });
 
   } catch (error) {
-    console.error('[Email API] Error sending verification code:', error);
-    res.status(500).json({
-      error: 'Failed to send verification code',
-      message: error.message
+    console.error('[Email API] Error sending quote request:', error);
+    console.error('[Email API] Error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
     });
-  }
-});
-
-// Verify code endpoint
-app.post('/api/verify/check', (req, res) => {
-  try {
-    const { email, code } = req.body;
-
-    if (!email || !code) {
-      return res.status(400).json({
-        error: 'Email and code are required'
-      });
-    }
-
-    const record = verificationStore.get(email.toLowerCase());
-
-    if (!record) {
-      return res.json({
-        status: 'not_found',
-        message: 'No verification code found for this email'
-      });
-    }
-
-    if (Date.now() > record.expiresAt) {
-      verificationStore.delete(email.toLowerCase());
-      return res.json({
-        status: 'expired',
-        message: 'Verification code has expired'
-      });
-    }
-
-    if (record.code !== code.trim()) {
-      record.attempts += 1;
-      if (record.attempts >= 5) {
-        verificationStore.delete(email.toLowerCase());
-        return res.json({
-          status: 'invalid',
-          message: 'Too many failed attempts. Please request a new code.'
-        });
-      }
-      return res.json({
-        status: 'invalid',
-        message: 'Invalid verification code',
-        attemptsRemaining: 5 - record.attempts
-      });
-    }
-
-    // Code is valid
-    verificationStore.delete(email.toLowerCase());
-    return res.json({
-      status: 'verified',
-      message: 'Email verified successfully'
-    });
-
-  } catch (error) {
-    console.error('[Email API] Error verifying code:', error);
     res.status(500).json({
-      error: 'Failed to verify code',
+      error: 'Failed to send quote request',
       message: error.message
     });
   }
@@ -309,6 +433,13 @@ app.post('/api/enquiry', async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
+    // Store enquiry in database
+    const pool = getPool();
+    await pool.execute(
+      'INSERT INTO enquiries (name, mobile, email, source) VALUES (?, ?, ?, ?)',
+      [name, mobile, email || null, 'Website Popup Enquiry']
+    );
+
     console.log(`[Email API] Enquiry email sent successfully from ${name} (${mobile}) to wainsogps@gmail.com`);
 
     res.json({
@@ -331,23 +462,37 @@ app.post('/api/enquiry', async (req, res) => {
   }
 });
 
-// Cleanup expired codes periodically (every 15 minutes)
-setInterval(() => {
-  const now = Date.now();
-  let cleaned = 0;
-  for (const [email, record] of verificationStore.entries()) {
-    if (now > record.expiresAt) {
-      verificationStore.delete(email);
-      cleaned++;
-    }
-  }
-  if (cleaned > 0) {
-    console.log(`[Email API] Cleaned up ${cleaned} expired verification codes`);
-  }
-}, 15 * 60 * 1000);
 
-app.listen(PORT, () => {
-  console.log(`[Email API] Server running on port ${PORT}`);
-  console.log(`[Email API] SMTP Host: ${process.env.SMTP_HOST || 'smtp.zeptomail.eu'}`);
-});
+// Initialize database and start server
+(async () => {
+  try {
+    // Initialize database first
+    console.log('[Email API] Initializing database...');
+    await initDatabase();
+    console.log('[Email API] Database initialized successfully');
+    
+    // Test database connection
+    const dbConnected = await testConnection();
+    if (dbConnected) {
+      console.log(
+        `[Email API] Database connected: ${process.env.MYSQL_HOST || '192.168.1.210'}/${process.env.MYSQL_DATABASE || 'wainsodb'}`
+      );
+    } else {
+      console.error(`[Email API] WARNING: Database connection test failed!`);
+    }
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`[Email API] Server running on port ${PORT}`);
+      console.log(`[Email API] SMTP Host: ${process.env.SMTP_HOST || 'smtp.zeptomail.eu'}`);
+      console.log(`[Email API] Available endpoints:`);
+      console.log(`  - POST /api/quote-request`);
+      console.log(`  - POST /api/enquiry`);
+      console.log(`  - GET /health`);
+    });
+  } catch (error) {
+    console.error('[Email API] Failed to initialize:', error);
+    process.exit(1);
+  }
+})();
 

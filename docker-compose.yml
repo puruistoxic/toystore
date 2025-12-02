@@ -10,10 +10,17 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - JWT_SECRET=your-secret-key-change-in-production-use-strong-random-string
+      - ADMIN_DEFAULT_PASSWORD=admin123
       - SMTP_HOST=smtp.zeptomail.eu
       - SMTP_PORT=587
       - SMTP_USER=emailapikey
       - SMTP_PASSWORD=yA6KbHtb4gihy2xRREVuhJKC+4sx/q0xiiSy4CHhfpYleNiz3KE20BFqINPuJ2CI0YfY5atVb45AI4266IsPfJlmPYUFLJTGTuv4P2uV48xh8ciEYNYkjJWuBrkWGqFPdx8jDioyQvMgWA==
+      - MYSQL_HOST=192.168.1.210
+      - MYSQL_DATABASE=wainsodb
+      - MYSQL_USER=dbuser
+      - MYSQL_PASSWORD=X9@uP!z1qF#D
+      - MYSQL_PORT=3306
     networks:
       - nginx_proxy
     expose:

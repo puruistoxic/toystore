@@ -54,7 +54,9 @@ wainsoweb/
 ├── nginx.conf             # Nginx configuration
 ├── deploy.sh              # Deployment script
 ├── server-setup.sh        # Server setup script
-└── DEPLOYMENT.md          # Deployment documentation
+└── docs/                  # Documentation files
+    ├── DEPLOYMENT.md      # Deployment documentation
+    └── ...                # Other documentation
 ```
 
 ## 🚀 Quick Start
@@ -150,7 +152,7 @@ docker compose up -d
 
 ### Manual Setup
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed server setup instructions.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed server setup instructions.
 
 ## 📋 Available Scripts
 

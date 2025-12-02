@@ -2,12 +2,14 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
+import { AuthProvider } from './contexts/AuthContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import EnquiryPopup, { useEnquiryPopup } from './components/EnquiryPopup';
 import ScrollToTop from './components/ScrollToTop';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import WhatsAppButton from './components/WhatsAppButton';
+import ProtectedRoute from './components/admin/ProtectedRoute';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Products from './pages/Products';
@@ -27,6 +29,28 @@ import Industries from './pages/Industries';
 import IndustryDetail from './pages/IndustryDetail';
 import CaseStudies from './pages/CaseStudies';
 import CaseStudyDetail from './pages/CaseStudyDetail';
+import AdminLogin from './pages/admin/Login';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminServices from './pages/admin/Services';
+import AdminProducts from './pages/admin/Products';
+import AdminLocations from './pages/admin/Locations';
+import AdminBrands from './pages/admin/Brands';
+import AdminIndustries from './pages/admin/Industries';
+import AdminCaseStudies from './pages/admin/CaseStudies';
+import AdminTestimonials from './pages/admin/Testimonials';
+import AdminCategories from './pages/admin/Categories';
+import AdminCountries from './pages/admin/Countries';
+import AdminStates from './pages/admin/States';
+import AdminLocalities from './pages/admin/Localities';
+import AdminAuditLogs from './pages/admin/AuditLogs';
+import ProductNew from './pages/admin/ProductNew';
+import ProductEdit from './pages/admin/ProductEdit';
+import CategoryNew from './pages/admin/CategoryNew';
+import CategoryEdit from './pages/admin/CategoryEdit';
+import BrandNew from './pages/admin/BrandNew';
+import BrandEdit from './pages/admin/BrandEdit';
+import NotFound from './pages/NotFound';
+import AdminNotFound from './pages/admin/NotFound';
 
 const queryClient = new QueryClient();
 
@@ -59,6 +83,8 @@ function AppContent() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/refund" element={<Refund />} />
+            {/* Public 404 */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />
@@ -74,9 +100,171 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <Router>
-          <AppContent />
-        </Router>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              {/* Categories before other admin routes so their sub-routes match first */}
+              <Route
+                path="/admin/categories"
+                element={
+                  <ProtectedRoute>
+                    <AdminCategories />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/countries"
+                element={
+                  <ProtectedRoute>
+                    <AdminCountries />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/states"
+                element={
+                  <ProtectedRoute>
+                    <AdminStates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/localities"
+                element={
+                  <ProtectedRoute>
+                    <AdminLocalities />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/categories/new"
+                element={
+                  <ProtectedRoute>
+                    <CategoryNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/categories/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <CategoryEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/services"
+                element={
+                  <ProtectedRoute>
+                    <AdminServices />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products"
+                element={
+                  <ProtectedRoute>
+                    <AdminProducts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products/new"
+                element={
+                  <ProtectedRoute>
+                    <ProductNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <ProductEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/locations"
+                element={
+                  <ProtectedRoute>
+                    <AdminLocations />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/brands"
+                element={
+                  <ProtectedRoute>
+                    <AdminBrands />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/brands/new"
+                element={
+                  <ProtectedRoute>
+                    <BrandNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/brands/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <BrandEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/industries"
+                element={
+                  <ProtectedRoute>
+                    <AdminIndustries />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/case-studies"
+                element={
+                  <ProtectedRoute>
+                    <AdminCaseStudies />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/testimonials"
+                element={
+                  <ProtectedRoute>
+                    <AdminTestimonials />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/audit-logs"
+                element={
+                  <ProtectedRoute>
+                    <AdminAuditLogs />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Admin 404 */}
+              <Route path="/admin/*" element={<AdminNotFound />} />
+              {/* Public Routes */}
+              <Route path="/*" element={<AppContent />} />
+            </Routes>
+          </Router>
+        </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );

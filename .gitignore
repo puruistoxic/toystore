@@ -30,3 +30,7 @@ yarn-error.log*
 # But keep the original videos
 !/public/videos/*.mp4
 !/public/videos/README.md
+
+# Uploaded files (but keep the directory structure)
+/server/uploads/*
+!/server/uploads/.gitkeep

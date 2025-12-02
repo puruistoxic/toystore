@@ -17,3 +17,6 @@ const Industries: React.FC = () => {
 
 export default Industries;
 
+
+
+
