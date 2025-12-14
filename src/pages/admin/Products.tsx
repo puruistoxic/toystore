@@ -12,6 +12,7 @@ export default function AdminProducts() {
           { key: 'name', label: 'Name' },
           { key: 'category', label: 'Category' },
           { key: 'brand', label: 'Brand' },
+          { key: 'hsn_code', label: 'HSN Code' },
           {
             key: 'price',
             label: 'Price',

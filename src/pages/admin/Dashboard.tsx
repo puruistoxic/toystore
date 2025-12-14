@@ -11,7 +11,10 @@ import {
   FileText,
   MessageSquare,
   LogOut,
-  Settings
+  Settings,
+  Users,
+  Receipt,
+  FileCheck
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -66,6 +69,27 @@ export default function AdminDashboard() {
       icon: MessageSquare,
       link: '/admin/testimonials',
       color: 'bg-teal-500'
+    },
+    {
+      title: 'Clients',
+      description: 'Manage client database',
+      icon: Users,
+      link: '/admin/clients',
+      color: 'bg-blue-600'
+    },
+    {
+      title: 'Proposals',
+      description: 'Manage client proposals',
+      icon: FileCheck,
+      link: '/admin/proposals',
+      color: 'bg-purple-600'
+    },
+    {
+      title: 'Invoices',
+      description: 'Manage invoices and payments',
+      icon: Receipt,
+      link: '/admin/invoices',
+      color: 'bg-green-600'
     }
   ];
 

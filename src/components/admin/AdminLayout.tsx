@@ -13,7 +13,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Menu
+  Menu,
+  Users,
+  Receipt,
+  FileCheck,
+  UserCog
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -74,10 +78,22 @@ const menuSections: MenuSection[] = [
     ]
   },
   {
+    id: 'invoicing',
+    label: 'Invoicing',
+    icon: Receipt,
+    items: [
+      { label: 'Clients', icon: Users, to: '/admin/clients' },
+      { label: 'Proposals', icon: FileCheck, to: '/admin/proposals' },
+      { label: 'Invoices', icon: Receipt, to: '/admin/invoices' }
+    ]
+  },
+  {
     id: 'settings',
     label: 'Settings',
     icon: Settings,
     items: [
+      { label: 'Company Settings', icon: Building2, to: '/admin/company-settings' },
+      { label: 'Users', icon: UserCog, to: '/admin/users' },
       { label: 'Audit Logs', icon: FileText, to: '/admin/audit-logs' }
     ]
   }
@@ -136,6 +152,14 @@ export default function AdminLayout({ title, children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         className={`
@@ -162,10 +186,21 @@ export default function AdminLayout({ title, children }: AdminLayoutProps) {
             <button
               type="button"
               onClick={() => setIsCollapsed((prev) => !prev)}
-              className="hidden md:inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
+              className="hidden md:inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 touch-manipulation"
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
+            {mobileOpen && (
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="md:hidden inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 touch-manipulation"
+                aria-label="Close menu"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* User info */}
@@ -258,22 +293,22 @@ export default function AdminLayout({ title, children }: AdminLayoutProps) {
                   <span>Sidebar</span>
                 </span>
               )}
-              <button
-                type="button"
-                onClick={() => setAutoHide((prev) => !prev)}
-                className={`flex items-center justify-center h-7 px-2 rounded-full text-xs font-medium border ${
-                  autoHide
-                    ? 'bg-teal-50 text-teal-700 border-teal-200'
-                    : 'bg-white text-gray-500 border-gray-200'
-                }`}
-              >
-                {autoHide ? 'Auto-hide: On' : 'Auto-hide: Off'}
-              </button>
+            <button
+              type="button"
+              onClick={() => setAutoHide((prev) => !prev)}
+              className={`flex items-center justify-center h-8 px-3 rounded-full text-xs font-medium border touch-manipulation ${
+                autoHide
+                  ? 'bg-teal-50 text-teal-700 border-teal-200'
+                  : 'bg-white text-gray-500 border-gray-200'
+              }`}
+            >
+              {autoHide ? 'Auto-hide: On' : 'Auto-hide: Off'}
+            </button>
             </div>
             <button
               type="button"
               onClick={logout}
-              className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md py-2 transition-colors"
+              className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md py-2.5 transition-colors touch-manipulation font-medium"
             >
               Log out
             </button>
@@ -290,7 +325,8 @@ export default function AdminLayout({ title, children }: AdminLayoutProps) {
               <button
                 type="button"
                 onClick={() => setMobileOpen((prev) => !prev)}
-                className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 touch-manipulation"
+                aria-label="Toggle menu"
               >
                 <Menu className="w-5 h-5" />
               </button>

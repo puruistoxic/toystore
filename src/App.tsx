@@ -49,6 +49,19 @@ import CategoryNew from './pages/admin/CategoryNew';
 import CategoryEdit from './pages/admin/CategoryEdit';
 import BrandNew from './pages/admin/BrandNew';
 import BrandEdit from './pages/admin/BrandEdit';
+import AdminClients from './pages/admin/Clients';
+import ClientNew from './pages/admin/ClientNew';
+import ClientEdit from './pages/admin/ClientEdit';
+import AdminProposals from './pages/admin/Proposals';
+import ProposalNew from './pages/admin/ProposalNew';
+import ProposalEdit from './pages/admin/ProposalEdit';
+import AdminInvoices from './pages/admin/Invoices';
+import InvoiceNew from './pages/admin/InvoiceNew';
+import InvoiceEdit from './pages/admin/InvoiceEdit';
+import AdminUsers from './pages/admin/Users';
+import UserNew from './pages/admin/UserNew';
+import UserEdit from './pages/admin/UserEdit';
+import CompanySettings from './pages/admin/CompanySettings';
 import NotFound from './pages/NotFound';
 import AdminNotFound from './pages/admin/NotFound';
 
@@ -255,6 +268,112 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AdminAuditLogs />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Invoicing Routes */}
+              <Route
+                path="/admin/clients"
+                element={
+                  <ProtectedRoute>
+                    <AdminClients />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/clients/new"
+                element={
+                  <ProtectedRoute>
+                    <ClientNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/clients/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <ClientEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/proposals"
+                element={
+                  <ProtectedRoute>
+                    <AdminProposals />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/proposals/new"
+                element={
+                  <ProtectedRoute>
+                    <ProposalNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/proposals/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <ProposalEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/invoices"
+                element={
+                  <ProtectedRoute>
+                    <AdminInvoices />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/invoices/new"
+                element={
+                  <ProtectedRoute>
+                    <InvoiceNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/invoices/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <InvoiceEdit />
+                  </ProtectedRoute>
+                }
+              />
+              {/* User Management Routes */}
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute>
+                    <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users/new"
+                element={
+                  <ProtectedRoute>
+                    <UserNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <UserEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/company-settings"
+                element={
+                  <ProtectedRoute>
+                    <CompanySettings />
                   </ProtectedRoute>
                 }
               />

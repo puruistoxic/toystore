@@ -184,3 +184,5 @@ const { initDatabase, getPool } = require('./db');
 5. Clear browser cache and localStorage
 6. Restart both frontend and backend servers
 
+
+

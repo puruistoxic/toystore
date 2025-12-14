@@ -1,0 +1,115 @@
+export interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+  tax_id?: string;
+  website?: string;
+  notes?: string;
+  status: 'active' | 'inactive' | 'archived';
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProposalItem {
+  description: string;
+  quantity: number;
+  price: number;
+  total?: number;
+  hsn_code?: string;
+}
+
+export interface Proposal {
+  id: string;
+  proposal_number: string;
+  client_id: string;
+  client_name?: string;
+  client_email?: string;
+  client_phone?: string;
+  client_company?: string;
+  client_address?: string;
+  client_city?: string;
+  client_state?: string;
+  client_country?: string;
+  client_postal_code?: string;
+  client_tax_id?: string;
+  title: string;
+  description?: string;
+  items: ProposalItem[];
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  discount: number;
+  total: number;
+  currency: string;
+  valid_until?: string;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  notes?: string;
+  terms?: string;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  price: number;
+  total?: number;
+  hsn_code?: string;
+}
+
+export interface Invoice {
+  id: string;
+  invoice_number: string;
+  proposal_id?: string;
+  client_id: string;
+  client_name?: string;
+  client_email?: string;
+  client_phone?: string;
+  client_company?: string;
+  client_address?: string;
+  client_city?: string;
+  client_state?: string;
+  client_country?: string;
+  client_postal_code?: string;
+  client_tax_id?: string;
+  title: string;
+  description?: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  discount: number;
+  total: number;
+  currency: string;
+  issue_date: string;
+  due_date: string;
+  status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
+  invoice_type?: 'confirmed' | 'sharing';
+  payment_terms?: string;
+  notes?: string;
+  terms?: string;
+  paid_amount?: number;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface InvoicePayment {
+  id: number;
+  invoice_id: string;
+  amount: number;
+  payment_date: string;
+  payment_method: 'cash' | 'bank_transfer' | 'cheque' | 'credit_card' | 'debit_card' | 'upi' | 'other';
+  reference_number?: string;
+  notes?: string;
+  created_by?: number;
+  created_at?: string;
+}

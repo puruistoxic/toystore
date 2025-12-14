@@ -26,3 +26,36 @@ code {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Better touch interactions for mobile */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on buttons and interactive elements */
+button,
+a,
+select,
+input[type="button"],
+input[type="submit"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure proper spacing on mobile */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+  
+  /* Increase touch target sizes on mobile */
+  button,
+  a,
+  input,
+  select {
+    min-height: 44px;
+  }
+}

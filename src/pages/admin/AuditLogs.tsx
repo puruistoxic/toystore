@@ -178,12 +178,21 @@ export default function AdminAuditLogs() {
                 <p className="mt-2 text-gray-600">Loading audit logs...</p>
               </div>
             ) : error ? (
-              <div className="px-6 py-12 text-center text-red-600">
-                Failed to load audit logs
+              <div className="px-6 py-12 text-center">
+                <div className="text-red-600 font-medium mb-2">Failed to load audit logs</div>
+                <div className="text-sm text-gray-500">
+                  {error instanceof Error ? error.message : 'An unexpected error occurred'}
+                </div>
               </div>
             ) : !data?.logs || data.logs.length === 0 ? (
-              <div className="px-6 py-12 text-center text-gray-600">
-                No audit logs found
+              <div className="px-6 py-12 text-center">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">No audit logs found</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {Object.values(filters).some(f => f) 
+                    ? 'Try adjusting your filters to see more results'
+                    : 'Audit logs will appear here as you make changes in the admin panel'}
+                </p>
               </div>
             ) : (
               <table className="w-full">

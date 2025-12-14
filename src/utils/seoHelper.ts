@@ -148,3 +148,5 @@ export const generateCanonicalURL = (slug: string, baseUrl: string = 'https://wa
   return `${baseUrl}/${slug}`;
 };
 
+
+

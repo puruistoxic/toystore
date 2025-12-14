@@ -45,7 +45,7 @@ export default function MasterQuickAddModal({ title, endpoint, onClose, onCreate
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-3">{title}</h2>
         {error && (
@@ -93,4 +93,6 @@ export default function MasterQuickAddModal({ title, endpoint, onClose, onCreate
     </div>
   );
 }
+
+
 

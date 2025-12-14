@@ -13,6 +13,7 @@ interface ProductFormState {
   price: string;
   category: string;
   brand: string;
+  hsnCode: string;
   shortDescription: string;
   description: string;
   mainImage: string;
@@ -31,6 +32,7 @@ const emptyState: ProductFormState = {
   price: '',
   category: '',
   brand: '',
+  hsnCode: '',
   shortDescription: '',
   description: '',
   mainImage: '',
@@ -69,6 +71,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
           price: data.price != null ? String(data.price) : '',
           category: data.category || '',
           brand: data.brand || '',
+          hsnCode: data.hsn_code || '',
           shortDescription: data.short_description || '',
           description: data.description || '',
           mainImage: data.image || '',
@@ -183,6 +186,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
         price: form.price ? parseFloat(form.price) : null,
         category: form.category.trim() || null,
         brand: form.brand.trim() || null,
+        hsn_code: form.hsnCode.trim() || null,
         image: form.mainImage.trim() || null,
         images: imagesArray,
         features: featuresArray,
@@ -314,6 +318,23 @@ export default function ProductForm({ productId }: ProductFormProps) {
               ))}
             </datalist>
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            HSN Code <span className="text-gray-500 text-xs">(for GST)</span>
+          </label>
+          <input
+            name="hsnCode"
+            type="text"
+            value={form.hsnCode}
+            onChange={handleChange}
+            placeholder="e.g., 8528, 8526"
+            maxLength={20}
+            className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            HSN (Harmonized System of Nomenclature) code required for GST invoicing. Common codes: 8528 (CCTV/Video equipment), 8526 (GPS devices), 8531 (Security systems)
+          </p>
         </div>
         <div className="flex items-center space-x-2 mt-6 md:mt-8">
           <input
