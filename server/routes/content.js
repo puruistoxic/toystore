@@ -179,7 +179,25 @@ router.delete('/services/:id', authenticateToken, async (req, res) => {
 router.get('/products', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM products ORDER BY created_at DESC');
+    const { search, is_active } = req.query;
+    
+    let query = 'SELECT * FROM products WHERE 1=1';
+    const params = [];
+    
+    if (is_active !== undefined) {
+      query += ' AND is_active = ?';
+      params.push(is_active === 'true' || is_active === true);
+    }
+    
+    if (search) {
+      query += ' AND (name LIKE ? OR description LIKE ? OR category LIKE ? OR brand LIKE ? OR hsn_code LIKE ?)';
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const [rows] = await pool.execute(query, params);
     const products = rows.map(row => formatDataFromDB(row, ['images', 'features', 'specifications', 'seo_keywords']));
     res.json(products);
   } catch (error) {
@@ -208,17 +226,17 @@ router.post('/products', authenticateToken, async (req, res) => {
     const pool = getPool();
     const data = prepareDataForDB(req.body, [
       'id', 'name', 'slug', 'description', 'short_description', 'price', 'category',
-      'brand', 'image', 'images', 'features', 'specifications', 'warranty',
+      'brand', 'hsn_code', 'image', 'images', 'features', 'specifications', 'warranty',
       'seo_title', 'seo_description', 'seo_keywords', 'is_active'
     ]);
 
     await pool.execute(
       `INSERT INTO products (id, name, slug, description, short_description, price, category, 
-       brand, image, images, features, specifications, warranty, seo_title, seo_description, 
-       seo_keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       brand, hsn_code, image, images, features, specifications, warranty, seo_title, seo_description, 
+       seo_keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.id, data.name, data.slug, data.description, data.short_description,
-        data.price, data.category, data.brand, data.image, data.images,
+        data.price, data.category, data.brand, data.hsn_code, data.image, data.images,
         data.features, data.specifications, data.warranty,
         data.seo_title, data.seo_description, data.seo_keywords,
         data.is_active !== undefined ? data.is_active : true
@@ -227,7 +245,7 @@ router.post('/products', authenticateToken, async (req, res) => {
 
     const entityName = data.name || null;
     await addAuditLog(req, 'CREATE', 'product', data.id, entityName, null, data);
-    res.json({ success: true, message: 'Product created successfully' });
+    res.json({ success: true, id: data.id, message: 'Product created successfully' });
   } catch (error) {
     console.error('[Content API] Create product error:', error);
     res.status(500).json({ error: 'Failed to create product', message: error.message });
@@ -245,18 +263,18 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
     
     const data = prepareDataForDB(req.body, [
       'name', 'slug', 'description', 'short_description', 'price', 'category',
-      'brand', 'image', 'images', 'features', 'specifications', 'warranty',
+      'brand', 'hsn_code', 'image', 'images', 'features', 'specifications', 'warranty',
       'seo_title', 'seo_description', 'seo_keywords', 'is_active'
     ]);
 
     await pool.execute(
       `UPDATE products SET name = ?, slug = ?, description = ?, short_description = ?, 
-       price = ?, category = ?, brand = ?, image = ?, images = ?, features = ?, 
+       price = ?, category = ?, brand = ?, hsn_code = ?, image = ?, images = ?, features = ?, 
        specifications = ?, warranty = ?, seo_title = ?, seo_description = ?, 
        seo_keywords = ?, is_active = ?, updated_at = NOW() WHERE id = ?`,
       [
         data.name, data.slug, data.description, data.short_description,
-        data.price, data.category, data.brand, data.image, data.images,
+        data.price, data.category, data.brand, data.hsn_code, data.image, data.images,
         data.features, data.specifications, data.warranty,
         data.seo_title, data.seo_description, data.seo_keywords,
         data.is_active !== undefined ? data.is_active : true,
@@ -1472,10 +1490,12 @@ router.get('/audit-logs', authenticateToken, async (req, res) => {
     );
     const total = countResult[0].total;
     
-    // Get logs
+    // Get logs - LIMIT and OFFSET must be integers, not placeholders
+    const limitInt = parseInt(limit.toString(), 10);
+    const offsetInt = parseInt(offset.toString(), 10);
     const [rows] = await pool.execute(
-      `SELECT * FROM audit_logs ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
+      `SELECT * FROM audit_logs ${whereClause} ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`,
+      params
     );
     
     // Parse JSON fields
@@ -1496,6 +1516,130 @@ router.get('/audit-logs', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('[Content API] Get audit logs error:', error);
     res.status(500).json({ error: 'Failed to fetch audit logs', message: error.message });
+  }
+});
+
+// ==================== COMPANY SETTINGS ====================
+
+router.get('/company-settings', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const [rows] = await pool.execute('SELECT * FROM company_settings ORDER BY id DESC LIMIT 1');
+    if (rows.length === 0) {
+      return res.json({
+        company_name: 'WAINSO',
+        address_line1: '',
+        address_line2: '',
+        address_line3: '',
+        city: '',
+        state: '',
+        postal_code: '',
+        country: 'India',
+        phone: '',
+        phone2: '',
+        email: '',
+        website: '',
+        gstin: '',
+        pan: '',
+        bank_name: '',
+        bank_account_number: '',
+        bank_ifsc: '',
+        bank_branch: '',
+        footer_text: '',
+        terms_and_conditions: ''
+      });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('[Content API] Get company settings error:', error);
+    res.status(500).json({ error: 'Failed to fetch company settings', message: error.message });
+  }
+});
+
+router.put('/company-settings', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const data = req.body;
+
+    // Check if settings exist
+    const [existing] = await pool.execute('SELECT id FROM company_settings ORDER BY id DESC LIMIT 1');
+
+    if (existing.length === 0) {
+      // Create new settings
+      await pool.execute(
+        `INSERT INTO company_settings (
+          company_name, logo_url, address_line1, address_line2, address_line3, city, state, postal_code, country,
+          phone, phone2, email, website, gstin, pan, bank_name, bank_account_name, bank_account_number, bank_ifsc, bank_branch,
+          footer_text, terms_and_conditions
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          data.company_name || 'WAINSO',
+          data.logo_url || null,
+          data.address_line1 || null,
+          data.address_line2 || null,
+          data.address_line3 || null,
+          data.city || null,
+          data.state || null,
+          data.postal_code || null,
+          data.country || 'India',
+          data.phone || null,
+          data.phone2 || null,
+          data.email || null,
+          data.website || null,
+          data.gstin || null,
+          data.pan || null,
+          data.bank_name || null,
+          data.bank_account_name || null,
+          data.bank_account_number || null,
+          data.bank_ifsc || null,
+          data.bank_branch || null,
+          data.footer_text || null,
+          data.terms_and_conditions || null
+        ]
+      );
+    } else {
+      // Update existing settings
+      await pool.execute(
+        `UPDATE company_settings SET
+          company_name = ?, logo_url = ?, address_line1 = ?, address_line2 = ?, address_line3 = ?,
+          city = ?, state = ?, postal_code = ?, country = ?, phone = ?, phone2 = ?, email = ?,
+          website = ?, gstin = ?, pan = ?, bank_name = ?, bank_account_name = ?, bank_account_number = ?, bank_ifsc = ?,
+          bank_branch = ?, footer_text = ?, terms_and_conditions = ?
+        WHERE id = ?`,
+        [
+          data.company_name || 'WAINSO',
+          data.logo_url || null,
+          data.address_line1 || null,
+          data.address_line2 || null,
+          data.address_line3 || null,
+          data.city || null,
+          data.state || null,
+          data.postal_code || null,
+          data.country || 'India',
+          data.phone || null,
+          data.phone2 || null,
+          data.email || null,
+          data.website || null,
+          data.gstin || null,
+          data.pan || null,
+          data.bank_name || null,
+          data.bank_account_name || null,
+          data.bank_account_number || null,
+          data.bank_ifsc || null,
+          data.bank_branch || null,
+          data.footer_text || null,
+          data.terms_and_conditions || null,
+          existing[0].id
+        ]
+      );
+    }
+
+    await addAuditLog(req, 'UPDATE', 'company_settings', '1', 'Company Settings', null, data);
+
+    res.json({ success: true, message: 'Company settings updated successfully' });
+  } catch (error) {
+    console.error('[Content API] Update company settings error:', error);
+    res.status(500).json({ error: 'Failed to update company settings', message: error.message });
   }
 });
 

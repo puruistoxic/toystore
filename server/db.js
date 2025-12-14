@@ -208,6 +208,7 @@ async function initializeTables() {
         price DECIMAL(10,2),
         category VARCHAR(100),
         brand VARCHAR(100),
+        hsn_code VARCHAR(20),
         image VARCHAR(500),
         images JSON,
         features JSON,
@@ -221,7 +222,8 @@ async function initializeTables() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_slug (slug),
         INDEX idx_category (category),
-        INDEX idx_brand (brand)
+        INDEX idx_brand (brand),
+        INDEX idx_hsn_code (hsn_code)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -490,6 +492,200 @@ async function initializeTables() {
         INDEX idx_username (username)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    // Create clients table for invoicing system
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS clients (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(20),
+        company VARCHAR(255),
+        address TEXT,
+        city VARCHAR(100),
+        state VARCHAR(100),
+        country VARCHAR(100) DEFAULT 'India',
+        postal_code VARCHAR(20),
+        tax_id VARCHAR(100),
+        website VARCHAR(500),
+        notes TEXT,
+        status ENUM('active', 'inactive', 'archived') DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_email (email),
+        INDEX idx_phone (phone),
+        INDEX idx_status (status),
+        INDEX idx_created_at (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Create proposals table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS proposals (
+        id VARCHAR(50) PRIMARY KEY,
+        proposal_number VARCHAR(50) NOT NULL UNIQUE,
+        client_id VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        items JSON NOT NULL,
+        subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
+        tax_rate DECIMAL(5,2) DEFAULT 0,
+        tax_amount DECIMAL(10,2) DEFAULT 0,
+        discount DECIMAL(10,2) DEFAULT 0,
+        total DECIMAL(10,2) NOT NULL DEFAULT 0,
+        currency VARCHAR(10) DEFAULT 'INR',
+        valid_until DATE,
+        status ENUM('draft', 'sent', 'accepted', 'rejected', 'expired') DEFAULT 'draft',
+        notes TEXT,
+        terms TEXT,
+        created_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_client (client_id),
+        INDEX idx_proposal_number (proposal_number),
+        INDEX idx_status (status),
+        INDEX idx_created_at (created_at),
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Create invoices table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS invoices (
+        id VARCHAR(50) PRIMARY KEY,
+        invoice_number VARCHAR(50) NOT NULL UNIQUE,
+        proposal_id VARCHAR(50),
+        client_id VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        items JSON NOT NULL,
+        subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
+        tax_rate DECIMAL(5,2) DEFAULT 0,
+        tax_amount DECIMAL(10,2) DEFAULT 0,
+        discount DECIMAL(10,2) DEFAULT 0,
+        total DECIMAL(10,2) NOT NULL DEFAULT 0,
+        currency VARCHAR(10) DEFAULT 'INR',
+        issue_date DATE NOT NULL,
+        due_date DATE NOT NULL,
+        status ENUM('draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled') DEFAULT 'draft',
+        invoice_type ENUM('confirmed', 'sharing') DEFAULT 'confirmed',
+        payment_terms VARCHAR(255),
+        notes TEXT,
+        terms TEXT,
+        paid_amount DECIMAL(10,2) DEFAULT 0,
+        created_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_client (client_id),
+        INDEX idx_invoice_number (invoice_number),
+        INDEX idx_status (status),
+        INDEX idx_due_date (due_date),
+        INDEX idx_created_at (created_at),
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT,
+        FOREIGN KEY (proposal_id) REFERENCES proposals(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Add invoice_type column if it doesn't exist (for existing databases)
+    try {
+      await connection.execute(`
+        ALTER TABLE invoices 
+        ADD COLUMN invoice_type ENUM('confirmed', 'sharing') DEFAULT 'confirmed'
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+      if (!error.message.includes('Duplicate column name')) {
+        console.warn('[Database] Could not add invoice_type column:', error.message);
+      }
+    }
+
+    // Create invoice_payments table for tracking payments
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS invoice_payments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        invoice_id VARCHAR(50) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        payment_date DATE NOT NULL,
+        payment_method ENUM('cash', 'bank_transfer', 'cheque', 'credit_card', 'debit_card', 'upi', 'other') DEFAULT 'bank_transfer',
+        reference_number VARCHAR(100),
+        notes TEXT,
+        created_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_invoice (invoice_id),
+        INDEX idx_payment_date (payment_date),
+        FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Create company_settings table for invoice/proposal header/footer configuration
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS company_settings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        company_name VARCHAR(255) NOT NULL DEFAULT 'WAINSO',
+        logo_url VARCHAR(500),
+        address_line1 VARCHAR(255),
+        address_line2 VARCHAR(255),
+        address_line3 VARCHAR(255),
+        city VARCHAR(100),
+        state VARCHAR(100),
+        postal_code VARCHAR(20),
+        country VARCHAR(100) DEFAULT 'India',
+        phone VARCHAR(20),
+        phone2 VARCHAR(20),
+        email VARCHAR(255),
+        website VARCHAR(255),
+        gstin VARCHAR(50),
+        pan VARCHAR(50),
+        bank_name VARCHAR(255),
+        bank_account_name VARCHAR(255),
+        bank_account_number VARCHAR(100),
+        bank_ifsc VARCHAR(50),
+        bank_branch VARCHAR(255),
+        footer_text TEXT,
+        terms_and_conditions TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Add bank_account_name column if it doesn't exist (for existing databases)
+    try {
+      await connection.execute(`
+        ALTER TABLE company_settings 
+        ADD COLUMN bank_account_name VARCHAR(255)
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+      if (!error.message.includes('Duplicate column name')) {
+        console.warn('[Database] Could not add bank_account_name column:', error.message);
+      }
+    }
+
+    // Insert default company settings if not exists
+    const [existingSettings] = await connection.execute('SELECT id FROM company_settings LIMIT 1');
+    if (existingSettings.length === 0) {
+      await connection.execute(`
+        INSERT INTO company_settings (
+          company_name, address_line1, address_line2, address_line3, city, state, postal_code, country,
+          phone, phone2, email, website, gstin, footer_text
+        ) VALUES (
+          'WAINSO GPS & Security System',
+          'Room No-9, 1st Floor, Yadav Complex',
+          'Near Block Chawck, Block Chowk',
+          'Ramgarh Cantt',
+          'Ramgarh',
+          'Jharkhand',
+          '829122',
+          'India',
+          '+91 98998 60975',
+          '+91 82927 17044',
+          'wainsogps@gmail.com',
+          'wainso.com',
+          '20AACFW6441P1ZY',
+          '© 2024 WAINSO GPS & Security System. All rights reserved. | Est. 2017 | 8+ Years in Business'
+        )
+      `);
+    }
 
     // Create default admin user if not exists
     const bcrypt = require('bcrypt');

@@ -19,10 +19,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const adminRoutes = require('./routes/admin');
 const contentRoutes = require('./routes/content');
 const uploadRoutes = require('./routes/upload');
+const invoicingRoutes = require('./routes/invoicing');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/invoicing', invoicingRoutes);
 
 // Create SMTP transporter
 const createTransporter = () => {

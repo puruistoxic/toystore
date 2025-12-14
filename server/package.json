@@ -9,7 +9,12 @@
     "init-db": "node scripts/init-db.js",
     "check-env": "node scripts/check-env.js",
     "test-login": "node scripts/test-login.js",
-    "migrate-schema": "node scripts/migrate-schema.js"
+    "migrate-schema": "node scripts/migrate-schema.js",
+    "seed-masters": "node scripts/seed-masters.js",
+    "seed-products": "node scripts/seed-products.js",
+    "seed-all": "node scripts/seed-masters.js && node scripts/seed-products.js",
+    "add-hsn-code": "node scripts/add-hsn-code-column.js",
+    "update-hsn": "node scripts/update-product-hsn.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
