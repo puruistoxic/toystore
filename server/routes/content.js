@@ -224,7 +224,36 @@ router.get('/products/:id', async (req, res) => {
 router.post('/products', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    const data = prepareDataForDB(req.body, [
+    
+    // Validate required fields
+    if (!req.body.name || !req.body.name.trim()) {
+      return res.status(400).json({ error: 'Product name is required' });
+    }
+
+    // Generate ID if not provided
+    const productId = req.body.id || uuidv4();
+    
+    // Generate slug if not provided or invalid
+    let slug = req.body.slug;
+    if (!slug || !slug.trim()) {
+      slug = req.body.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || `product-${productId}`;
+    }
+
+    // Check for duplicate slug
+    const [existingSlug] = await pool.execute(
+      'SELECT id FROM products WHERE slug = ?',
+      [slug]
+    );
+    
+    if (existingSlug.length > 0) {
+      // Append timestamp to make it unique
+      slug = `${slug}-${Date.now()}`;
+    }
+
+    const data = prepareDataForDB({ ...req.body, id: productId, slug }, [
       'id', 'name', 'slug', 'description', 'short_description', 'price', 'category',
       'brand', 'hsn_code', 'image', 'images', 'features', 'specifications', 'warranty',
       'seo_title', 'seo_description', 'seo_keywords', 'is_active'

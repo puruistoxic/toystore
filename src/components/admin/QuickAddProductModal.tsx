@@ -53,21 +53,25 @@ export default function QuickAddProductModal({
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Generate ID (required by backend)
+      const id = Date.now().toString();
+      
       // Generate slug from name
       const slug = data.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+        .replace(/(^-|-$)/g, '') || `product-${id}`;
       
       const payload = {
-        name: data.name,
+        id: id,
+        name: data.name.trim(),
         slug: slug,
-        price: data.price ? parseFloat(data.price) : null,
-        hsn_code: data.hsn_code || null,
-        category: data.category || null,
-        brand: data.brand || null,
-        description: data.description || null,
-        short_description: data.description || null,
+        price: data.price && data.price.trim() ? parseFloat(data.price) : null,
+        hsn_code: data.hsn_code && data.hsn_code.trim() ? data.hsn_code.trim() : null,
+        category: data.category && data.category.trim() ? data.category.trim() : null,
+        brand: data.brand && data.brand.trim() ? data.brand.trim() : null,
+        description: data.description && data.description.trim() ? data.description.trim() : null,
+        short_description: data.description && data.description.trim() ? data.description.trim() : null,
         is_active: true
       };
 
