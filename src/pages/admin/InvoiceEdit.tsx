@@ -25,6 +25,7 @@ export default function InvoiceEdit() {
     issue_date: new Date().toISOString().split('T')[0],
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     status: 'draft',
+    invoice_type: 'confirmed' as 'confirmed' | 'sharing',
     payment_terms: '',
     notes: '',
     terms: ''
@@ -82,6 +83,7 @@ export default function InvoiceEdit() {
         issue_date: invoice.issue_date ? invoice.issue_date.split('T')[0] : new Date().toISOString().split('T')[0],
         due_date: invoice.due_date ? invoice.due_date.split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: invoice.status || 'draft',
+        invoice_type: invoice.invoice_type || 'confirmed',
         payment_terms: invoice.payment_terms || '',
         notes: invoice.notes || '',
         terms: invoice.terms || ''
@@ -153,7 +155,7 @@ export default function InvoiceEdit() {
 
   const calculateTotals = () => {
     const subtotal = formData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-    const taxAmount = (subtotal * formData.tax_rate) / 100;
+    const taxAmount = formData.invoice_type === 'sharing' ? 0 : (subtotal * formData.tax_rate) / 100;
     const total = subtotal + taxAmount - formData.discount;
     return { subtotal, taxAmount, total };
   };
@@ -247,6 +249,21 @@ export default function InvoiceEdit() {
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Invoice Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.invoice_type}
+                onChange={(e) => setFormData({ ...formData, invoice_type: e.target.value as 'confirmed' | 'sharing' })}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              >
+                <option value="confirmed">Confirmed (with GST)</option>
+                <option value="sharing">Sharing (without GST)</option>
+              </select>
             </div>
 
             <div>
@@ -466,14 +483,17 @@ export default function InvoiceEdit() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tax Rate (%)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tax Rate (%) {formData.invoice_type === 'sharing' && <span className="text-gray-500 text-xs">(disabled for sharing invoices)</span>}
+                </label>
                 <input
                   type="number"
                   value={formData.tax_rate}
                   onChange={(e) => setFormData({ ...formData, tax_rate: parseFloat(e.target.value) || 0 })}
                   min="0"
                   step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  disabled={formData.invoice_type === 'sharing'}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
               <div>
