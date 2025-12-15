@@ -37,7 +37,7 @@ const ProductDetail: React.FC = () => {
   }
 
   const metaDescription = generateProductMetaDescription(product.name, product.brand);
-  const pageTitle = generatePageTitle(`${product.name} - ${product.brand}`, 'Ramgarh, Jharkhand');
+  const pageTitle = generatePageTitle(`${product.name} - ${product.brand}`);
 
   return (
     <>
@@ -150,11 +150,28 @@ const ProductDetail: React.FC = () => {
               )}
             </div>
 
-            {/* Location Badge */}
-            <div className="flex items-center mb-4">
-              <div className="flex items-center text-sm text-gray-700 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
-                <MapPin className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
-                <span className="font-medium">Available in Ramgarh, Jharkhand</span>
+            {/* Location Badge (only for CCTV/Security categories) */}
+            {(product.category === 'security' || product.category === 'cctv') && (
+              <div className="flex items-center mb-4">
+                <div className="flex items-center text-sm text-gray-700 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+                  <MapPin className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
+                  <span className="font-medium">Available in Ramgarh, Jharkhand</span>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
+              <div className="flex items-center text-sm text-gray-700">
+                <Shield className="h-4 w-4 text-primary-600 mr-2" />
+                Deployment, warranty, and integration assistance included.
+              </div>
+              <div className="flex items-center text-sm text-gray-700">
+                <MapPin className="h-4 w-4 text-primary-600 mr-2" />
+                On-site and remote delivery with pan-India support options.
+              </div>
+              <div className="flex items-center text-sm text-gray-700">
+                <RotateCcw className="h-4 w-4 text-primary-600 mr-2" />
+                Need sizing help? Share your use case and we’ll propose a fit.
               </div>
             </div>
 
@@ -169,6 +186,12 @@ const ProductDetail: React.FC = () => {
               <button className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
                 <Heart className="h-5 w-5" />
               </button>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+              <div className="text-sm text-blue-900">
+                Looking for deployment + AMC? Add that in your quote request and we’ll bundle implementation, training, and SLAs.
+              </div>
             </div>
 
             {/* Features */}

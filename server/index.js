@@ -90,7 +90,7 @@ app.post('/api/quote-request', async (req, res) => {
     
     // Email to business
     const businessMailOptions = {
-      from: `"WAINSO GPS & Security System" <noreply@wainso.com>`,
+      from: `"WAINSO" <noreply@wainso.com>`,
       to: 'wainsogps@gmail.com', // Business email
       replyTo: email || undefined,
       subject: `New Quote Request - ${itemName || 'WAINSO'}`,
@@ -105,7 +105,7 @@ app.post('/api/quote-request', async (req, res) => {
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
           <div style="background: linear-gradient(135deg, #006767 0%, #004d4d 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">WAINSO</h1>
-            <p style="color: #e6f7f7; margin: 10px 0 0 0; font-size: 14px;">GPS & Security System</p>
+            <p style="color: #e6f7f7; margin: 10px 0 0 0; font-size: 14px;">IT & ERP Solutions</p>
             <h2 style="color: #ffffff; margin: 20px 0 0 0; font-size: 20px; font-weight: normal;">New Quote Request</h2>
           </div>
           
@@ -160,7 +160,7 @@ app.post('/api/quote-request', async (req, res) => {
           </div>
           
           <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-            <p>WAINSO GPS & Security System | <a href="https://wainso.com" style="color: #006767;">wainso.com</a></p>
+            <p>WAINSO | <a href="https://wainso.com" style="color: #006767;">wainso.com</a></p>
           </div>
         </body>
         </html>
@@ -173,7 +173,7 @@ app.post('/api/quote-request', async (req, res) => {
     // Send confirmation email to the sender (if email provided)
     if (email && email.trim()) {
       const confirmationMailOptions = {
-        from: `"WAINSO GPS & Security System" <noreply@wainso.com>`,
+        from: `"WAINSO" <noreply@wainso.com>`,
         to: email,
         subject: `Thank you for your quote request - ${itemName || 'WAINSO'}`,
         html: `
@@ -187,7 +187,7 @@ app.post('/api/quote-request', async (req, res) => {
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
             <div style="background: linear-gradient(135deg, #006767 0%, #004d4d 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
               <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">WAINSO</h1>
-              <p style="color: #e6f7f7; margin: 10px 0 0 0; font-size: 14px;">GPS & Security System</p>
+              <p style="color: #e6f7f7; margin: 10px 0 0 0; font-size: 14px;">IT & ERP Solutions</p>
             </div>
             
             <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -229,12 +229,12 @@ app.post('/api/quote-request', async (req, res) => {
               
               <p style="margin-top: 20px;">
                 Best regards,<br>
-                <strong>WAINSO GPS & Security System</strong>
+                <strong>WAINSO</strong>
               </p>
             </div>
             
             <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px; padding: 20px; background: #ffffff; border-radius: 10px;">
-              <p style="margin: 5px 0;"><strong>WAINSO GPS & Security System</strong></p>
+              <p style="margin: 5px 0;"><strong>WAINSO</strong></p>
               <p style="margin: 5px 0;">Room No-9, 1st Floor, Yadav Complex</p>
               <p style="margin: 5px 0;">Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand</p>
               <p style="margin: 5px 0;">
@@ -252,7 +252,7 @@ app.post('/api/quote-request', async (req, res) => {
           </html>
         `,
         text: `
-          WAINSO GPS & Security System
+          WAINSO
           
           Thank You for Your Quote Request!
           
@@ -279,10 +279,10 @@ app.post('/api/quote-request', async (req, res) => {
           If you have any questions or need to modify your request, please don't hesitate to contact us.
           
           Best regards,
-          WAINSO GPS & Security System
+          WAINSO
           
           ---
-          WAINSO GPS & Security System
+          WAINSO
           Room No-9, 1st Floor, Yadav Complex
           Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand
           Phone: +91 98998 60975 | +91 82927 17044
@@ -367,7 +367,7 @@ app.post('/api/enquiry', async (req, res) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: `"WAINSO GPS & Security System" <noreply@wainso.com>`,
+      from: `"WAINSO" <noreply@wainso.com>`,
       to: 'wainsogps@gmail.com', // Business email
       subject: `New Website Enquiry from ${name}`,
       html: `

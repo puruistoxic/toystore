@@ -68,13 +68,19 @@ async function addAuditLog(req, action, entityType, entityId, entityName, oldDat
 router.get('/clients', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    const { status, search } = req.query;
+    const { status, search, only_deleted, include_deleted } = req.query;
     let query = 'SELECT * FROM clients WHERE 1=1';
     const params = [];
 
     if (status) {
       query += ' AND status = ?';
       params.push(status);
+    }
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
     }
 
     if (search) {
@@ -198,14 +204,47 @@ router.delete('/clients/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    await pool.execute('DELETE FROM clients WHERE id = ?', [clientId]);
+    await pool.execute(
+      'UPDATE clients SET is_deleted = 1, status = ?, deleted_at = NOW() WHERE id = ?',
+      ['archived', clientId]
+    );
 
     await addAuditLog(req, 'DELETE', 'client', clientId, oldData.name, oldData, null);
 
-    res.json({ success: true, message: 'Client deleted successfully' });
+    res.json({ success: true, message: 'Client archived successfully' });
   } catch (error) {
     console.error('[Invoicing API] Delete client error:', error);
     res.status(500).json({ error: 'Failed to delete client', message: error.message });
+  }
+});
+
+// Restore client
+router.post('/clients/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const clientId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM clients WHERE id = ?', [clientId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    const client = rows[0];
+    if (!client.is_deleted) {
+      return res.status(400).json({ error: 'Client is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE clients SET is_deleted = 0, status = ?, deleted_at = NULL WHERE id = ?',
+      ['active', clientId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'client', clientId, client.name, client, null);
+
+    res.json({ success: true, message: 'Client restored successfully' });
+  } catch (error) {
+    console.error('[Invoicing API] Restore client error:', error);
+    res.status(500).json({ error: 'Failed to restore client', message: error.message });
   }
 });
 
@@ -259,7 +298,7 @@ async function generateProposalNumber(pool) {
 router.get('/proposals', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    const { status, client_id, search } = req.query;
+    const { status, client_id, search, only_deleted, include_deleted } = req.query;
     let query = `
       SELECT p.*, c.name as client_name, c.email as client_email, c.phone as client_phone, c.company as client_company,
        c.address as client_address, c.city as client_city, c.state as client_state,
@@ -273,6 +312,12 @@ router.get('/proposals', authenticateToken, async (req, res) => {
     if (status) {
       query += ' AND p.status = ?';
       params.push(status);
+    }
+
+    if (only_deleted === 'true') {
+      query += ' AND p.is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND p.is_deleted = 0';
     }
 
     if (client_id) {
@@ -544,14 +589,47 @@ router.delete('/proposals/:id', authenticateToken, async (req, res) => {
     }
     const oldData = formatDataFromDB(oldRows[0], ['items']);
 
-    await pool.execute('DELETE FROM proposals WHERE id = ?', [proposalId]);
+    await pool.execute(
+      'UPDATE proposals SET is_deleted = 1, deleted_at = NOW() WHERE id = ?',
+      [proposalId]
+    );
 
     await addAuditLog(req, 'DELETE', 'proposal', proposalId, oldData.title, oldData, null);
 
-    res.json({ success: true, message: 'Proposal deleted successfully' });
+    res.json({ success: true, message: 'Proposal archived successfully' });
   } catch (error) {
     console.error('[Invoicing API] Delete proposal error:', error);
     res.status(500).json({ error: 'Failed to delete proposal', message: error.message });
+  }
+});
+
+// Restore proposal
+router.post('/proposals/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const proposalId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM proposals WHERE id = ?', [proposalId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    const proposal = rows[0];
+    if (!proposal.is_deleted) {
+      return res.status(400).json({ error: 'Proposal is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE proposals SET is_deleted = 0, deleted_at = NULL WHERE id = ?',
+      [proposalId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'proposal', proposalId, proposal.title, proposal, null);
+
+    res.json({ success: true, message: 'Proposal restored successfully' });
+  } catch (error) {
+    console.error('[Invoicing API] Restore proposal error:', error);
+    res.status(500).json({ error: 'Failed to restore proposal', message: error.message });
   }
 });
 
@@ -587,7 +665,7 @@ async function generateInvoiceNumber(pool, invoiceType = 'confirmed') {
 router.get('/invoices', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    const { status, client_id, search } = req.query;
+    const { status, client_id, search, only_deleted, include_deleted } = req.query;
     let query = `
       SELECT i.*, c.name as client_name, c.email as client_email, c.phone as client_phone, c.company as client_company,
        c.address as client_address, c.city as client_city, c.state as client_state,
@@ -602,6 +680,12 @@ router.get('/invoices', authenticateToken, async (req, res) => {
     if (status) {
       query += ' AND i.status = ?';
       params.push(status);
+    }
+
+    if (only_deleted === 'true') {
+      query += ' AND i.is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND i.is_deleted = 0';
     }
 
     if (client_id) {
@@ -794,16 +878,48 @@ router.delete('/invoices/:id', authenticateToken, async (req, res) => {
     }
     const oldData = formatDataFromDB(oldRows[0], ['items']);
 
-    // Delete payments first (cascade should handle this, but being explicit)
-    await pool.execute('DELETE FROM invoice_payments WHERE invoice_id = ?', [invoiceId]);
-    await pool.execute('DELETE FROM invoices WHERE id = ?', [invoiceId]);
+    // Soft delete invoice (keep payments for audit/reporting)
+    await pool.execute(
+      'UPDATE invoices SET is_deleted = 1, deleted_at = NOW() WHERE id = ?',
+      [invoiceId]
+    );
 
     await addAuditLog(req, 'DELETE', 'invoice', invoiceId, oldData.title, oldData, null);
 
-    res.json({ success: true, message: 'Invoice deleted successfully' });
+    res.json({ success: true, message: 'Invoice archived successfully' });
   } catch (error) {
     console.error('[Invoicing API] Delete invoice error:', error);
     res.status(500).json({ error: 'Failed to delete invoice', message: error.message });
+  }
+});
+
+// Restore invoice
+router.post('/invoices/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const invoiceId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM invoices WHERE id = ?', [invoiceId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    const invoice = rows[0];
+    if (!invoice.is_deleted) {
+      return res.status(400).json({ error: 'Invoice is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE invoices SET is_deleted = 0, deleted_at = NULL WHERE id = ?',
+      [invoiceId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'invoice', invoiceId, invoice.title, invoice, null);
+
+    res.json({ success: true, message: 'Invoice restored successfully' });
+  } catch (error) {
+    console.error('[Invoicing API] Restore invoice error:', error);
+    res.status(500).json({ error: 'Failed to restore invoice', message: error.message });
   }
 });
 

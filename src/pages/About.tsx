@@ -67,8 +67,8 @@ const VisitingCard: React.FC = () => {
   const downloadAsVCF = () => {
     const vcard = `BEGIN:VCARD
 VERSION:3.0
-FN:WAINSO GPS & Security System
-ORG:WAINSO GPS & Security System
+FN:WAINSO
+ORG:WAINSO
 ADR;TYPE=WORK:;;Room No-9, 1st Floor, Yadav Complex, Near Block Chawck, Block Chowk;Ramgarh Cantt;Jharkhand;829122;India
 TEL;TYPE=WORK,VOICE:+91 98998 60975
 TEL;TYPE=WORK,VOICE:+91 82927 17044
@@ -274,8 +274,8 @@ const About: React.FC = () => {
   return (
     <>
       <SEO
-        title="About WAINSO GPS & Security System - 8+ Years of Excellence in Ramgarh, Ramgarh Cantt, Jharkhand | India"
-        description="Established in 2017, WAINSO GPS & Security System is a trusted name in CCTV installation, GPS tracking, and security solutions in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India. Authorized dealers for CP Plus, Hikvision, Panasonic, Godrej, and Concox. 500+ satisfied customers, 4.9-star rating."
+        title="About WAINSO - IT, Security & ERP Partner in Jharkhand | India"
+        description="Established in 2017, WAINSO is a trusted IT and security partner delivering ERP, networking, CCTV, and software solutions across Jharkhand and India. 500+ satisfied customers and 4.9-star service quality."
         path="/about"
       />
       <div className="min-h-screen bg-gray-50">
@@ -322,8 +322,8 @@ const About: React.FC = () => {
               </h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  Established in 2017, WAINSO GPS & Security System began with a simple mission: to provide businesses 
-                  and individuals in Ramgarh, Jharkhand and across India with reliable, cutting-edge security and tracking solutions. 
+                  Established in 2017, WAINSO began with a simple mission: to provide businesses
+                  and individuals across India with reliable, cutting-edge security and tracking solutions.
                   What started as a small team of passionate technicians has grown into a trusted name in the industry, 
                   serving over 500+ satisfied customers.
                 </p>

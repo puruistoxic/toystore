@@ -157,7 +157,7 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm">
-              <p>© 2024 WAINSO GPS & Security System. All rights reserved.</p>
+              <p>© 2024 WAINSO. All rights reserved.</p>
               <p className="mt-1 text-xs">GSTIN: 20AACFW6441P1ZY | Est. 2017 | 8+ Years in Business</p>
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">

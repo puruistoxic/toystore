@@ -4,132 +4,262 @@ import { generateSlug } from '../utils/seo';
 export const services: Service[] = [
   {
     id: '1',
-    name: 'CCTV Installation & Setup',
-    slug: generateSlug('CCTV Installation & Setup'),
-    description: 'Professional installation of high-definition surveillance systems with remote monitoring capabilities.',
-    price: 15000,
-    duration: '1-2 Days',
-    category: 'cctv-installation',
-    iconName: 'Camera',
+    name: 'ERP Development & Implementation',
+    slug: generateSlug('ERP Development & Implementation'),
+    description: 'End-to-end ERP consulting, custom module development, integrations, and rollout with training.',
+    price: 75000,
+    duration: '3-8 Weeks',
+    category: 'erp',
+    iconName: 'Settings',
     features: [
-      'HD IP Cameras',
-      'Remote Mobile Access',
-      'Night Vision',
-      'Motion Detection',
-      'Cloud Storage',
-      'Professional Installation'
+      'Process Discovery & Blueprint',
+      'Custom Module Build',
+      'Legacy Data Migration',
+      'API/ESB Integrations',
+      'User & Admin Training',
+      'Hypercare Support'
     ],
     includes: [
-      'Site Survey',
-      'Camera Installation',
-      'DVR/NVR Setup',
-      'Mobile App Configuration',
-      'User Training',
-      '1 Year Warranty'
+      'Discovery Workshops',
+      'Solution Architecture',
+      'Sandbox & UAT',
+      'Cutover Plan',
+      'Change Management',
+      'Post-Go-Live Support'
     ]
   },
   {
     id: '2',
-    name: 'GPS Vehicle Tracking',
-    slug: generateSlug('GPS Vehicle Tracking'),
-    description: 'Real-time vehicle tracking with advanced features like geofencing and fuel monitoring.',
-    price: 12000,
-    duration: '1 Day',
-    category: 'gps-installation',
+    name: 'Networking & Infrastructure',
+    slug: generateSlug('Networking & Infrastructure'),
+    description: 'Design and deployment of secure LAN/WAN, Wi‑Fi, servers, and storage with monitoring.',
+    price: 35000,
+    duration: '1-2 Weeks',
+    category: 'networking',
     iconName: 'Navigation',
     features: [
-      'Real-time Tracking',
-      'Geofencing Alerts',
-      'Fuel Monitoring',
-      'Driver Behavior Analysis',
-      'Route Optimization',
-      'Mobile App Access'
+      'LAN/WAN & SD-WAN',
+      'Secure Wi‑Fi',
+      'Firewalls & VPN',
+      'Server & Storage Sizing',
+      '24/7 Monitoring',
+      'SLA Reporting'
     ],
     includes: [
-      'GPS Device Installation',
-      'SIM Card Setup',
-      'Software Configuration',
-      'User Training',
-      'Monthly Reports',
-      '1 Year Support'
+      'Network Assessment',
+      'Bill of Materials',
+      'On-site Deployment',
+      'Hardening & DR',
+      'Monitoring Setup',
+      'Runbook & Training'
     ]
   },
   {
     id: '3',
-    name: 'Equipment Maintenance',
-    slug: generateSlug('Equipment Maintenance'),
-    description: 'Comprehensive maintenance services for CCTV, GPS, and other security equipment.',
-    price: 5000,
-    duration: '2-4 Hours',
-    category: 'maintenance',
-    iconName: 'Wrench',
+    name: 'Web & Software Engineering',
+    slug: generateSlug('Web & Software Engineering'),
+    description: 'Websites, portals, and custom applications integrated with CRM/ERP and analytics.',
+    price: 28000,
+    duration: '2-6 Weeks',
+    category: 'software',
+    iconName: 'MessageCircle',
     features: [
-      'Preventive Maintenance',
-      'System Health Check',
-      'Software Updates',
-      'Hardware Cleaning',
-      'Performance Optimization',
-      '24/7 Support'
+      'Corporate & Commerce Sites',
+      'Custom Portals & Apps',
+      'API Integrations',
+      'Performance & SEO',
+      'Analytics & Dashboards',
+      'Secure DevOps'
     ],
     includes: [
-      'System Inspection',
-      'Cleaning & Calibration',
-      'Software Updates',
-      'Performance Report',
-      'Recommendations',
-      'Emergency Support'
+      'UX & IA',
+      'Tech Stack Selection',
+      'Sprint Delivery',
+      'Testing & QA',
+      'Launch Support',
+      'Training & Handover'
     ]
   },
   {
     id: '4',
-    name: 'Repair & Troubleshooting',
-    slug: generateSlug('Repair & Troubleshooting'),
-    description: 'Expert repair services for all types of security and tracking equipment.',
-    price: 3000,
-    duration: '1-3 Hours',
-    category: 'repair',
-    iconName: 'Settings',
+    name: 'Managed IT & AMC',
+    slug: generateSlug('Managed IT & AMC'),
+    description: 'Proactive monitoring, patching, backups, and multi-vendor AMC with SLA-driven support.',
+    price: 18000,
+    duration: 'Monthly',
+    category: 'amc',
+    iconName: 'Wrench',
     features: [
-      'Hardware Repair',
-      'Software Issues',
-      'Network Problems',
-      'Component Replacement',
-      'System Recovery',
-      'Data Backup'
+      'Proactive Monitoring',
+      'Patch Management',
+      'Backup & DR Drills',
+      'On-site & Remote Helpdesk',
+      'Asset & License Tracking',
+      'SLA Dashboard'
     ],
     includes: [
-      'Diagnostic Check',
-      'Repair or Replacement',
-      'System Testing',
-      'Documentation',
-      'Warranty on Repairs',
-      'Follow-up Support'
+      'Health Checks',
+      'Playbooks & SOPs',
+      'Quarterly Reviews',
+      'Vendor Coordination',
+      'Incident Reports',
+      '24/7 Support Options'
     ]
   },
   {
     id: '5',
-    name: 'Security Consultation',
-    slug: generateSlug('Security Consultation'),
-    description: 'Expert consultation for designing comprehensive security solutions for your business.',
-    price: 8000,
-    duration: '1 Day',
-    category: 'consultation',
-    iconName: 'MessageCircle',
+    name: 'Security & Surveillance',
+    slug: generateSlug('Security & Surveillance'),
+    description: 'CCTV, access control, and video analytics integrated with your IT and compliance needs.',
+    price: 22000,
+    duration: '3-7 Days',
+    category: 'security',
+    iconName: 'Camera',
     features: [
-      'Security Assessment',
-      'Custom Solution Design',
-      'Technology Recommendations',
-      'Cost Analysis',
-      'Implementation Plan',
-      'ROI Calculation'
+      'IP CCTV & VMS',
+      'Access Control',
+      'Video Analytics',
+      'Storage Planning',
+      'Mobile & Web Access',
+      'Compliance Reporting'
     ],
     includes: [
-      'Site Visit',
-      'Security Audit',
-      'Detailed Report',
-      'Solution Design',
-      'Implementation Timeline',
-      'Budget Planning'
+      'Site Survey',
+      'Design & BOM',
+      'Installation & Cabling',
+      'VMS Configuration',
+      'User Training',
+      'Maintenance Plan'
+    ]
+  },
+  {
+    id: '6',
+    name: 'Website & Portal Development',
+    slug: generateSlug('Website & Portal Development'),
+    description: 'Corporate websites, product landing pages, and customer portals built for performance, SEO, and lead capture.',
+    price: 45000,
+    duration: '2-6 Weeks',
+    category: 'web-development',
+    iconName: 'MessageCircle',
+    features: [
+      'Corporate & Product Sites',
+      'Headless CMS Options',
+      'SEO & Core Web Vitals',
+      'Analytics & Tagging',
+      'CRM/ERP Integrations',
+      'Performance & Security'
+    ],
+    includes: [
+      'Discovery & IA',
+      'Design System Setup',
+      'Build & Integrations',
+      'QA & UAT',
+      'Launch Support',
+      'Training & Handover'
+    ]
+  },
+  {
+    id: '7',
+    name: 'Invoicing & Billing Systems',
+    slug: generateSlug('Invoicing & Billing Systems'),
+    description: 'GST-compliant invoicing, estimates, collections, and receipts with role-based access and audit trails.',
+    price: 38000,
+    duration: '2-4 Weeks',
+    category: 'invoicing-billing',
+    iconName: 'Settings',
+    features: [
+      'GST-Compliant Invoices',
+      'Estimates & Proforma',
+      'Receipts & Collections',
+      'Role-Based Access',
+      'Audit Logs',
+      'Reports & Exports'
+    ],
+    includes: [
+      'Process Mapping',
+      'Template Setup',
+      'User & Role Config',
+      'Tax & Series Setup',
+      'UAT & Training',
+      'Go-live Support'
+    ]
+  },
+  {
+    id: '8',
+    name: 'Inventory Management',
+    slug: generateSlug('Inventory Management'),
+    description: 'Multi-location stock, procurement, GRN, and reorder automation with alerts and dashboards.',
+    price: 52000,
+    duration: '3-6 Weeks',
+    category: 'inventory-management',
+    iconName: 'Settings',
+    features: [
+      'Multi-Location Stock',
+      'Procurement & GRN',
+      'Reorder Automation',
+      'Batch/Serial Tracking',
+      'Alerts & Dashboards',
+      'API/ERP Integration'
+    ],
+    includes: [
+      'Data Model & Masters',
+      'Workflow Setup',
+      'Approval Rules',
+      'Reporting Pack',
+      'User Training',
+      'Hypercare'
+    ]
+  },
+  {
+    id: '9',
+    name: 'Clinic Management System',
+    slug: generateSlug('Clinic Management System'),
+    description: 'OPD management, appointments, EMR, prescriptions, and billing tailored for clinics.',
+    price: 68000,
+    duration: '4-8 Weeks',
+    category: 'clinic-management',
+    iconName: 'Settings',
+    features: [
+      'Appointments & Calendar',
+      'Patient Records & EMR',
+      'Prescriptions & Templates',
+      'Billing & Payments',
+      'Role & Consent Controls',
+      'Reports & Analytics'
+    ],
+    includes: [
+      'Requirement Workshops',
+      'Template Configuration',
+      'Data Migration (if any)',
+      'User Onboarding',
+      'UAT & Sign-off',
+      'Support & AMC Options'
+    ]
+  },
+  {
+    id: '10',
+    name: 'Lab Management System',
+    slug: generateSlug('Lab Management System'),
+    description: 'Sample tracking, test catalogue, billing, and report publishing for diagnostics labs.',
+    price: 72000,
+    duration: '4-8 Weeks',
+    category: 'lab-management',
+    iconName: 'Settings',
+    features: [
+      'Sample & Test Tracking',
+      'Test Catalogue & Pricing',
+      'Workflows & Approvals',
+      'Billing & Payments',
+      'Report Publishing',
+      'Integrations & APIs'
+    ],
+    includes: [
+      'Workflow Mapping',
+      'Catalogue Setup',
+      'Template & Branding',
+      'Role-Based Access',
+      'Training & UAT',
+      'Go-live Hypercare'
     ]
   }
 ];

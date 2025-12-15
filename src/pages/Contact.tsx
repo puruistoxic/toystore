@@ -82,8 +82,8 @@ const Contact: React.FC = () => {
   return (
     <>
       <SEO
-        title="Contact WAINSO GPS & Security System in Ramgarh, Ramgarh Cantt, Jharkhand | India"
-        description="Get in touch with WAINSO GPS & Security System in Ramgarh Cantt, Jharkhand. Serving Ramgarh, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across India. Call +91 98998 60975 or email wainsogps@gmail.com for CCTV installation, GPS tracking, and security solutions."
+        title="Contact WAINSO - IT, ERP, Security & Networking Partner"
+        description="Get in touch with WAINSO for ERP, networking, security, and IT services across Jharkhand and India. Call +91 98998 60975 or email wainsogps@gmail.com."
         path="/contact"
       />
       <div className="min-h-screen bg-gray-50">

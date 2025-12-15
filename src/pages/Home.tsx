@@ -37,44 +37,44 @@ const Home: React.FC = () => {
   const heroSlides: HeroSlide[] = [
     {
       id: '1',
-      title: 'Security &',
-      subtitle: 'Tracking Solutions',
-      description: 'Trusted security solutions across Jharkhand. 8+ years of excellence in CCTV, GPS tracking, and maintenance services.',
+      title: 'Full-Stack IT &',
+      subtitle: 'ERP Solutions',
+      description: 'Modernize your business with ERP development, implementation, and managed IT. From discovery to go-live with measurable ROI.',
       image: '/images/hero/hero-main.jpg',
-      imageAlt: 'Professional security and tracking solutions',
-      primaryButton: { text: 'Learn More', link: '/services' },
+      imageAlt: 'ERP and IT transformation workshop',
+      primaryButton: { text: 'Explore ERP Services', link: '/services?category=erp' },
       overlay: 'dark'
     },
     {
       id: '2',
-      title: 'CCTV Systems',
-      subtitle: '24/7 Surveillance',
-      description: 'HD IP cameras with night vision, motion detection, and mobile access. Professional installation included.',
+      title: 'IT Infrastructure',
+      subtitle: 'Hardware & Networking',
+      description: 'Enterprise-ready compute, storage, and secure networks. Supply, install, and maintain with SLAs you can trust.',
       image: '/images/hero/cctv-systems.jpg',
-      imageAlt: 'CCTV surveillance systems',
-      primaryButton: { text: 'View CCTV Solutions', link: '/services?category=cctv-installation' },
+      imageAlt: 'Servers and networking racks',
+      primaryButton: { text: 'View IT Infrastructure', link: '/products?category=hardware' },
       secondaryButton: { text: 'Get Quote', link: '/quote-request' },
       overlay: 'dark'
     },
     {
       id: '3',
-      title: 'GPS Tracking',
-      subtitle: 'Fleet Management',
-      description: 'Monitor vehicles in real-time with GPS tracking, fuel monitoring, and driver analytics. Reduce costs, boost efficiency.',
+      title: 'Digital',
+      subtitle: 'Web & Software',
+      description: 'High-performance websites, portals, and custom apps integrated with CRM/ERP and analytics to grow revenue.',
       image: '/images/hero/gps-tracking.jpg',
-      imageAlt: 'GPS tracking solutions',
-      primaryButton: { text: 'Explore GPS Solutions', link: '/services?category=gps-installation' },
-      secondaryButton: { text: 'Request Quote', link: '/quote-request' },
+      imageAlt: 'Developers collaborating on software and web apps',
+      primaryButton: { text: 'See Software Services', link: '/services?category=software' },
+      secondaryButton: { text: 'Request Demo', link: '/quote-request' },
       overlay: 'dark'
     },
     {
       id: '4',
-      title: 'Maintenance',
-      subtitle: 'Expert Services',
-      description: 'Complete maintenance, repair, and troubleshooting for all security equipment. 24/7 support available.',
+      title: 'Managed Support',
+      subtitle: 'AMC & Helpdesk',
+      description: 'Proactive monitoring, security hardening, and multi-vendor AMC across infra, endpoints, and business apps.',
       image: '/images/hero/maintenance-services.jpg',
-      imageAlt: 'Maintenance and repair services',
-      primaryButton: { text: 'View Services', link: '/services?category=maintenance' },
+      imageAlt: 'IT support specialist providing managed services',
+      primaryButton: { text: 'View Managed Services', link: '/services?category=amc' },
       secondaryButton: { text: 'Contact Us', link: '/contact' },
       overlay: 'dark'
     }
@@ -120,61 +120,79 @@ const Home: React.FC = () => {
 
   const services = [
     {
-      icon: <Camera className="h-8 w-8" />,
-      title: 'CCTV Installation',
-      description: 'Professional surveillance systems for complete security coverage',
-      features: ['HD Cameras', 'Remote Monitoring', 'Night Vision', 'Mobile App']
+      icon: <Settings className="h-8 w-8" />,
+      title: 'ERP Development & Integration',
+      description: 'Custom ERP builds, module rollouts, and integration with CRM, finance, and inventory.',
+      features: ['Discovery & Blueprint', 'Module Implementation', 'Data Migration', 'User Training']
     },
     {
       icon: <Navigation className="h-8 w-8" />,
-      title: 'GPS Tracking',
-      description: 'Real-time vehicle and asset tracking solutions',
-      features: ['Real-time Tracking', 'Geofencing', 'Fuel Monitoring', 'Reports']
+      title: 'Networking & Infrastructure',
+      description: 'Secure networks, servers, and cloud-ready setups with monitoring and SLAs.',
+      features: ['LAN/WAN & Wi‑Fi', 'Firewalls & VPN', 'Server Sizing', '24/7 NOC']
     },
     {
-      icon: <Settings className="h-8 w-8" />,
-      title: 'Maintenance',
-      description: 'Comprehensive maintenance services for all your equipment',
-      features: ['Preventive Maintenance', '24/7 Support', 'Quick Response', 'Warranty']
+      icon: <Camera className="h-8 w-8" />,
+      title: 'Web & Software Engineering',
+      description: 'High-performing websites and custom software aligned to your business workflows.',
+      features: ['Websites & Portals', 'Custom Apps', 'API Integrations', 'Performance & SEO']
+    },
+    {
+      icon: <Wrench className="h-8 w-8" />,
+      title: 'Managed IT & AMC',
+      description: 'Multi-vendor AMC, patching, backups, and on-site/remote helpdesk.',
+      features: ['Preventive Maintenance', 'Helpdesk & Remote', 'Backup & DR', 'SLA Reporting']
+    },
+    {
+      icon: <Shield className="h-8 w-8" />,
+      title: 'Security & Surveillance',
+      description: 'CCTV, access control, and video analytics integrated with your network.',
+      features: ['IP CCTV', 'Access Control', 'VMS & Analytics', 'Compliance Ready']
+    },
+    {
+      icon: <Star className="h-8 w-8" />,
+      title: 'IT Procurement',
+      description: 'Hardware, software licensing, and rollout support with lifecycle management.',
+      features: ['Laptops & Desktops', 'Servers & Storage', 'Licensing', 'Deployment']
     }
   ];
 
   const features = [
     {
       icon: <Shield className="h-6 w-6" />,
-      title: 'Secure & Reliable',
-      description: 'Enterprise-grade security solutions with 99.9% uptime'
+      title: 'Outcome-Driven',
+      description: 'Roadmaps tied to uptime, user adoption, and cost benchmarks.'
     },
     {
       icon: <MapPin className="h-6 w-6" />,
-      title: 'Wide Service Coverage',
-      description: 'Serving Ramgarh, Ramgarh Cantt, and across Jharkhand, India with professional installation and support'
+      title: 'Pan-India Delivery',
+      description: 'On-site across Jharkhand with remote delivery nationwide.'
     },
     {
       icon: <Wrench className="h-6 w-6" />,
-      title: 'Expert Technicians',
-      description: 'Certified professionals with years of experience'
+      title: 'Certified Engineers',
+      description: 'ERP, cloud, network, and security specialists under one roof.'
     }
   ];
 
   const testimonials = [
     {
-      name: 'Rajesh Kumar',
-      company: 'Kumar Industries',
+      name: 'Ritu Singh',
+      company: 'Manufacturing ERP Rollout',
       rating: 5,
-      comment: 'Excellent CCTV installation service. The team was professional and the system works perfectly.'
+      comment: 'They delivered a phased ERP go-live with zero downtime. Finance and inventory teams adopted in weeks.'
     },
     {
-      name: 'Priya Sharma',
-      company: 'Sharma Logistics',
+      name: 'Sanjay Mehta',
+      company: 'Nationwide Retail',
       rating: 5,
-      comment: 'GPS tracking has helped us reduce fuel costs by 15%. Highly recommended!'
+      comment: 'Networking upgrade and CCTV integration were seamless. Branch uptime improved and IT tickets dropped noticeably.'
     },
     {
-      name: 'Amit Patel',
-      company: 'Patel Manufacturing',
+      name: 'Ankita Verma',
+      company: 'D2C Brand',
       rating: 5,
-      comment: 'Outstanding maintenance service. Quick response time and reliable support.'
+      comment: 'New website, CRM hooks, and analytics lifted lead capture and page speed. Great ongoing support.'
     }
   ];
 
@@ -192,8 +210,8 @@ const Home: React.FC = () => {
   return (
     <>
       <SEO
-        title="WAINSO GPS & Security System - CCTV, GPS Tracking & Security Solutions in Ramgarh, Ramgarh Cantt, Jharkhand | India"
-        description="Professional CCTV installation, GPS tracking, and security solutions in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jamshedpur, and across Jharkhand, India. Authorized dealers for CP Plus, Hikvision, Panasonic, Godrej. 8+ years experience, 4.9-star rating. Call +91 98998 60975."
+        title="WAINSO IT & ERP Services - Infrastructure, Software, Security Across India"
+        description="Full-stack IT partner for ERP development, networking, hardware procurement, web/software engineering, managed services, and security rollouts. Delivered across Jharkhand and pan-India with certified engineers."
         path="/"
       />
       <div className="min-h-screen">
@@ -377,14 +395,14 @@ const Home: React.FC = () => {
               <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">What We Offer</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Our Services
+              IT, ERP, and Digital Services
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Comprehensive solutions for all your security, tracking, and maintenance needs in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India
+              End-to-end delivery: consulting, build, procurement, implementation, and managed support across software, infrastructure, security, and ERP.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
             {services.map((service, index) => (
               <div 
                 key={index} 
@@ -482,7 +500,7 @@ const Home: React.FC = () => {
               Why Choose WAINSO?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We deliver excellence through innovation, reliability, and customer satisfaction. Serving Ramgarh, Ramgarh Cantt, and across Jharkhand, India.
+              We deliver excellence through innovation, reliability, and customer satisfaction for businesses across India.
             </p>
           </div>
 
@@ -547,10 +565,10 @@ const Home: React.FC = () => {
               <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Our Service Areas</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Serving Ramgarh & Across Jharkhand, India
+              Serving Businesses Nationwide
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              We provide professional security and tracking solutions in multiple cities across Jharkhand and India
+              We deliver IT, ERP, security, and infrastructure solutions with on-site and remote support across India.
             </p>
           </div>
           
@@ -569,9 +587,9 @@ const Home: React.FC = () => {
           </div>
           
           <div className="text-center">
-            <p className="text-gray-600 mb-4">
-              <span className="font-semibold text-primary-600">+ More cities across India</span> - We also serve major cities nationwide including Delhi, Mumbai, Bangalore, Kolkata, and more.
-            </p>
+              <p className="text-gray-600 mb-4">
+                <span className="font-semibold text-primary-600">Nationwide delivery</span> with local partners and remote support.
+              </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/locations"
@@ -596,10 +614,10 @@ const Home: React.FC = () => {
       <section className="py-20 bg-primary-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to Secure Your Business?
+            Ready to Modernize Your Business?
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Get a free consultation and quote for your security and tracking needs in Ramgarh, Ramgarh Cantt, and across Jharkhand, India
+            Get a free consultation and quote for your IT, ERP, networking, and security needs anywhere in India.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

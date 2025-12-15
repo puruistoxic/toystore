@@ -16,68 +16,77 @@ const extendedServiceDetails: Record<string, {
     rating: 4.9,
     reviews: 47,
     requirements: [
-      'Stable Internet Connection',
-      'Power Outlets Near Installation Points',
-      'Access to Installation Areas',
-      'Basic Network Knowledge (Optional)'
+      'Current workflows and pain points',
+      'Data sources for migration',
+      'Key users for UAT and sign-off',
+      'Environment access (dev/test/prod)'
     ],
     process: [
-      {
-        step: 1,
-        title: 'Initial Consultation',
-        description: 'We assess your security needs and recommend the best camera placement and system configuration.'
-      },
-      {
-        step: 2,
-        title: 'Site Survey',
-        description: 'Our technicians visit your location to plan the installation and identify any potential challenges.'
-      },
-      {
-        step: 3,
-        title: 'Installation',
-        description: 'Professional installation of cameras, DVR/NVR, and network equipment with minimal disruption.'
-      },
-      {
-        step: 4,
-        title: 'Configuration & Testing',
-        description: 'System setup, network configuration, and thorough testing to ensure everything works perfectly.'
-      },
-      {
-        step: 5,
-        title: 'Training & Handover',
-        description: 'Complete training on system operation and mobile app usage, plus documentation handover.'
-      }
+      { step: 1, title: 'Discovery & Blueprint', description: 'Map processes, integrations, and KPIs. Finalize modules, scope, and success criteria.' },
+      { step: 2, title: 'Architecture & Plan', description: 'Design data model, integrations, and rollout plan with clear milestones.' },
+      { step: 3, title: 'Build & Configure', description: 'Develop modules, configure workflows, and set up roles and security.' },
+      { step: 4, title: 'Testing & Migration', description: 'UAT cycles, data migration, and performance checks before cutover.' },
+      { step: 5, title: 'Go-live & Hypercare', description: 'Cutover support, training, and hypercare with dashboards on adoption and uptime.' }
     ]
   },
   '2': {
     rating: 4.8,
     reviews: 36,
     requirements: [
-      'Vehicle Access',
-      '12V Power Source',
-      'Driver Availability for Testing'
+      'Floor plans or rack details',
+      'Internet/ISP details',
+      'Existing IP scheme and VLAN needs'
     ],
     process: [
-      {
-        step: 1,
-        title: 'Requirement Gathering',
-        description: 'Understand tracking objectives, fleet size, and reporting needs.'
-      },
-      {
-        step: 2,
-        title: 'Device Installation',
-        description: 'Install trackers with minimal downtime and secure wiring.'
-      },
-      {
-        step: 3,
-        title: 'Software Setup',
-        description: 'Configure tracking portal, alerts, and reporting templates.'
-      },
-      {
-        step: 4,
-        title: 'Training',
-        description: 'Train fleet managers on monitoring tools and mobile apps.'
-      }
+      { step: 1, title: 'Assess & Design', description: 'Capture coverage, capacity, and security needs. Produce high-level and low-level design.' },
+      { step: 2, title: 'Bill of Materials', description: 'Finalize hardware, licenses, and accessories with delivery timelines.' },
+      { step: 3, title: 'Deploy & Configure', description: 'Install, cable, and configure network, security, and Wi‑Fi with best practices.' },
+      { step: 4, title: 'Validation & Handover', description: 'Run validation tests, document configurations, and hand over runbooks.' }
+    ]
+  },
+  '3': {
+    rating: 4.7,
+    reviews: 29,
+    requirements: [
+      'Brand guidelines and copy references',
+      'Feature list and integrations',
+      'Staging credentials'
+    ],
+    process: [
+      { step: 1, title: 'Product & UX Brief', description: 'Define journeys, SEO goals, and performance budgets.' },
+      { step: 2, title: 'Build & Integrate', description: 'Develop web/app modules with API and analytics integration.' },
+      { step: 3, title: 'QA & Launch', description: 'Cross-browser/device QA, performance tuning, and release.' },
+      { step: 4, title: 'Enablement', description: 'Train admins, hand over documentation, and set up monitoring.' }
+    ]
+  },
+  '4': {
+    rating: 4.8,
+    reviews: 33,
+    requirements: [
+      'Asset inventory (hardware/software)',
+      'Access for remote/onsite',
+      'Change window preferences'
+    ],
+    process: [
+      { step: 1, title: 'Onboarding & Audit', description: 'Baseline health, patch levels, backups, and security posture.' },
+      { step: 2, title: 'Runbooks & SLAs', description: 'Define SOPs, escalation, and reporting cadence.' },
+      { step: 3, title: 'Operate & Optimize', description: '24/7 monitoring, incident response, and preventive maintenance.' },
+      { step: 4, title: 'Review & Improve', description: 'Monthly reviews with KPI dashboards and improvement backlog.' }
+    ]
+  },
+  '5': {
+    rating: 4.6,
+    reviews: 24,
+    requirements: [
+      'Site layout and coverage areas',
+      'Network availability and power points',
+      'Compliance requirements (if any)'
+    ],
+    process: [
+      { step: 1, title: 'Survey & Design', description: 'Coverage planning, camera/access control placement, and storage sizing.' },
+      { step: 2, title: 'Install & Integrate', description: 'Deploy CCTV/access control and integrate with VMS/network.' },
+      { step: 3, title: 'Test & Secure', description: 'Validate feeds, alerts, retention, and harden devices.' },
+      { step: 4, title: 'Train & Support', description: 'Train operators, hand over SOPs, and schedule maintenance.' }
     ]
   }
 };
@@ -90,31 +99,15 @@ const ServiceDetail: React.FC = () => {
     rating: 4.7,
     reviews: 18,
     requirements: [
-      'Project Brief',
-      'Primary Contact Person',
-      'Access to Installation or Consultation Areas'
+      'Project brief and owners',
+      'Integration points (if any)',
+      'Preferred timelines and budget guardrails'
     ],
     process: [
-      {
-        step: 1,
-        title: 'Discovery Call',
-        description: 'Understand your requirements, timelines, and desired outcomes.'
-      },
-      {
-        step: 2,
-        title: 'Scope Definition',
-        description: 'Document scope, deliverables, and schedules for the engagement.'
-      },
-      {
-        step: 3,
-        title: 'Execution',
-        description: 'Deliver the service with transparent communication and progress updates.'
-      },
-      {
-        step: 4,
-        title: 'Review & Sign-off',
-        description: 'Validate outcomes, hand over documentation, and plan follow-up support if required.'
-      }
+      { step: 1, title: 'Discovery Call', description: 'Clarify goals, constraints, and timelines.' },
+      { step: 2, title: 'Scope Definition', description: 'Document deliverables, access, and rollout plan.' },
+      { step: 3, title: 'Execute', description: 'Deliver in sprints with demos and updates.' },
+      { step: 4, title: 'Handover & Support', description: 'Train users and plan post-launch support.' }
     ]
   };
 
@@ -143,9 +136,11 @@ const ServiceDetail: React.FC = () => {
     );
   }
 
-  const serviceLocations = ['Ramgarh', 'Ramgarh Cantt', 'Hazaribagh', 'Ranchi', 'Dhanbad', 'Bokaro', 'Jamshedpur', 'Giridih', 'Deoghar', 'Jharkhand', 'India'];
-  const metaDescription = generateServiceMetaDescription(service.name, 'Ramgarh, Jharkhand');
-  const pageTitle = generatePageTitle(service.name, 'Ramgarh, Jharkhand');
+  const serviceLocations = service.category === 'security'
+    ? ['Ramgarh', 'Ramgarh Cantt', 'Hazaribagh', 'Ranchi', 'Dhanbad', 'Bokaro', 'Jamshedpur', 'Giridih', 'Deoghar', 'Jharkhand', 'India']
+    : undefined;
+  const metaDescription = generateServiceMetaDescription(service.name, service.category === 'security' ? 'Ramgarh, Jharkhand' : '');
+  const pageTitle = generatePageTitle(service.name, service.category === 'security' ? 'Ramgarh, Jharkhand' : '');
 
   return (
     <>
@@ -163,13 +158,13 @@ const ServiceDetail: React.FC = () => {
             name: 'WAINSO',
             telephone: '+919899860975',
             email: 'wainsogps@gmail.com',
-            address: {
+            address: service.category === 'security' ? {
               addressLocality: 'Ramgarh',
               addressRegion: 'Jharkhand',
               addressCountry: 'IN'
-            }
+            } : undefined
           },
-          areaServed: serviceLocations.map(loc => ({ name: loc })),
+          areaServed: serviceLocations?.map(loc => ({ name: loc })),
           rating: extra.rating ? {
             value: extra.rating,
             count: extra.reviews
@@ -219,10 +214,12 @@ const ServiceDetail: React.FC = () => {
 
               {/* Location Badge and Rating */}
               <div className="flex items-center flex-wrap gap-4 mb-4 pt-2">
-                <div className="flex items-center text-sm text-gray-700 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
-                  <MapPin className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
-                  <span className="font-medium">Available in Ramgarh, Jharkhand</span>
-                </div>
+                {service.category === 'security' && (
+                  <div className="flex items-center text-sm text-gray-700 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+                    <MapPin className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
+                    <span className="font-medium">Available in Ramgarh, Jharkhand</span>
+                  </div>
+                )}
                 <div className="flex items-center text-sm text-gray-600">
                   <Shield className="h-4 w-4 mr-1.5 text-green-600 flex-shrink-0" />
                   <span className="font-semibold">{extra.rating} out of 5</span>
@@ -315,10 +312,13 @@ const ServiceDetail: React.FC = () => {
                   Request Quote
                 </Link>
 
-                <button className="w-full border border-primary-600 text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors mt-3">
+                <Link
+                  to="/contact"
+                  className="w-full inline-flex items-center justify-center border border-primary-600 text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors mt-3"
+                >
                   <MessageCircle className="h-5 w-5 inline mr-2" />
                   Contact Us
-                </button>
+                </Link>
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
@@ -338,31 +338,33 @@ const ServiceDetail: React.FC = () => {
             </div>
 
             {/* Service Areas */}
-            <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border border-primary-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MapPin className="h-5 w-5 mr-2 text-primary-600" />
-                Service Areas
-              </h3>
-              <p className="text-gray-700 text-sm mb-3">
-                We provide professional {service.name.toLowerCase()} services in:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {serviceLocations.map((location, idx) => (
-                  <span
-                    key={idx}
-                    className="bg-white text-primary-700 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm"
-                  >
-                    {location}
-                  </span>
-                ))}
+            {service.category === 'security' && serviceLocations && (
+              <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border border-primary-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <MapPin className="h-5 w-5 mr-2 text-primary-600" />
+                  Service Areas
+                </h3>
+                <p className="text-gray-700 text-sm mb-3">
+                  We provide professional {service.name.toLowerCase()} services in:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {serviceLocations.map((location, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-white text-primary-700 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm"
+                    >
+                      {location}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Contact Info */}
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Our experts are here to help you choose the right solution for your needs in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India.
+                Our experts are here to help you choose the right solution for your needs with nationwide support.
               </p>
               <div className="space-y-3 text-sm">
                 <a

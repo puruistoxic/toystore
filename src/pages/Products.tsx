@@ -8,7 +8,8 @@ import {
   Star,
   MessageCircle,
   Eye,
-  CheckCircle
+  CheckCircle,
+  Settings
 } from 'lucide-react';
 import { products } from '../data/products';
 import type { Product } from '../types/catalog';
@@ -20,11 +21,11 @@ const Products: React.FC = () => {
 
   const categories = [
     { id: 'all', name: 'All Products' },
-    { id: 'cctv', name: 'CCTV Equipment' },
-    { id: 'gps', name: 'GPS Trackers' },
-    { id: 'security', name: 'Security Systems' },
-    { id: 'maintenance', name: 'Maintenance' },
-    { id: 'accessories', name: 'Accessories' }
+    { id: 'erp', name: 'ERP & Connectors' },
+    { id: 'software', name: 'Software & Licenses' },
+    { id: 'hardware', name: 'Laptops & Servers' },
+    { id: 'networking', name: 'Networking' },
+    { id: 'security', name: 'Security & CCTV' }
   ];
 
   const filteredProducts = useMemo(() => {
@@ -44,8 +45,8 @@ const Products: React.FC = () => {
   return (
     <>
       <SEO
-        title="Security Products - CCTV Cameras, GPS Trackers, Security Systems in Ramgarh, Ramgarh Cantt, Jharkhand | India"
-        description="Buy CCTV cameras, GPS trackers, security lockers, video door phones from CP Plus, Hikvision, Panasonic, Godrej in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India. Authorized dealers with warranty. Free shipping available."
+        title="IT & ERP Products - Hardware, Networking, Software, Security | WAINSO"
+        description="IT procurement with implementation support: laptops, servers, firewalls, Wi‑Fi, ERP suites, software licenses, CCTV kits, and connectors. Delivered and supported across India."
         path="/products"
       />
       <div className="min-h-screen bg-gray-50">
@@ -57,7 +58,7 @@ const Products: React.FC = () => {
               Our Products
             </h1>
             <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-              High-quality security and tracking equipment from leading brands - CP Plus, Hikvision, Panasonic, Godrej, and more. Available in Ramgarh, Ramgarh Cantt, and across Jharkhand, India
+              Curated IT and security stack: hardware, networking, software, ERP, and CCTV with deployment-ready support.
             </p>
           </div>
         </div>
@@ -109,9 +110,11 @@ const Products: React.FC = () => {
               <div className="relative h-48 bg-gray-200">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-gray-400">
-                    {product.category === 'cctv' && <Camera className="h-16 w-16" />}
-                    {product.category === 'gps' && <Navigation className="h-16 w-16" />}
-                    {product.category === 'maintenance' && <Wrench className="h-16 w-16" />}
+                    {(product.category === 'security' || product.category === 'cctv') && <Camera className="h-16 w-16" />}
+                    {product.category === 'networking' && <Navigation className="h-16 w-16" />}
+                    {product.category === 'hardware' && <Wrench className="h-16 w-16" />}
+                    {product.category === 'software' && <MessageCircle className="h-16 w-16" />}
+                    {product.category === 'erp' && <Settings className="h-16 w-16" />}
                   </div>
                 </div>
                 {!product.inStock && (

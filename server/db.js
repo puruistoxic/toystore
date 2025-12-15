@@ -190,10 +190,13 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_slug (slug),
-        INDEX idx_category (category)
+        INDEX idx_category (category),
+        INDEX idx_services_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -218,12 +221,15 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_slug (slug),
         INDEX idx_category (category),
         INDEX idx_brand (brand),
-        INDEX idx_hsn_code (hsn_code)
+        INDEX idx_hsn_code (hsn_code),
+        INDEX idx_products_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -250,10 +256,13 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_slug (slug),
-        INDEX idx_state (state)
+        INDEX idx_state (state),
+        INDEX idx_locations_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -281,9 +290,12 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_slug (slug)
+        INDEX idx_slug (slug),
+        INDEX idx_brands_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -306,11 +318,14 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_slug (slug),
         INDEX idx_type (type),
-        INDEX idx_parent (parent_id)
+        INDEX idx_parent (parent_id),
+        INDEX idx_categories_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -387,9 +402,12 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_slug (slug)
+        INDEX idx_slug (slug),
+        INDEX idx_industries_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -420,12 +438,15 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_slug (slug),
         INDEX idx_industry (industry),
         INDEX idx_location (location),
-        INDEX idx_featured (featured)
+        INDEX idx_featured (featured),
+        INDEX idx_case_studies_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -446,12 +467,15 @@ async function initializeTables() {
         featured BOOLEAN DEFAULT FALSE,
         verified BOOLEAN DEFAULT FALSE,
         published_at TIMESTAMP,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_location (location),
         INDEX idx_industry (industry),
         INDEX idx_featured (featured),
-        INDEX idx_verified (verified)
+        INDEX idx_verified (verified),
+        INDEX idx_testimonials_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -510,12 +534,15 @@ async function initializeTables() {
         website VARCHAR(500),
         notes TEXT,
         status ENUM('active', 'inactive', 'archived') DEFAULT 'active',
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_email (email),
         INDEX idx_phone (phone),
         INDEX idx_status (status),
-        INDEX idx_created_at (created_at)
+        INDEX idx_created_at (created_at),
+        INDEX idx_clients_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
@@ -539,12 +566,15 @@ async function initializeTables() {
         notes TEXT,
         terms TEXT,
         created_by INT,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_client (client_id),
         INDEX idx_proposal_number (proposal_number),
         INDEX idx_status (status),
         INDEX idx_created_at (created_at),
+        INDEX idx_proposals_is_deleted (is_deleted),
         FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
@@ -574,6 +604,8 @@ async function initializeTables() {
         terms TEXT,
         paid_amount DECIMAL(10,2) DEFAULT 0,
         created_by INT,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_client (client_id),
@@ -581,6 +613,7 @@ async function initializeTables() {
         INDEX idx_status (status),
         INDEX idx_due_date (due_date),
         INDEX idx_created_at (created_at),
+        INDEX idx_invoices_is_deleted (is_deleted),
         FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT,
         FOREIGN KEY (proposal_id) REFERENCES proposals(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -669,7 +702,7 @@ async function initializeTables() {
           company_name, address_line1, address_line2, address_line3, city, state, postal_code, country,
           phone, phone2, email, website, gstin, footer_text
         ) VALUES (
-          'WAINSO GPS & Security System',
+          'WAINSO',
           'Room No-9, 1st Floor, Yadav Complex',
           'Near Block Chawck, Block Chowk',
           'Ramgarh Cantt',
@@ -682,7 +715,7 @@ async function initializeTables() {
           'wainsogps@gmail.com',
           'wainso.com',
           '20AACFW6441P1ZY',
-          '© 2024 WAINSO GPS & Security System. All rights reserved. | Est. 2017 | 8+ Years in Business'
+          '© 2024 WAINSO. All rights reserved. | Est. 2017 | 8+ Years in Business'
         )
       `);
     }

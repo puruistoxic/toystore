@@ -19,11 +19,16 @@ const Services: React.FC = () => {
 
   const categories = [
     { id: 'all', name: 'All Services' },
-    { id: 'cctv-installation', name: 'CCTV Installation' },
-    { id: 'gps-installation', name: 'GPS Tracking' },
-    { id: 'maintenance', name: 'Maintenance' },
-    { id: 'repair', name: 'Repair' },
-    { id: 'consultation', name: 'Consultation' }
+    { id: 'erp', name: 'ERP Development' },
+    { id: 'networking', name: 'Networking & Infra' },
+    { id: 'software', name: 'Web & Software' },
+    { id: 'amc', name: 'Managed IT & AMC' },
+    { id: 'security', name: 'Security & Surveillance' },
+    { id: 'web-development', name: 'Website & Portals' },
+    { id: 'invoicing-billing', name: 'Invoicing & Billing' },
+    { id: 'inventory-management', name: 'Inventory Management' },
+    { id: 'clinic-management', name: 'Clinic Management' },
+    { id: 'lab-management', name: 'Lab Management' }
   ];
 
   const iconMap: Record<Service['iconName'], React.ReactElement> = {
@@ -44,8 +49,8 @@ const Services: React.FC = () => {
   return (
     <>
       <SEO
-        title="Professional Security & Tracking Services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jharkhand | India"
-        description="Expert CCTV installation, GPS tracking, and maintenance services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jamshedpur, and across Jharkhand, India. Professional technicians, quality guaranteed. Free consultation available."
+        title="IT Services - ERP, Networking, Software, AMC, Security | WAINSO"
+        description="Full-stack IT services: ERP development, networking & infra, web and software engineering, managed IT/AMC, and security deployments. Delivered across Jharkhand and pan-India."
         path="/services"
       />
       <div className="min-h-screen bg-gray-50">
@@ -57,7 +62,7 @@ const Services: React.FC = () => {
               Our Services
             </h1>
             <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-              Comprehensive security, tracking, and maintenance solutions in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, and across Jharkhand, India
+              Consulting, build, and managed services across ERP, software, infrastructure, and security.
             </p>
           </div>
         </div>
@@ -169,7 +174,7 @@ const Services: React.FC = () => {
             Need a Custom Solution?
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            We provide tailored security and tracking solutions for businesses of all sizes
+            We design and support IT solutions tailored to your industry, budget, and timelines.
           </p>
           <Link
             to="/contact"

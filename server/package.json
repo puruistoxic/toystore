@@ -10,6 +10,8 @@
     "check-env": "node scripts/check-env.js",
     "test-login": "node scripts/test-login.js",
     "migrate-schema": "node scripts/migrate-schema.js",
+    "seed-countries": "node scripts/seed-countries.js",
+    "seed-states": "node scripts/seed-states.js",
     "seed-masters": "node scripts/seed-masters.js",
     "seed-products": "node scripts/seed-products.js",
     "seed-all": "node scripts/seed-masters.js && node scripts/seed-products.js",

@@ -100,7 +100,7 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
             Send Enquiry for
           </h2>
           <h3 className="text-xl md:text-2xl font-bold text-primary-600 mb-6">
-            WAINSO GPS & Security System
+            WAINSO
           </h3>
 
           {isSubmitted ? (
@@ -232,7 +232,7 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                 Professional Security Solutions
               </h2>
               <p className="text-primary-100 text-lg mb-6">
-                Trusted by 500+ businesses in Ramgarh, Jharkhand
+                Trusted by 500+ businesses across India
               </p>
 
               <div className="space-y-4 mb-6">

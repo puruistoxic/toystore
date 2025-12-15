@@ -22,21 +22,26 @@ const Header: React.FC = () => {
     };
   }, []);
 
-  // Group services by category
+  // Group services by primary categories
   const servicesByCategory = {
-    'cctv-installation': services.filter(s => s.category === 'cctv-installation'),
-    'gps-installation': services.filter(s => s.category === 'gps-installation'),
-    'maintenance': services.filter(s => s.category === 'maintenance'),
-    'repair': services.filter(s => s.category === 'repair'),
-    'consultation': services.filter(s => s.category === 'consultation'),
+    erp: services.filter(s => s.category === 'erp'),
+    networking: services.filter(s => s.category === 'networking'),
+    software: services.filter(s => ['software', 'web-development'].includes(s.category)),
+    amc: services.filter(s => s.category === 'amc'),
+    security: services.filter(s => s.category === 'security'),
+    invoicing: services.filter(s => s.category === 'invoicing-billing'),
+    inventory: services.filter(s => s.category === 'inventory-management'),
+    clinic: services.filter(s => s.category === 'clinic-management'),
+    lab: services.filter(s => s.category === 'lab-management'),
   };
 
   // Group products by category
   const productsByCategory = {
-    'cctv': products.filter(p => p.category === 'cctv'),
-    'gps': products.filter(p => p.category === 'gps'),
-    'security': products.filter(p => p.category === 'security'),
-    'maintenance': products.filter(p => p.category === 'maintenance'),
+    erp: products.filter(p => p.category === 'erp'),
+    hardware: products.filter(p => p.category === 'hardware'),
+    networking: products.filter(p => p.category === 'networking'),
+    software: products.filter(p => p.category === 'software'),
+    security: products.filter(p => p.category === 'security' || p.category === 'cctv'),
   };
 
   const navigation = [
@@ -53,26 +58,46 @@ const Header: React.FC = () => {
         type: 'solutions', // 3-column layout with categories, services, and industries
         categories: [
           {
-            name: 'CCTV Installation',
-            icon: Camera,
-            services: servicesByCategory['cctv-installation']
+            name: 'ERP & Integrations',
+            icon: Settings,
+            services: servicesByCategory.erp
           },
           {
-            name: 'GPS Tracking',
+            name: 'Networking & Infrastructure',
             icon: Navigation,
-            services: servicesByCategory['gps-installation']
+            services: servicesByCategory.networking
           },
           {
-            name: 'Maintenance & Support',
+            name: 'Web & Software',
+            icon: MessageCircle,
+            services: servicesByCategory.software
+          },
+          {
+            name: 'Managed IT & AMC',
             icon: Wrench,
-            services: [...servicesByCategory['maintenance'], ...servicesByCategory['repair']]
+            services: servicesByCategory.amc
+          },
+          {
+            name: 'Security & Surveillance',
+            icon: Camera,
+            services: servicesByCategory.security
+          },
+          {
+            name: 'Business Apps',
+            icon: Shield,
+            services: [...servicesByCategory.invoicing, ...servicesByCategory.inventory]
+          },
+          {
+            name: 'Healthcare Solutions',
+            icon: MapPin,
+            services: [...servicesByCategory.clinic, ...servicesByCategory.lab]
           }
         ],
         industries: [
-          { name: 'Business Security', icon: Shield, link: '/services?category=cctv-installation' },
-          { name: 'Fleet Management', icon: Navigation, link: '/services?category=gps-installation' },
-          { name: 'System Maintenance', icon: Wrench, link: '/services?category=maintenance' },
-          { name: 'Security Consultation', icon: MessageCircle, link: '/services?category=consultation' }
+          { name: 'SMB & Mid-Market', icon: Shield, link: '/services' },
+          { name: 'Retail & FMCG', icon: Navigation, link: '/services?category=inventory-management' },
+          { name: 'Healthcare', icon: MapPin, link: '/services?category=clinic-management' },
+          { name: 'Manufacturing', icon: Wrench, link: '/services?category=erp' }
         ]
       }
     },
@@ -83,12 +108,11 @@ const Header: React.FC = () => {
       dropdown: {
         type: 'list', // Simple 2-column list
         items: [
-          { name: 'CCTV Cameras', link: '/products?category=cctv' },
-          { name: 'GPS Trackers', link: '/products?category=gps' },
-          { name: 'Security Systems', link: '/products?category=security' },
-          { name: 'Maintenance Tools', link: '/products?category=maintenance' },
-          { name: 'DVR & NVR Systems', link: '/products?category=cctv' },
-          { name: 'Accessories', link: '/products' }
+          { name: 'ERP & Connectors', link: '/products?category=erp' },
+          { name: 'Laptops & Servers', link: '/products?category=hardware' },
+          { name: 'Networking & Firewalls', link: '/products?category=networking' },
+          { name: 'Software & Licenses', link: '/products?category=software' },
+          { name: 'Security & CCTV Kits', link: '/products?category=security' }
         ]
       }
     },
@@ -349,7 +373,7 @@ const Header: React.FC = () => {
 
                 {/* Middle Column - Services grouped by category */}
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 mb-4">Enterprise Solutions</h3>
+                  <h3 className="text-base font-bold text-gray-900 mb-4">Featured Services</h3>
                   <div className="space-y-4">
                     {item.dropdown.categories?.map((category, idx) => {
                       const hasServices = 'services' in category;
@@ -357,12 +381,10 @@ const Header: React.FC = () => {
                       return (
                         <div key={idx}>
                           <div className="text-sm font-bold text-gray-500 uppercase mb-2.5">
-                            {category.name === 'CCTV Installation' ? 'Surveillance' : 
-                             category.name === 'GPS Tracking' ? 'Tracking' : 
-                             'Support'}
+                            {category.name}
                           </div>
                           <div className="space-y-0">
-                            {category.services.map((service, serviceIdx) => (
+                            {category.services.slice(0, 3).map((service, serviceIdx) => (
                               <Link
                                 key={serviceIdx}
                                 to={`/services/${service.slug}`}
@@ -371,6 +393,14 @@ const Header: React.FC = () => {
                                 {service.name}
                               </Link>
                             ))}
+                            {category.services.length > 3 && (
+                              <Link
+                                to={`/services?category=${category.services[0].category}`}
+                                className="block py-2 text-sm text-primary-600 font-semibold"
+                              >
+                                View all {category.services.length} →
+                              </Link>
+                            )}
                           </div>
                         </div>
                       );

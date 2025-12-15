@@ -192,15 +192,15 @@ function drawInvoiceHeader(
   
   // Client contact information
   if (invoice.client_phone) {
-    doc.text(`Contact: ${invoice.client_phone}`, leftX, toYPos);
+    doc.text(`CONTACT: ${invoice.client_phone}`.toUpperCase(), leftX, toYPos);
     toYPos += 4;
   }
   if (invoice.client_email) {
-    doc.text(`Email: ${invoice.client_email}`, leftX, toYPos);
+    doc.text(`EMAIL: ${invoice.client_email}`.toUpperCase(), leftX, toYPos);
     toYPos += 4;
   }
   if (invoice.client_tax_id && !isSharingInvoice) {
-    doc.text(`GSTIN: ${invoice.client_tax_id}`, leftX, toYPos);
+    doc.text(`GSTIN: ${invoice.client_tax_id}`.toUpperCase(), leftX, toYPos);
     toYPos += 4;
   }
 
@@ -233,15 +233,15 @@ function drawInvoiceHeader(
   
   // Company Address - Right aligned
   if (companySettings.address_line1) {
-    doc.text(companySettings.address_line1, rightTopX, fromYPos, { align: 'right' });
+    doc.text(companySettings.address_line1.toUpperCase(), rightTopX, fromYPos, { align: 'right' });
     fromYPos += 4;
   }
   if (companySettings.address_line2) {
-    doc.text(companySettings.address_line2, rightTopX, fromYPos, { align: 'right' });
+    doc.text(companySettings.address_line2.toUpperCase(), rightTopX, fromYPos, { align: 'right' });
     fromYPos += 4;
   }
   if (companySettings.address_line3) {
-    doc.text(companySettings.address_line3, rightTopX, fromYPos, { align: 'right' });
+    doc.text(companySettings.address_line3.toUpperCase(), rightTopX, fromYPos, { align: 'right' });
     fromYPos += 4;
   }
   const cityStateCountryZip = [
@@ -251,21 +251,21 @@ function drawInvoiceHeader(
     companySettings.postal_code
   ].filter((item): item is string => Boolean(item)).join(', ');
   if (cityStateCountryZip) {
-    doc.text(cityStateCountryZip, rightTopX, fromYPos, { align: 'right' });
+    doc.text(cityStateCountryZip.toUpperCase(), rightTopX, fromYPos, { align: 'right' });
     fromYPos += 4;
   }
   
   // Contact Info - Right aligned
   if (companySettings.gstin && !isSharingInvoice) {
-    doc.text(`GSTIN:${companySettings.gstin}`, rightTopX, fromYPos, { align: 'right' });
+    doc.text(`GSTIN:${companySettings.gstin}`.toUpperCase(), rightTopX, fromYPos, { align: 'right' });
     fromYPos += 4;
   }
   if (companySettings.phone) {
-    doc.text(`Contact:${companySettings.phone}`, rightTopX, fromYPos, { align: 'right' });
+    doc.text(`CONTACT:${companySettings.phone}`.toUpperCase(), rightTopX, fromYPos, { align: 'right' });
     fromYPos += 4;
   }
   if (companySettings.email) {
-    doc.text(`Mail ID:${companySettings.email}`, rightTopX, fromYPos, { align: 'right' });
+    doc.text(`MAIL ID:${companySettings.email}`.toUpperCase(), rightTopX, fromYPos, { align: 'right' });
     fromYPos += 4;
   }
   
@@ -312,7 +312,17 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
   const fontSizeSmall = 8;   // Footer/small text
   const fontSizeTitle = 12;  // Main title (reduced from 16)
   const fontSizeHeading = 10; // Section headings
-  
+
+  // Single source of truth for invoice footer text.
+  // We resolve it once here and only render it through addPageNumber,
+  // so the copyright can never appear twice on the same page.
+  const invoiceDefaultFooterText =
+    '© 2025 WAINSO. All rights reserved. | Est. 2017 | 8+ Years in Business';
+  const invoiceResolvedFooterText =
+    (companySettings.footer_text && companySettings.footer_text.trim().length > 0
+      ? companySettings.footer_text.trim()
+      : invoiceDefaultFooterText);
+
   // Calculate available width for table (page width minus margins)
   const tableWidth = pageWidth - (margin * 2);
   
@@ -331,10 +341,12 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
 
   const items = invoice.items as InvoiceItemWithHSN[];
   
-  // Helper function to add footer and page number
+  // Helper function to add footer and page number.
+  // This is the ONLY place where the footer copyright is rendered,
+  // ensuring it never appears twice on the same page.
   const addPageNumber = (pageNum: number, total: number) => {
     // Footer text above page number
-    const footerText = '© 2025 WAINSO GPS & Security System. All rights reserved. | Est. 2017 | 8+ Years in Business';
+    const footerText = invoiceResolvedFooterText;
     doc.setFontSize(fontSizeSmall);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(128, 128, 128);
@@ -394,7 +406,7 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
 
     autoTable(doc, {
       startY: lastTableFinalY,
-      head: [['S.NO', 'HSN CODE', 'DESCRIPTION', 'Price', 'Qty', 'AMOUNT']],
+    head: [['#', 'HSN CODE', 'DESCRIPTION', 'PRICE', 'QTY', 'AMOUNT']],
       body: tableData,
       theme: 'striped',
       headStyles: { 
@@ -416,8 +428,13 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
         5: { cellWidth: tableWidth * 0.18, halign: 'right' }
       },
       didParseCell: (data: any) => {
-        // Right-align headers for Price, Qty, and AMOUNT columns
+        // Header alignment tweaks
         if (data.section === 'head') {
+          // Center-align "#" column header
+          if (data.column.index === 0) {
+            data.cell.styles.halign = 'center';
+          }
+          // Right-align headers for PRICE, QTY, and AMOUNT columns
           if (data.column.index === 3 || data.column.index === 4 || data.column.index === 5) {
             data.cell.styles.halign = 'right';
           }
@@ -535,25 +552,29 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
     doc.setFont('helvetica', 'normal');
     
     if (companySettings.bank_account_name || companySettings.company_name) {
-      doc.text(`Name: ${companySettings.bank_account_name || companySettings.company_name}`, margin, totalsY);
+      const nameLine = `NAME: ${companySettings.bank_account_name || companySettings.company_name}`;
+      doc.text(nameLine.toUpperCase(), margin, totalsY);
       totalsY += 4;
     }
     if (companySettings.bank_account_number) {
-      doc.text(`Acc/no: ${companySettings.bank_account_number}`, margin, totalsY);
+      const accLine = `ACC/NO: ${companySettings.bank_account_number}`;
+      doc.text(accLine.toUpperCase(), margin, totalsY);
       totalsY += 4;
     }
     if (companySettings.bank_ifsc) {
-      doc.text(`IFSC: ${companySettings.bank_ifsc}`, margin, totalsY);
+      const ifscLine = `IFSC: ${companySettings.bank_ifsc}`;
+      doc.text(ifscLine.toUpperCase(), margin, totalsY);
       totalsY += 4;
     }
     if (companySettings.bank_name) {
-      doc.text(`BANK: ${companySettings.bank_name}`, margin, totalsY);
+      const bankLine = `BANK: ${companySettings.bank_name}`;
+      doc.text(bankLine.toUpperCase(), margin, totalsY);
       totalsY += 4;
     }
     if (companySettings.bank_branch) {
-      const branchLine = `BRANCH: ${companySettings.bank_branch}`;
+      const branchLine = `BRANCH: ${companySettings.bank_branch}`.toUpperCase();
       if (companySettings.postal_code) {
-        doc.text(`${branchLine}, ${companySettings.postal_code}`, margin, totalsY);
+        doc.text(`${branchLine}, ${companySettings.postal_code}`.toUpperCase(), margin, totalsY);
       } else {
         doc.text(branchLine, margin, totalsY);
       }
@@ -599,16 +620,7 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
     totalsY += notesLines.length * 4;
   }
 
-  // Footer - Only on last page (if different from standard footer)
-  if (companySettings.footer_text && companySettings.footer_text !== '© 2025 WAINSO GPS & Security System. All rights reserved. | Est. 2017 | 8+ Years in Business') {
-    const footerY = pageHeight - 12;
-    doc.setFontSize(fontSizeSmall);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(128, 128, 128);
-    doc.text(companySettings.footer_text, pageWidth / 2, footerY, { align: 'center' });
-  }
-
-  // Add footer text and page number on last page
+  // Add footer text and page number on last page (footer rendered only here)
   addPageNumber(totalPages, totalPages);
 
   return doc;
@@ -822,7 +834,17 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   const fontSizeSmall = 8;   // Footer/small text
   const fontSizeTitle = 12;  // Main title (reduced from 16)
   const fontSizeHeading = 10; // Section headings
-  
+
+  // Single source of truth for proposal footer text.
+  // We resolve it once here and only render it through addPageNumber,
+  // so the copyright can never appear twice on the same page.
+  const proposalDefaultFooterText =
+    '© 2025 WAINSO. All rights reserved. | Est. 2017 | 8+ Years in Business';
+  const proposalResolvedFooterText =
+    (companySettings.footer_text && companySettings.footer_text.trim().length > 0
+      ? companySettings.footer_text.trim()
+      : proposalDefaultFooterText);
+
   // Calculate available width for table (page width minus margins)
   const tableWidth = pageWidth - (margin * 2);
   
@@ -841,10 +863,12 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   // Items Table with proper number formatting and HSN code
   const items = proposal.items as InvoiceItemWithHSN[];
   
-  // Helper function to add footer and page number
+  // Helper function to add footer and page number.
+  // This is the ONLY place where the footer copyright is rendered,
+  // ensuring it never appears twice on the same page.
   const addPageNumber = (pageNum: number, total: number) => {
     // Footer text above page number
-    const footerText = '© 2025 WAINSO GPS & Security System. All rights reserved. | Est. 2017 | 8+ Years in Business';
+    const footerText = proposalResolvedFooterText;
     doc.setFontSize(fontSizeSmall);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(128, 128, 128);
@@ -903,7 +927,7 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   
     autoTable(doc, {
       startY: lastTableFinalY,
-      head: [['S.NO', 'HSN CODE', 'DESCRIPTION', 'Price', 'Qty', 'AMOUNT']],
+    head: [['#', 'HSN CODE', 'DESCRIPTION', 'PRICE', 'QTY', 'AMOUNT']],
       body: tableData,
       theme: 'striped',
       headStyles: { 
@@ -925,8 +949,13 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         5: { cellWidth: tableWidth * 0.18, halign: 'right' }
       },
       didParseCell: (data: any) => {
-        // Right-align headers for Price, Qty, and AMOUNT columns
+        // Header alignment tweaks
         if (data.section === 'head') {
+          // Center-align "#" column header
+          if (data.column.index === 0) {
+            data.cell.styles.halign = 'center';
+          }
+          // Right-align headers for PRICE, QTY, and AMOUNT columns
           if (data.column.index === 3 || data.column.index === 4 || data.column.index === 5) {
             data.cell.styles.halign = 'right';
           }
@@ -1097,16 +1126,7 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
     }
   }
 
-  // Footer - Only on last page (if different from standard footer)
-  if (companySettings.footer_text && companySettings.footer_text !== '© 2025 WAINSO GPS & Security System. All rights reserved. | Est. 2017 | 8+ Years in Business') {
-    const footerY = pageHeight - 12;
-    doc.setFontSize(fontSizeSmall);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(128, 128, 128);
-    doc.text(companySettings.footer_text, pageWidth / 2, footerY, { align: 'center' });
-  }
-
-  // Add footer text and page number on last page
+  // Add footer text and page number on last page (footer rendered only here)
   addPageNumber(totalPages, totalPages);
 
   return doc;

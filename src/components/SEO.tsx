@@ -34,8 +34,8 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-  title = 'WAINSO - Professional Security & Tracking Solutions',
-  description = 'Professional CCTV installation, GPS tracking, and maintenance services in Ramgarh, Ramgarh Cantt, Hazaribagh, Ranchi, Dhanbad, Bokaro, Jamshedpur, and across Jharkhand, India. Expert technicians, quality guaranteed. Call +91 98998 60975.',
+  title = 'WAINSO - IT, ERP, Security & Networking Solutions',
+  description = 'Full-stack IT partner for ERP, networking, security, and software solutions with nationwide delivery and support.',
   path = '/',
   image = 'https://wainso.com/images/og-image.jpg',
   type = 'website',
@@ -118,19 +118,8 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="twitter:description" content={description} />
       <meta property="twitter:image" content={image} />
 
-      {/* Location-specific meta tags */}
-      <meta name="geo.region" content="IN-JH" />
-      <meta name="geo.placename" content="Ramgarh, Ramgarh Cantt, Jharkhand, India" />
-      <meta name="geo.position" content="23.6345;85.3803" />
-      <meta name="ICBM" content="23.6345, 85.3803" />
-      <meta name="keywords" content="CCTV installation Ramgarh, GPS tracking Ramgarh, Security systems Ramgarh Cantt, CCTV Ramgarh Jharkhand, GPS tracker Hazaribagh, Security cameras Ranchi, CCTV installation Dhanbad, GPS tracking Bokaro, Security solutions Jharkhand, CCTV India, GPS tracking India" />
-
-      {/* Business Information */}
-      <meta name="business:contact_data:street_address" content="Ramgarh, Jharkhand" />
-      <meta name="business:contact_data:locality" content="Ramgarh" />
-      <meta name="business:contact_data:region" content="Jharkhand" />
-      <meta name="business:contact_data:postal_code" content="829122" />
-      <meta name="business:contact_data:country_name" content="India" />
+      {/* Keywords */}
+      <meta name="keywords" content="ERP development, IT services, networking solutions, hardware procurement, CCTV installation, managed IT AMC, software development, cloud and servers, pan India IT partner" />
 
       {/* Schema.org Structured Data */}
       <script type="application/ld+json">
@@ -146,34 +135,9 @@ const SEO: React.FC<SEOProps> = ({
           description: 'Professional CCTV installation, GPS tracking, and maintenance services',
           telephone: '+919899860975',
           email: 'wainsogps@gmail.com',
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: 'Ramgarh',
-            addressRegion: 'Jharkhand',
-            postalCode: '829122',
-            addressCountry: 'IN'
-          },
-          geo: {
-            '@type': 'GeoCoordinates',
-            latitude: '23.6345',
-            longitude: '85.3803'
-          },
-          areaServed: [
-            { '@type': 'City', name: 'Ramgarh' },
-            { '@type': 'City', name: 'Ramgarh Cantt' },
-            { '@type': 'City', name: 'Hazaribagh' },
-            { '@type': 'City', name: 'Ranchi' },
-            { '@type': 'City', name: 'Dhanbad' },
-            { '@type': 'City', name: 'Bokaro' },
-            { '@type': 'City', name: 'Jamshedpur' },
-            { '@type': 'City', name: 'Giridih' },
-            { '@type': 'City', name: 'Deoghar' },
-            { '@type': 'City', name: 'Gumla' },
-            { '@type': 'City', name: 'Chatra' },
-            { '@type': 'City', name: 'Koderma' },
-            { '@type': 'State', name: 'Jharkhand' },
-            { '@type': 'Country', name: 'India' }
-          ],
+          address: undefined,
+          geo: undefined,
+          areaServed: undefined,
           url: 'https://wainso.com',
           priceRange: '₹₹',
           openingHoursSpecification: {

@@ -212,7 +212,7 @@ const brands = [
   },
   {
     name: 'Service',
-    description: 'Service brand for installation and maintenance services provided by WAINSO GPS & Security Systems.',
+    description: 'Service brand for installation and maintenance services provided by WAINSO.',
     short_description: 'Professional installation and maintenance services',
     partnership_type: 'others',
     partnership_since: '2018'

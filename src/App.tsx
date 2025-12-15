@@ -42,6 +42,8 @@ import AdminCategories from './pages/admin/Categories';
 import AdminCountries from './pages/admin/Countries';
 import AdminStates from './pages/admin/States';
 import AdminLocalities from './pages/admin/Localities';
+import StateNew from './pages/admin/StateNew';
+import StateEdit from './pages/admin/StateEdit';
 import AdminAuditLogs from './pages/admin/AuditLogs';
 import ProductNew from './pages/admin/ProductNew';
 import ProductEdit from './pages/admin/ProductEdit';
@@ -140,6 +142,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AdminStates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/states/new"
+                element={
+                  <ProtectedRoute>
+                    <StateNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/states/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <StateEdit />
                   </ProtectedRoute>
                 }
               />

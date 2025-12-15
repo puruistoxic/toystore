@@ -14,6 +14,14 @@ interface ContentManagerProps {
   }[];
   searchFields?: string[];
   itemsPerPage?: number;
+  /**
+   * Optional additional controls (e.g. filters) to render next to the search box.
+   */
+  filters?: React.ReactNode;
+  /**
+   * Optional extra predicate applied after fetching, before search & pagination.
+   */
+  itemFilter?: (item: any) => boolean;
 }
 
 export default function ContentManager({
@@ -22,7 +30,9 @@ export default function ContentManager({
   apiEndpoint,
   fields,
   searchFields = ['name', 'title'],
-  itemsPerPage = 10
+  itemsPerPage = 10,
+  filters,
+  itemFilter
 }: ContentManagerProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +44,7 @@ export default function ContentManager({
   useEffect(() => {
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [apiEndpoint]);
 
   const fetchItems = async () => {
     try {
@@ -64,6 +74,9 @@ export default function ContentManager({
   // Filter items based on search
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
+      if (itemFilter && !itemFilter(item)) {
+        return false;
+      }
       if (!searchTerm) return true;
       const searchLower = searchTerm.toLowerCase();
       return searchFields.some((field) => {
@@ -71,7 +84,7 @@ export default function ContentManager({
         return value && String(value).toLowerCase().includes(searchLower);
       });
     });
-  }, [items, searchTerm, searchFields]);
+  }, [items, searchTerm, searchFields, itemFilter]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -166,9 +179,9 @@ export default function ContentManager({
           </div>
         )}
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative">
+        {/* Search + optional filters */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
             </div>
@@ -180,6 +193,11 @@ export default function ContentManager({
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
+          {filters && (
+            <div className="w-full sm:w-auto flex justify-start sm:justify-end">
+              {filters}
+            </div>
+          )}
         </div>
 
         {/* Table */}

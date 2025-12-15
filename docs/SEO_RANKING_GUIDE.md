@@ -45,7 +45,7 @@ Based on current search results, your domain needs better visibility. Here's a c
 1. Go to [Google Business Profile](https://www.google.com/business/)
 2. Create/claim your business listing
 3. **Complete ALL fields:**
-   - Business Name: "WAINSO GPS & Security System"
+  - Business Name: "WAINSO"
    - Category: "Security System Installation Service" or "CCTV Installation Service"
    - Address: Room No-9, 1st Floor, Yadav Complex, Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand
    - Phone: +91 98998 60975

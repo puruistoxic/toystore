@@ -69,7 +69,19 @@ async function addAuditLog(req, action, entityType, entityId, entityName, oldDat
 router.get('/services', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM services ORDER BY created_at DESC');
+    const { only_deleted, include_deleted } = req.query;
+    let query = 'SELECT * FROM services WHERE 1=1';
+    const params = [];
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
     const services = rows.map(row => formatDataFromDB(row, ['features', 'includes', 'seo_keywords']));
     res.json(services);
   } catch (error) {
@@ -164,7 +176,10 @@ router.delete('/services/:id', authenticateToken, async (req, res) => {
     const [oldRows] = await pool.execute('SELECT * FROM services WHERE id = ?', [serviceId]);
     const oldData = oldRows.length > 0 ? formatDataFromDB(oldRows[0], ['features', 'includes', 'seo_keywords']) : null;
     
-    await pool.execute('DELETE FROM services WHERE id = ?', [serviceId]);
+    await pool.execute(
+      'UPDATE services SET is_deleted = 1, is_active = 0, deleted_at = NOW() WHERE id = ?',
+      [serviceId]
+    );
     
     const entityName = oldData?.name || null;
     await logAudit(req, 'DELETE', 'service', serviceId, entityName, { deleted: oldData });
@@ -175,11 +190,41 @@ router.delete('/services/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Restore service
+router.post('/services/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const serviceId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM services WHERE id = ?', [serviceId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Service not found' });
+    }
+
+    const service = rows[0];
+    if (!service.is_deleted) {
+      return res.status(400).json({ error: 'Service is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE services SET is_deleted = 0, is_active = 1, deleted_at = NULL WHERE id = ?',
+      [serviceId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'service', serviceId, service.name, service, null);
+
+    res.json({ success: true, message: 'Service restored successfully' });
+  } catch (error) {
+    console.error('[Content API] Restore service error:', error);
+    res.status(500).json({ error: 'Failed to restore service', message: error.message });
+  }
+});
+
 // ==================== PRODUCTS ====================
 router.get('/products', async (req, res) => {
   try {
     const pool = getPool();
-    const { search, is_active } = req.query;
+    const { search, is_active, only_deleted, include_deleted } = req.query;
     
     let query = 'SELECT * FROM products WHERE 1=1';
     const params = [];
@@ -187,6 +232,12 @@ router.get('/products', async (req, res) => {
     if (is_active !== undefined) {
       query += ' AND is_active = ?';
       params.push(is_active === 'true' || is_active === true);
+    }
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
     }
     
     if (search) {
@@ -329,7 +380,10 @@ router.delete('/products/:id', authenticateToken, async (req, res) => {
     const [oldRows] = await pool.execute('SELECT * FROM products WHERE id = ?', [productId]);
     const oldData = oldRows.length > 0 ? formatDataFromDB(oldRows[0], ['images', 'features', 'specifications', 'seo_keywords']) : null;
     
-    await pool.execute('DELETE FROM products WHERE id = ?', [productId]);
+    await pool.execute(
+      'UPDATE products SET is_deleted = 1, is_active = 0, deleted_at = NOW() WHERE id = ?',
+      [productId]
+    );
     
     const entityName = oldData?.name || null;
     await addAuditLog(req, 'DELETE', 'product', productId, entityName, oldData);
@@ -337,6 +391,36 @@ router.delete('/products/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('[Content API] Delete product error:', error);
     res.status(500).json({ error: 'Failed to delete product', message: error.message });
+  }
+});
+
+// Restore product
+router.post('/products/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const productId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [productId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const product = rows[0];
+    if (!product.is_deleted) {
+      return res.status(400).json({ error: 'Product is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE products SET is_deleted = 0, is_active = 1, deleted_at = NULL WHERE id = ?',
+      [productId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'product', productId, product.name, product, null);
+
+    res.json({ success: true, message: 'Product restored successfully' });
+  } catch (error) {
+    console.error('[Content API] Restore product error:', error);
+    res.status(500).json({ error: 'Failed to restore product', message: error.message });
   }
 });
 
@@ -449,7 +533,19 @@ router.delete('/locations/:id', authenticateToken, async (req, res) => {
 router.get('/brands', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM brands ORDER BY created_at DESC');
+    const { only_deleted, include_deleted } = req.query;
+    let query = 'SELECT * FROM brands WHERE 1=1';
+    const params = [];
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
     const brands = rows.map(row => formatDataFromDB(row, ['products', 'services', 'certifications', 'features', 'seo_keywords']));
     res.json(brands);
   } catch (error) {
@@ -701,7 +797,10 @@ router.delete('/brands/:id', authenticateToken, async (req, res) => {
     const [oldRows] = await pool.execute('SELECT * FROM brands WHERE id = ?', [brandId]);
     const oldData = oldRows.length > 0 ? formatDataFromDB(oldRows[0], ['products', 'services', 'certifications', 'features', 'seo_keywords']) : null;
     
-    await pool.execute('DELETE FROM brands WHERE id = ?', [brandId]);
+    await pool.execute(
+      'UPDATE brands SET is_deleted = 1, is_active = 0, deleted_at = NOW() WHERE id = ?',
+      [brandId]
+    );
     
     const entityName = oldData?.name || null;
     await addAuditLog(req, 'DELETE', 'brand', brandId, entityName, oldData);
@@ -712,11 +811,53 @@ router.delete('/brands/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Restore brand
+router.post('/brands/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const brandId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM brands WHERE id = ?', [brandId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    const brand = rows[0];
+    if (!brand.is_deleted) {
+      return res.status(400).json({ error: 'Brand is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE brands SET is_deleted = 0, is_active = 1, deleted_at = NULL WHERE id = ?',
+      [brandId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'brand', brandId, brand.name, brand, null);
+
+    res.json({ success: true, message: 'Brand restored successfully' });
+  } catch (error) {
+    console.error('[Content API] Restore brand error:', error);
+    res.status(500).json({ error: 'Failed to restore brand', message: error.message });
+  }
+});
+
 // ==================== INDUSTRIES ====================
 router.get('/industries', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM industries ORDER BY created_at DESC');
+    const { only_deleted, include_deleted } = req.query;
+    let query = 'SELECT * FROM industries WHERE 1=1';
+    const params = [];
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
     const industries = rows.map(row => formatDataFromDB(row, ['services', 'products', 'use_cases', 'case_studies', 'testimonials', 'seo_keywords']));
     res.json(industries);
   } catch (error) {
@@ -807,7 +948,10 @@ router.put('/industries/:id', authenticateToken, async (req, res) => {
 router.delete('/industries/:id', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    await pool.execute('DELETE FROM industries WHERE id = ?', [req.params.id]);
+    await pool.execute(
+      'UPDATE industries SET is_deleted = 1, is_active = 0, deleted_at = NOW() WHERE id = ?',
+      [req.params.id]
+    );
     res.json({ success: true, message: 'Industry deleted successfully' });
   } catch (error) {
     console.error('[Content API] Delete industry error:', error);
@@ -815,11 +959,53 @@ router.delete('/industries/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Restore industry
+router.post('/industries/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const industryId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM industries WHERE id = ?', [industryId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Industry not found' });
+    }
+
+    const industry = rows[0];
+    if (!industry.is_deleted) {
+      return res.status(400).json({ error: 'Industry is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE industries SET is_deleted = 0, is_active = 1, deleted_at = NULL WHERE id = ?',
+      [industryId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'industry', industryId, industry.name, industry, null);
+
+    res.json({ success: true, message: 'Industry restored successfully' });
+  } catch (error) {
+    console.error('[Content API] Restore industry error:', error);
+    res.status(500).json({ error: 'Failed to restore industry', message: error.message });
+  }
+});
+
 // ==================== CASE STUDIES ====================
 router.get('/case-studies', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM case_studies ORDER BY created_at DESC');
+    const { only_deleted, include_deleted } = req.query;
+    let query = 'SELECT * FROM case_studies WHERE 1=1';
+    const params = [];
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
     const caseStudies = rows.map(row => formatDataFromDB(row, ['services', 'products', 'results', 'images', 'seo_keywords']));
     res.json(caseStudies);
   } catch (error) {
@@ -917,7 +1103,10 @@ router.put('/case-studies/:id', authenticateToken, async (req, res) => {
 router.delete('/case-studies/:id', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    await pool.execute('DELETE FROM case_studies WHERE id = ?', [req.params.id]);
+    await pool.execute(
+      'UPDATE case_studies SET is_deleted = 1, is_active = 0, deleted_at = NOW() WHERE id = ?',
+      [req.params.id]
+    );
     res.json({ success: true, message: 'Case study deleted successfully' });
   } catch (error) {
     console.error('[Content API] Delete case study error:', error);
@@ -925,11 +1114,53 @@ router.delete('/case-studies/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Restore case study
+router.post('/case-studies/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const id = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM case_studies WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Case study not found' });
+    }
+
+    const cs = rows[0];
+    if (!cs.is_deleted) {
+      return res.status(400).json({ error: 'Case study is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE case_studies SET is_deleted = 0, is_active = 1, deleted_at = NULL WHERE id = ?',
+      [id]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'case_study', id, cs.title, cs, null);
+
+    res.json({ success: true, message: 'Case study restored successfully' });
+  } catch (error) {
+    console.error('[Content API] Restore case study error:', error);
+    res.status(500).json({ error: 'Failed to restore case study', message: error.message });
+  }
+});
+
 // ==================== TESTIMONIALS ====================
 router.get('/testimonials', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM testimonials ORDER BY created_at DESC');
+    const { only_deleted, include_deleted } = req.query;
+    let query = 'SELECT * FROM testimonials WHERE 1=1';
+    const params = [];
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
     res.json(rows);
   } catch (error) {
     console.error('[Content API] Get testimonials error:', error);
@@ -1005,11 +1236,44 @@ router.put('/testimonials/:id', authenticateToken, async (req, res) => {
 router.delete('/testimonials/:id', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    await pool.execute('DELETE FROM testimonials WHERE id = ?', [req.params.id]);
+    await pool.execute(
+      'UPDATE testimonials SET is_deleted = 1, deleted_at = NOW() WHERE id = ?',
+      [req.params.id]
+    );
     res.json({ success: true, message: 'Testimonial deleted successfully' });
   } catch (error) {
     console.error('[Content API] Delete testimonial error:', error);
     res.status(500).json({ error: 'Failed to delete testimonial', message: error.message });
+  }
+});
+
+// Restore testimonial
+router.post('/testimonials/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const id = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM testimonials WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Testimonial not found' });
+    }
+
+    const t = rows[0];
+    if (!t.is_deleted) {
+      return res.status(400).json({ error: 'Testimonial is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE testimonials SET is_deleted = 0, deleted_at = NULL WHERE id = ?',
+      [id]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'testimonial', id, t.name, t, null);
+
+    res.json({ success: true, message: 'Testimonial restored successfully' });
+  } catch (error) {
+    console.error('[Content API] Restore testimonial error:', error);
+    res.status(500).json({ error: 'Failed to restore testimonial', message: error.message });
   }
 });
 
@@ -1019,7 +1283,19 @@ router.delete('/testimonials/:id', authenticateToken, async (req, res) => {
 router.get('/categories', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM categories ORDER BY type, name');
+    const { only_deleted, include_deleted } = req.query;
+    let query = 'SELECT * FROM categories WHERE 1=1';
+    const params = [];
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
+    }
+
+    query += ' ORDER BY type, name';
+
+    const [rows] = await pool.execute(query, params);
     const categories = rows.map(row => formatDataFromDB(row, ['services', 'products', 'brands', 'seo_keywords']));
     res.json(categories);
   } catch (error) {
@@ -1280,7 +1556,10 @@ router.delete('/categories/:id', authenticateToken, async (req, res) => {
     const [oldRows] = await pool.execute('SELECT * FROM categories WHERE id = ?', [categoryId]);
     const oldData = oldRows.length > 0 ? formatDataFromDB(oldRows[0], ['services', 'products', 'brands', 'seo_keywords']) : null;
     
-    await pool.execute('DELETE FROM categories WHERE id = ?', [categoryId]);
+    await pool.execute(
+      'UPDATE categories SET is_deleted = 1, is_active = 0, deleted_at = NOW() WHERE id = ?',
+      [categoryId]
+    );
     
     const entityName = oldData?.name || null;
     await addAuditLog(req, 'DELETE', 'category', categoryId, entityName, oldData);
@@ -1288,6 +1567,36 @@ router.delete('/categories/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('[Content API] Delete category error:', error);
     res.status(500).json({ error: 'Failed to delete category', message: error.message });
+  }
+});
+
+// Restore category
+router.post('/categories/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const categoryId = req.params.id;
+
+    const [rows] = await pool.execute('SELECT * FROM categories WHERE id = ?', [categoryId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    const category = rows[0];
+    if (!category.is_deleted) {
+      return res.status(400).json({ error: 'Category is not deleted' });
+    }
+
+    await pool.execute(
+      'UPDATE categories SET is_deleted = 0, is_active = 1, deleted_at = NULL WHERE id = ?',
+      [categoryId]
+    );
+
+    await addAuditLog(req, 'RESTORE', 'category', categoryId, category.name, category, null);
+
+    res.json({ success: true, message: 'Category restored successfully' });
+  } catch (error) {
+    console.error('[Content API] Restore category error:', error);
+    res.status(500).json({ error: 'Failed to restore category', message: error.message });
   }
 });
 
@@ -1347,7 +1656,19 @@ router.delete('/countries/:code', authenticateToken, async (req, res) => {
 router.get('/states', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM states ORDER BY name');
+    const { country_code } = req.query;
+
+    let sql = 'SELECT * FROM states';
+    const params = [];
+
+    if (country_code) {
+      sql += ' WHERE country_code = ?';
+      params.push(country_code);
+    }
+
+    sql += ' ORDER BY name';
+
+    const [rows] = await pool.execute(sql, params);
     res.json(rows);
   } catch (error) {
     console.error('[Content API] Get states error:', error);
@@ -1355,15 +1676,30 @@ router.get('/states', async (req, res) => {
   }
 });
 
+router.get('/states/:id', async (req, res) => {
+  try {
+    const pool = getPool();
+    const [rows] = await pool.execute('SELECT * FROM states WHERE id = ?', [req.params.id]);
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'State not found' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('[Content API] Get state detail error:', error);
+    res.status(500).json({ error: 'Failed to fetch state', message: error.message });
+  }
+});
+
 router.post('/states', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
     const data = req.body;
+    const id = data.id || `${data.country_code || 'STATE'}-${Date.now()}`;
     await pool.execute(
       `REPLACE INTO states (id, country_code, name, slug, latitude, longitude, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
-        data.id,
+        id,
         data.country_code,
         data.name,
         data.slug,
