@@ -597,7 +597,7 @@ async function initializeTables() {
         currency VARCHAR(10) DEFAULT 'INR',
         issue_date DATE NOT NULL,
         due_date DATE NOT NULL,
-        status ENUM('draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled') DEFAULT 'draft',
+        status ENUM('draft', 'pending_approval', 'approved', 'sent', 'viewed', 'partial', 'paid', 'overdue', 'disputed', 'on_hold', 'cancelled', 'refunded') DEFAULT 'draft',
         invoice_type ENUM('confirmed', 'sharing') DEFAULT 'confirmed',
         payment_terms VARCHAR(255),
         notes TEXT,
@@ -632,6 +632,19 @@ async function initializeTables() {
       }
     }
 
+    // Update invoice status enum to include new statuses (for existing databases)
+    try {
+      await connection.execute(`
+        ALTER TABLE invoices 
+        MODIFY COLUMN status ENUM('draft', 'pending_approval', 'approved', 'sent', 'viewed', 'partial', 'paid', 'overdue', 'disputed', 'on_hold', 'cancelled', 'refunded') DEFAULT 'draft'
+      `);
+    } catch (error) {
+      // Column might not exist or enum values might already be updated
+      if (!error.message.includes('Duplicate column name') && !error.message.includes('Unknown column')) {
+        console.warn('[Database] Could not update status enum:', error.message);
+      }
+    }
+
     // Create invoice_payments table for tracking payments
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS invoice_payments (
@@ -646,6 +659,27 @@ async function initializeTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_invoice (invoice_id),
         INDEX idx_payment_date (payment_date),
+        FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Create invoice_reminders table for payment reminders
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS invoice_reminders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        invoice_id VARCHAR(50) NOT NULL,
+        reminder_type ENUM('before_due', 'on_due', 'after_due', 'custom') DEFAULT 'after_due',
+        reminder_date DATE NOT NULL,
+        days_before_after INT DEFAULT 0,
+        email_sent TINYINT(1) DEFAULT 0,
+        email_sent_at TIMESTAMP NULL,
+        email_subject VARCHAR(255),
+        email_body TEXT,
+        created_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_invoice (invoice_id),
+        INDEX idx_reminder_date (reminder_date),
+        INDEX idx_email_sent (email_sent),
         FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);

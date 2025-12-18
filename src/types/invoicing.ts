@@ -23,6 +23,7 @@ export interface ProposalItem {
   price: number;
   total?: number;
   hsn_code?: string;
+  product_id?: string;
 }
 
 export interface Proposal {
@@ -63,6 +64,7 @@ export interface InvoiceItem {
   price: number;
   total?: number;
   hsn_code?: string;
+  product_id?: string;
 }
 
 export interface Invoice {
@@ -91,7 +93,7 @@ export interface Invoice {
   currency: string;
   issue_date: string;
   due_date: string;
-  status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
+  status: 'draft' | 'pending_approval' | 'approved' | 'sent' | 'viewed' | 'partial' | 'paid' | 'overdue' | 'disputed' | 'on_hold' | 'cancelled' | 'refunded';
   invoice_type?: 'confirmed' | 'sharing';
   payment_terms?: string;
   notes?: string;
@@ -110,6 +112,20 @@ export interface InvoicePayment {
   payment_method: 'cash' | 'bank_transfer' | 'cheque' | 'credit_card' | 'debit_card' | 'upi' | 'other';
   reference_number?: string;
   notes?: string;
+  created_by?: number;
+  created_at?: string;
+}
+
+export interface InvoiceReminder {
+  id: number;
+  invoice_id: string;
+  reminder_type: 'before_due' | 'on_due' | 'after_due' | 'custom';
+  reminder_date: string;
+  days_before_after: number;
+  email_sent: boolean;
+  email_sent_at?: string;
+  email_subject?: string;
+  email_body?: string;
   created_by?: number;
   created_at?: string;
 }

@@ -4,13 +4,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { invoicingApi, companySettingsApi } from '../../utils/api';
 import { Invoice } from '../../types/invoicing';
-import { Plus, Search, Edit, Trash2, FileText, Calendar, DollarSign, Download } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FileText, Calendar, DollarSign, Download, Mail, CreditCard } from 'lucide-react';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
+import PaymentReminderModal from '../../components/admin/PaymentReminderModal';
+import PaymentManagementModal from '../../components/admin/PaymentManagementModal';
 
 export default function AdminInvoices() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [reminderModalInvoice, setReminderModalInvoice] = useState<Invoice | null>(null);
+  const [paymentModalInvoice, setPaymentModalInvoice] = useState<Invoice | null>(null);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices', statusFilter, search],
@@ -68,11 +72,17 @@ export default function AdminInvoices() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       draft: 'bg-gray-100 text-gray-800',
+      pending_approval: 'bg-amber-100 text-amber-800',
+      approved: 'bg-blue-100 text-blue-800',
       sent: 'bg-blue-100 text-blue-800',
-      paid: 'bg-green-100 text-green-800',
+      viewed: 'bg-indigo-100 text-indigo-800',
       partial: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-green-100 text-green-800',
       overdue: 'bg-red-100 text-red-800',
-      cancelled: 'bg-gray-100 text-gray-800'
+      disputed: 'bg-orange-100 text-orange-800',
+      on_hold: 'bg-purple-100 text-purple-800',
+      cancelled: 'bg-gray-100 text-gray-800',
+      refunded: 'bg-pink-100 text-pink-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
@@ -115,11 +125,17 @@ export default function AdminInvoices() {
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
+              <option value="pending_approval">Pending Approval</option>
+              <option value="approved">Approved</option>
               <option value="sent">Sent</option>
-              <option value="paid">Paid</option>
+              <option value="viewed">Viewed</option>
               <option value="partial">Partial</option>
+              <option value="paid">Paid</option>
               <option value="overdue">Overdue</option>
+              <option value="disputed">Disputed</option>
+              <option value="on_hold">On Hold</option>
               <option value="cancelled">Cancelled</option>
+              <option value="refunded">Refunded</option>
             </select>
           </div>
         </div>
@@ -210,6 +226,20 @@ export default function AdminInvoices() {
                         <td className="px-4 lg:px-6 py-4 text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-2">
                             <button
+                              onClick={() => setPaymentModalInvoice(invoice)}
+                              className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation"
+                              title="Payment Management"
+                            >
+                              <CreditCard className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setReminderModalInvoice(invoice)}
+                              className="p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-md touch-manipulation"
+                              title="Payment Reminders"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => handleDownloadPDF(invoice)}
                               className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation"
                               title="Download PDF"
@@ -283,6 +313,14 @@ export default function AdminInvoices() {
 
                   <div className="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
                     <button
+                      onClick={() => setReminderModalInvoice(invoice)}
+                      className="flex items-center px-3 py-2 text-sm text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-md touch-manipulation"
+                      title="Payment Reminders"
+                    >
+                      <Mail className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">Reminders</span>
+                    </button>
+                    <button
                       onClick={() => handleDownloadPDF(invoice)}
                       className="flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation"
                       title="Download PDF"
@@ -311,6 +349,25 @@ export default function AdminInvoices() {
           </>
         )}
       </div>
+
+      {reminderModalInvoice && (
+        <PaymentReminderModal
+          isOpen={!!reminderModalInvoice}
+          onClose={() => setReminderModalInvoice(null)}
+          invoiceId={reminderModalInvoice.id}
+          invoiceNumber={reminderModalInvoice.invoice_number}
+          dueDate={reminderModalInvoice.due_date}
+          clientEmail={reminderModalInvoice.client_email}
+        />
+      )}
+
+      {paymentModalInvoice && (
+        <PaymentManagementModal
+          isOpen={!!paymentModalInvoice}
+          onClose={() => setPaymentModalInvoice(null)}
+          invoice={paymentModalInvoice}
+        />
+      )}
     </AdminLayout>
   );
 }

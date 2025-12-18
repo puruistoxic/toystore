@@ -3,6 +3,7 @@ const { getPool } = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 const { logAudit, getEntityName } = require('../middleware/auditLog');
 const { v4: uuidv4 } = require('uuid');
+const reminderService = require('../services/emailReminderService');
 
 const router = express.Router();
 
@@ -975,8 +976,16 @@ router.post('/invoices/:id/payments', authenticateToken, async (req, res) => {
     let newStatus = invoices[0].status;
     if (totalPaid >= invoiceTotal) {
       newStatus = 'paid';
-    } else if (totalPaid > 0 && invoices[0].status === 'sent') {
-      newStatus = 'partial';
+    } else if (totalPaid > 0) {
+      // If there's any payment, set to partial (unless already paid or cancelled)
+      if (invoices[0].status !== 'paid' && invoices[0].status !== 'cancelled' && invoices[0].status !== 'refunded') {
+        newStatus = 'partial';
+      }
+    } else if (totalPaid === 0) {
+      // If all payments are removed, revert to sent (if it was sent/partial before)
+      if (invoices[0].status === 'partial' || invoices[0].status === 'paid') {
+        newStatus = 'sent';
+      }
     }
 
     await pool.execute(
@@ -999,23 +1008,47 @@ router.delete('/invoices/:id/payments/:paymentId', authenticateToken, async (req
     const { id: invoiceId, paymentId } = req.params;
 
     // Delete payment
+    // Get payment details before deletion for audit log
+    const [paymentRows] = await pool.execute(
+      'SELECT * FROM invoice_payments WHERE id = ? AND invoice_id = ?',
+      [paymentId, invoiceId]
+    );
+    
+    if (paymentRows.length === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    const paymentToDelete = paymentRows[0];
+
+    // Delete payment
     await pool.execute('DELETE FROM invoice_payments WHERE id = ? AND invoice_id = ?', [paymentId, invoiceId]);
 
+    // Log payment deletion
+    await addAuditLog(req, 'DELETE', 'payment', invoiceId, `Payment of ${paymentToDelete.amount} deleted`, paymentToDelete, null);
+
     // Update invoice paid amount and status
-    const [paymentRows] = await pool.execute(
+    const [totalPaymentRows] = await pool.execute(
       'SELECT COALESCE(SUM(amount), 0) as total_paid FROM invoice_payments WHERE invoice_id = ?',
       [invoiceId]
     );
-    const totalPaid = parseFloat(paymentRows[0].total_paid);
+    const totalPaid = parseFloat(totalPaymentRows[0].total_paid);
 
     const [invoices] = await pool.execute('SELECT * FROM invoices WHERE id = ?', [invoiceId]);
     if (invoices.length > 0) {
       const invoiceTotal = parseFloat(invoices[0].total);
       let newStatus = invoices[0].status;
-      if (totalPaid === 0) {
-        newStatus = 'sent';
-      } else if (totalPaid < invoiceTotal) {
-        newStatus = 'partial';
+      if (totalPaid >= invoiceTotal) {
+        newStatus = 'paid';
+      } else if (totalPaid > 0) {
+        // If there's any payment, set to partial (unless already cancelled/refunded)
+        if (invoices[0].status !== 'cancelled' && invoices[0].status !== 'refunded') {
+          newStatus = 'partial';
+        }
+      } else if (totalPaid === 0) {
+        // If all payments are removed, revert to sent (if it was sent/partial/paid before)
+        if (invoices[0].status === 'partial' || invoices[0].status === 'paid') {
+          newStatus = 'sent';
+        }
       }
 
       await pool.execute(
@@ -1028,6 +1061,195 @@ router.delete('/invoices/:id/payments/:paymentId', authenticateToken, async (req
   } catch (error) {
     console.error('[Invoicing API] Delete payment error:', error);
     res.status(500).json({ error: 'Failed to delete payment', message: error.message });
+  }
+});
+
+// ==================== DASHBOARD STATISTICS ====================
+
+// Get dashboard statistics
+router.get('/dashboard/stats', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const { period = '30' } = req.query; // days
+    const periodDays = parseInt(period);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - periodDays);
+
+    // Invoice statistics
+    const [invoiceStats] = await pool.execute(`
+      SELECT 
+        COUNT(*) as total_invoices,
+        SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft_count,
+        SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent_count,
+        SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_count,
+        SUM(CASE WHEN status = 'partial' THEN 1 ELSE 0 END) as partial_count,
+        SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue_count,
+        SUM(CASE WHEN status = 'pending_approval' THEN 1 ELSE 0 END) as pending_approval_count,
+        SUM(CASE WHEN status = 'disputed' THEN 1 ELSE 0 END) as disputed_count,
+        SUM(total) as total_revenue,
+        SUM(paid_amount) as total_paid,
+        SUM(total - paid_amount) as total_outstanding
+      FROM invoices
+      WHERE is_deleted = 0
+        AND created_at >= ?
+    `, [startDate.toISOString().split('T')[0]]);
+
+    // Sales trend (last 12 months)
+    const [salesTrend] = await pool.execute(`
+      SELECT 
+        DATE_FORMAT(created_at, '%Y-%m') as month,
+        COUNT(*) as invoice_count,
+        SUM(total) as revenue,
+        SUM(paid_amount) as paid
+      FROM invoices
+      WHERE is_deleted = 0
+        AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+      ORDER BY month ASC
+    `);
+
+    // Recent invoices
+    const [recentInvoices] = await pool.execute(`
+      SELECT 
+        i.id,
+        i.invoice_number,
+        i.title,
+        i.total,
+        i.status,
+        i.due_date,
+        i.created_at,
+        c.name as client_name
+      FROM invoices i
+      LEFT JOIN clients c ON i.client_id = c.id
+      WHERE i.is_deleted = 0
+      ORDER BY i.created_at DESC
+      LIMIT 5
+    `);
+
+    // Overdue invoices
+    const [overdueInvoices] = await pool.execute(`
+      SELECT 
+        i.id,
+        i.invoice_number,
+        i.title,
+        i.total,
+        i.paid_amount,
+        i.due_date,
+        DATEDIFF(NOW(), i.due_date) as days_overdue,
+        c.name as client_name
+      FROM invoices i
+      LEFT JOIN clients c ON i.client_id = c.id
+      WHERE i.is_deleted = 0
+        AND i.status IN ('sent', 'partial', 'overdue')
+        AND i.due_date < CURDATE()
+        AND (i.total - COALESCE(i.paid_amount, 0)) > 0
+      ORDER BY i.due_date ASC
+      LIMIT 10
+    `);
+
+    // Client statistics
+    const [clientStats] = await pool.execute(`
+      SELECT 
+        COUNT(*) as total_clients,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_clients
+      FROM clients
+      WHERE is_deleted = 0
+    `);
+
+    // Proposal statistics
+    const [proposalStats] = await pool.execute(`
+      SELECT 
+        COUNT(*) as total_proposals,
+        SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft_count,
+        SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent_count,
+        SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted_count
+      FROM proposals
+      WHERE is_deleted = 0
+        AND created_at >= ?
+    `, [startDate.toISOString().split('T')[0]]);
+
+    res.json({
+      invoices: invoiceStats[0] || {},
+      sales_trend: salesTrend,
+      recent_invoices: recentInvoices.map(row => formatDataFromDB(row, [])),
+      overdue_invoices: overdueInvoices.map(row => formatDataFromDB(row, [])),
+      clients: clientStats[0] || {},
+      proposals: proposalStats[0] || {},
+      period_days: periodDays
+    });
+  } catch (error) {
+    console.error('[Invoicing API] Dashboard stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch dashboard statistics', message: error.message });
+  }
+});
+
+// ==================== INVOICE REMINDERS ====================
+
+// Get reminders for an invoice
+router.get('/invoices/:id/reminders', authenticateToken, async (req, res) => {
+  try {
+    const reminders = await reminderService.getInvoiceReminders(req.params.id);
+    res.json(reminders);
+  } catch (error) {
+    console.error('[Invoicing API] Get reminders error:', error);
+    res.status(500).json({ error: 'Failed to fetch reminders', message: error.message });
+  }
+});
+
+// Create a reminder
+router.post('/invoices/:id/reminders', authenticateToken, async (req, res) => {
+  try {
+    const { reminder_type, reminder_date, days_before_after } = req.body;
+    
+    if (!reminder_type || !reminder_date) {
+      return res.status(400).json({ error: 'reminder_type and reminder_date are required' });
+    }
+    
+    const result = await reminderService.createReminder(
+      req.params.id,
+      reminder_type,
+      reminder_date,
+      days_before_after || 0,
+      req.user.userId || req.user.id
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('[Invoicing API] Create reminder error:', error);
+    res.status(500).json({ error: 'Failed to create reminder', message: error.message });
+  }
+});
+
+// Send reminder email immediately
+router.post('/invoices/:id/reminders/:reminderId/send', authenticateToken, async (req, res) => {
+  try {
+    const result = await reminderService.sendReminderEmail(req.params.id, req.params.reminderId);
+    res.json(result);
+  } catch (error) {
+    console.error('[Invoicing API] Send reminder error:', error);
+    res.status(500).json({ error: 'Failed to send reminder', message: error.message });
+  }
+});
+
+// Send reminder email (without reminder record)
+router.post('/invoices/:id/send-reminder', authenticateToken, async (req, res) => {
+  try {
+    const result = await reminderService.sendReminderEmail(req.params.id);
+    res.json(result);
+  } catch (error) {
+    console.error('[Invoicing API] Send reminder error:', error);
+    res.status(500).json({ error: 'Failed to send reminder', message: error.message });
+  }
+});
+
+// Delete a reminder
+router.delete('/invoices/:id/reminders/:reminderId', authenticateToken, async (req, res) => {
+  try {
+    const result = await reminderService.deleteReminder(req.params.reminderId);
+    res.json(result);
+  } catch (error) {
+    console.error('[Invoicing API] Delete reminder error:', error);
+    res.status(500).json({ error: 'Failed to delete reminder', message: error.message });
   }
 });
 

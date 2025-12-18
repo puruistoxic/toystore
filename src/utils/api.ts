@@ -105,6 +105,22 @@ export const invoicingApi = {
     api.post(`/invoicing/invoices/${invoiceId}/payments`, data),
   deletePayment: (invoiceId: string, paymentId: number) => 
     api.delete(`/invoicing/invoices/${invoiceId}/payments/${paymentId}`),
+
+  // Reminders
+  getReminders: (invoiceId: string) => 
+    api.get(`/invoicing/invoices/${invoiceId}/reminders`),
+  createReminder: (invoiceId: string, data: any) => 
+    api.post(`/invoicing/invoices/${invoiceId}/reminders`, data),
+  sendReminder: (invoiceId: string, reminderId?: number) => 
+    reminderId 
+      ? api.post(`/invoicing/invoices/${invoiceId}/reminders/${reminderId}/send`)
+      : api.post(`/invoicing/invoices/${invoiceId}/send-reminder`),
+  deleteReminder: (invoiceId: string, reminderId: number) => 
+    api.delete(`/invoicing/invoices/${invoiceId}/reminders/${reminderId}`),
+
+  // Dashboard
+  getDashboardStats: (period?: number) => 
+    api.get('/invoicing/dashboard/stats', { params: { period } }),
 };
 
 // Content API functions (for products, categories, brands, etc.)
