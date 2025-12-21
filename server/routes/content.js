@@ -224,7 +224,7 @@ router.post('/services/:id/restore', authenticateToken, async (req, res) => {
 router.get('/products', async (req, res) => {
   try {
     const pool = getPool();
-    const { search, is_active, only_deleted, include_deleted } = req.query;
+    const { search, is_active, only_deleted, include_deleted, exclude_services } = req.query;
     
     let query = 'SELECT * FROM products WHERE 1=1';
     const params = [];
@@ -238,6 +238,19 @@ router.get('/products', async (req, res) => {
       query += ' AND is_deleted = 1';
     } else if (include_deleted !== 'true') {
       query += ' AND is_deleted = 0';
+    }
+    
+    // Smart filtering: exclude service-like items by default (unless explicitly included)
+    if (exclude_services !== 'false') {
+      // Exclude service categories
+      query += ` AND category NOT IN ('Installation Service', 'Maintenance Service', 'Visit Charge', 'Software Service', 'Internet Service', 'Service')`;
+      // Exclude service-like names (but allow if category is clearly a product category)
+      query += ` AND (
+        LOWER(name) NOT LIKE '%installation service%' 
+        AND LOWER(name) NOT LIKE '%visit charge%'
+        AND LOWER(name) NOT LIKE '%maintenance service%'
+        AND (LOWER(name) NOT LIKE '%service%' OR LOWER(category) IN ('hardware', 'software', 'networking', 'security', 'erp', 'accessories', 'cctv', 'gps'))
+      )`;
     }
     
     if (search) {
@@ -260,7 +273,16 @@ router.get('/products', async (req, res) => {
 router.get('/products/:id', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [req.params.id]);
+    const identifier = req.params.id;
+    
+    // Try to find by ID first, then by slug
+    let [rows] = await pool.execute('SELECT * FROM products WHERE id = ? AND is_deleted = 0', [identifier]);
+    
+    if (rows.length === 0) {
+      // Try finding by slug
+      [rows] = await pool.execute('SELECT * FROM products WHERE slug = ? AND is_deleted = 0', [identifier]);
+    }
+    
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }

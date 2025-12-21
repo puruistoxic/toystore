@@ -1,17 +1,83 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Heart, Star, CheckCircle, Truck, Shield, RotateCcw, MapPin } from 'lucide-react';
-import { products } from '../data/products';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, MessageCircle, Heart, Star, CheckCircle, Truck, Shield, RotateCcw, MapPin, Image as ImageIcon } from 'lucide-react';
+import { contentApi } from '../utils/api';
 import type { Product } from '../types/catalog';
 import SEO from '../components/SEO';
 import { generateProductMetaDescription, generatePageTitle } from '../utils/seo';
+import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
+import QuoteRequestModal from '../components/QuoteRequestModal';
+
+// Map database product to frontend Product interface
+function mapDbProductToFrontend(dbProduct: any): Product {
+  const images = dbProduct.images ? (Array.isArray(dbProduct.images) ? dbProduct.images : [dbProduct.images]) : [];
+  if (dbProduct.image && !images.includes(dbProduct.image)) {
+    images.unshift(dbProduct.image);
+  }
+  if (images.length === 0 || !images[0] || images[0].trim() === '') {
+    images.push(getPlaceholderImage(800, 600, dbProduct.name || 'Product'));
+  }
+
+  const features = dbProduct.features ? (Array.isArray(dbProduct.features) ? dbProduct.features : []) : [];
+  const specifications = dbProduct.specifications ? (typeof dbProduct.specifications === 'object' ? dbProduct.specifications : {}) : {};
+
+  return {
+    id: dbProduct.id,
+    name: dbProduct.name,
+    slug: dbProduct.slug || dbProduct.id,
+    description: dbProduct.description || dbProduct.short_description || 'Professional IT solution',
+    price: dbProduct.price || 0,
+    originalPrice: undefined, // No pricing displayed
+    images: images,
+    category: dbProduct.category || 'accessories',
+    brand: dbProduct.brand || 'WAINSO',
+    model: specifications.model || specifications.Model || dbProduct.name,
+    inStock: true, // Default to in stock if not specified
+    stockQuantity: 0, // Not tracked in current schema
+    rating: 4.5, // Default rating
+    reviews: 0, // Default reviews
+    features: features,
+    specifications: specifications,
+    warranty: dbProduct.warranty || undefined
+  };
+}
 
 const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
-  const product: Product | undefined = products.find((item) => item.slug === slug);
+  // Fetch product from database by slug
+  const { data: dbProduct, isLoading, error } = useQuery({
+    queryKey: ['product', slug],
+    queryFn: async () => {
+      const response = await contentApi.getProduct(slug!);
+      return response.data;
+    },
+    enabled: !!slug,
+  });
 
-  if (!product) {
+  const product = dbProduct ? mapDbProductToFrontend(dbProduct) : undefined;
+
+  if (isLoading) {
+    return (
+      <>
+        <SEO
+          title="Loading Product | WAINSO"
+          description="Loading product details..."
+          path="/products/loading"
+        />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <p className="mt-4 text-gray-600">Loading product...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !product) {
     return (
       <>
         <SEO
@@ -66,26 +132,32 @@ const ProductDetail: React.FC = () => {
           {/* Product Images */}
           <div className="space-y-4">
             <div className="bg-white rounded-lg p-4">
-              <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                {product.images.length > 0 ? (
+              <div className="aspect-w-16 aspect-h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                {product.images && product.images.length > 0 && product.images[0] ? (
                   <img
                     src={product.images[0]}
                     alt={product.name}
                     className="h-full w-full object-cover"
+                    onError={(e) => handleImageError(e, product.name)}
                   />
                 ) : (
-                  <div className="text-gray-400 text-center">
-                    <div className="text-6xl mb-2">📷</div>
-                    <p>Product Image</p>
+                  <div className="flex flex-col items-center justify-center text-gray-400">
+                    <ImageIcon className="h-16 w-16 mb-2" />
+                    <p className="text-sm">{product.name}</p>
                   </div>
                 )}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {(product.images.length ? product.images : ['/api/placeholder/200/150']).map((image, index) => (
+              {(product.images && product.images.length > 0 ? product.images : [getPlaceholderImage(200, 150, product.name)]).map((image, index) => (
                 <div key={`${image}-${index}`} className="bg-white rounded-lg p-2">
-                  <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
+                  <div className="aspect-w-16 aspect-h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={image} 
+                      alt={`${product.name} ${index + 1}`} 
+                      className="h-full w-full object-cover"
+                      onError={(e) => handleImageError(e, product.name)}
+                    />
                   </div>
                 </div>
               ))}
@@ -121,20 +193,6 @@ const ProductDetail: React.FC = () => {
               </p>
             </div>
 
-
-            <div className="flex items-center space-x-2">
-              {product.inStock ? (
-                <div className="flex items-center text-green-600">
-                  <CheckCircle className="h-5 w-5 mr-1" />
-                  <span>In Stock ({product.stockQuantity} available)</span>
-                </div>
-              ) : (
-                <div className="flex items-center text-red-600">
-                  <span>Out of Stock</span>
-                </div>
-              )}
-            </div>
-
             {/* Location Badge (only for CCTV/Security categories) */}
             {(product.category === 'security' || product.category === 'cctv') && (
               <div className="flex items-center mb-4">
@@ -161,13 +219,13 @@ const ProductDetail: React.FC = () => {
             </div>
 
             <div className="flex space-x-4">
-              <Link
-                to={`/quote-request?type=product&id=${product.id}`}
+              <button
+                onClick={() => setQuoteModalOpen(true)}
                 className="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Request Quote
-              </Link>
+              </button>
               <button className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
                 <Heart className="h-5 w-5" />
               </button>
@@ -180,32 +238,36 @@ const ProductDetail: React.FC = () => {
             </div>
 
             {/* Features */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {product.features && product.features.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h3>
+                <ul className="space-y-2">
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Specifications */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <dl className="space-y-2">
-                  {Object.entries(product.specifications).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <dt className="text-gray-600 font-medium">{key}:</dt>
-                      <dd className="text-gray-900">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
+            {product.specifications && Object.keys(product.specifications).length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <dl className="space-y-2">
+                    {Object.entries(product.specifications).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <dt className="text-gray-600 font-medium">{key}:</dt>
+                        <dd className="text-gray-900">{String(value)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Warranty */}
             {product.warranty && (
@@ -244,6 +306,16 @@ const ProductDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Quote Request Modal */}
+      {product && (
+        <QuoteRequestModal
+          isOpen={quoteModalOpen}
+          onClose={() => setQuoteModalOpen(false)}
+          product={product}
+          productId={product.id.toString()}
+        />
+      )}
     </div>
     </>
   );

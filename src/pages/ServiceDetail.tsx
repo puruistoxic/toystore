@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, CheckCircle, Users, Star, MessageCircle, MapPin, Shield } from 'lucide-react';
 import { services } from '../data/services';
 import type { Service } from '../types/catalog';
 import SEO from '../components/SEO';
 import { generateServiceMetaDescription, generatePageTitle } from '../utils/seo';
+import QuoteRequestModal from '../components/QuoteRequestModal';
 
 const extendedServiceDetails: Record<string, {
   rating: number;
@@ -93,6 +94,7 @@ const extendedServiceDetails: Record<string, {
 
 const ServiceDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
   const service: Service | undefined = services.find((item) => item.slug === slug);
   const extra = (service?.id && extendedServiceDetails[service.id]) || {
@@ -293,13 +295,13 @@ const ServiceDetail: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-900 mb-6">Book This Service</h3>
               <div className="space-y-5">
 
-                <Link
-                  to={`/quote-request?type=service&id=${service.id}`}
+                <button
+                  onClick={() => setQuoteModalOpen(true)}
                   className="w-full inline-flex items-center justify-center bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all mb-3"
                 >
                   <MessageCircle className="h-5 w-5 mr-2" />
                   Request Quote
-                </Link>
+                </button>
 
                 <Link
                   to="/contact"
@@ -375,6 +377,16 @@ const ServiceDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Quote Request Modal */}
+      {service && (
+        <QuoteRequestModal
+          isOpen={quoteModalOpen}
+          onClose={() => setQuoteModalOpen(false)}
+          service={service}
+          serviceId={service.id.toString()}
+        />
+      )}
     </div>
     </>
   );

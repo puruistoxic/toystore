@@ -13,9 +13,12 @@ import {
 import { services } from '../data/services';
 import type { Service } from '../types/catalog';
 import SEO from '../components/SEO';
+import QuoteRequestModal from '../components/QuoteRequestModal';
 
 const Services: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   const categories = [
     { id: 'all', name: 'All Services' },
@@ -91,8 +94,6 @@ const Services: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {filteredServices.map((service) => {
-            const quoteLink = `/quote-request?type=service&id=${service.id}`;
-
             return (
               <div key={service.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
                 <div className="p-8">
@@ -150,12 +151,15 @@ const Services: React.FC = () => {
                     View Details
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
-                  <Link
-                    to={quoteLink}
+                  <button
+                    onClick={() => {
+                      setSelectedService(service);
+                      setQuoteModalOpen(true);
+                    }}
                     className="flex-1 border-2 border-primary-600 text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors text-center"
                   >
                     Request Quote
-                  </Link>
+                  </button>
                 </div>
                 </div>
               </div>
@@ -182,6 +186,17 @@ const Services: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Quote Request Modal */}
+      <QuoteRequestModal
+        isOpen={quoteModalOpen}
+        onClose={() => {
+          setQuoteModalOpen(false);
+          setSelectedService(null);
+        }}
+        service={selectedService || undefined}
+        serviceId={selectedService?.id ? selectedService.id.toString() : undefined}
+      />
     </div>
     </>
   );

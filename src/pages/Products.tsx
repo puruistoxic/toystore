@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Camera,
   Navigation,
@@ -9,15 +10,127 @@ import {
   MessageCircle,
   Eye,
   CheckCircle,
-  Settings
+  Settings,
+  Image as ImageIcon
 } from 'lucide-react';
-import { products } from '../data/products';
+import { contentApi } from '../utils/api';
 import type { Product } from '../types/catalog';
 import SEO from '../components/SEO';
+import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
+import QuoteRequestModal from '../components/QuoteRequestModal';
+
+// Smart function to determine if an item is a service (not a product)
+function isServiceItem(dbProduct: any): boolean {
+  const name = (dbProduct.name || '').toLowerCase();
+  const category = (dbProduct.category || '').toLowerCase();
+  const description = (dbProduct.description || '').toLowerCase();
+  
+  // Service indicators in name
+  const serviceKeywords = [
+    'installation',
+    'service',
+    'visit charge',
+    'visit',
+    'maintenance',
+    'repair',
+    'consultation',
+    'support',
+    'setup',
+    'configuration',
+    'training',
+    'amc',
+    'annual maintenance'
+  ];
+  
+  // Service categories
+  const serviceCategories = [
+    'installation service',
+    'maintenance service',
+    'visit charge',
+    'software service',
+    'internet service',
+    'service'
+  ];
+  
+  // Check if name contains service keywords
+  if (serviceKeywords.some(keyword => name.includes(keyword))) {
+    return true;
+  }
+  
+  // Check if category is a service category
+  if (serviceCategories.some(cat => category.includes(cat))) {
+    return true;
+  }
+  
+  // Check if description strongly indicates a service
+  if (description.includes('service') && (
+    description.includes('installation') ||
+    description.includes('visit') ||
+    description.includes('maintenance') ||
+    description.includes('support')
+  )) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Map database product to frontend Product interface
+function mapDbProductToFrontend(dbProduct: any): Product {
+  const images = dbProduct.images ? (Array.isArray(dbProduct.images) ? dbProduct.images : [dbProduct.images]) : [];
+  if (dbProduct.image && !images.includes(dbProduct.image)) {
+    images.unshift(dbProduct.image);
+  }
+  if (images.length === 0 || !images[0] || images[0].trim() === '') {
+    images.push(getPlaceholderImage(400, 300, dbProduct.name || 'Product'));
+  }
+
+  const features = dbProduct.features ? (Array.isArray(dbProduct.features) ? dbProduct.features : []) : [];
+  const specifications = dbProduct.specifications ? (typeof dbProduct.specifications === 'object' ? dbProduct.specifications : {}) : {};
+
+  return {
+    id: dbProduct.id,
+    name: dbProduct.name,
+    slug: dbProduct.slug || dbProduct.id,
+    description: dbProduct.description || dbProduct.short_description || 'Professional IT solution',
+    price: dbProduct.price || 0,
+    originalPrice: undefined, // No pricing displayed
+    images: images,
+    category: dbProduct.category || 'accessories',
+    brand: dbProduct.brand || 'WAINSO',
+    model: specifications.model || specifications.Model || dbProduct.name,
+    inStock: true, // Default to in stock if not specified
+    stockQuantity: 0, // Not tracked in current schema
+    rating: 4.5, // Default rating
+    reviews: 0, // Default reviews
+    features: features,
+    specifications: specifications,
+    warranty: dbProduct.warranty || undefined
+  };
+}
 
 const Products: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Fetch products from database
+  const { data: dbProducts = [], isLoading, error } = useQuery({
+    queryKey: ['products', 'public'],
+    queryFn: async () => {
+      const response = await contentApi.getProducts({ is_active: true });
+      return response.data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Map database products to frontend format and filter out services
+  const products = useMemo(() => {
+    return dbProducts
+      .filter((dbProduct: any) => !isServiceItem(dbProduct)) // Filter out services
+      .map(mapDbProductToFrontend);
+  }, [dbProducts]);
 
   const categories = [
     { id: 'all', name: 'All Products' },
@@ -35,12 +148,12 @@ const Products: React.FC = () => {
       const matchesSearch =
         product.name.toLowerCase().includes(search) ||
         product.description.toLowerCase().includes(search) ||
-        product.brand.toLowerCase().includes(search) ||
-        product.model.toLowerCase().includes(search);
+        (product.brand && product.brand.toLowerCase().includes(search)) ||
+        (product.model && product.model.toLowerCase().includes(search));
 
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchTerm]);
+  }, [products, selectedCategory, searchTerm]);
 
   return (
     <>
@@ -100,26 +213,40 @@ const Products: React.FC = () => {
 
       {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => {
-            const quoteLink = `/quote-request?type=product&id=${product.id}`;
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <p className="mt-4 text-gray-600">Loading products...</p>
+          </div>
+        )}
 
+        {error && (
+          <div className="text-center py-12">
+            <div className="text-red-600 mb-4">
+              <p className="font-semibold">Error loading products</p>
+              <p className="text-sm text-gray-600 mt-2">Please try again later</p>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProducts.map((product: Product) => {
             return (
               <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               {/* Product Image */}
-              <div className="relative h-48 bg-gray-200">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-gray-400">
-                    {(product.category === 'security' || product.category === 'cctv') && <Camera className="h-16 w-16" />}
-                    {product.category === 'networking' && <Navigation className="h-16 w-16" />}
-                    {product.category === 'hardware' && <Wrench className="h-16 w-16" />}
-                    {product.category === 'software' && <MessageCircle className="h-16 w-16" />}
-                    {product.category === 'erp' && <Settings className="h-16 w-16" />}
-                  </div>
-                </div>
-                {!product.inStock && (
-                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                    Out of Stock
+              <div className="relative h-48 bg-gray-100 overflow-hidden">
+                {product.images && product.images.length > 0 && product.images[0] ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => handleImageError(e, product.name)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <ImageIcon className="h-12 w-12 text-gray-400 mb-2" />
+                    <p className="text-xs text-gray-500 px-2 text-center">{product.name}</p>
                   </div>
                 )}
               </div>
@@ -144,26 +271,11 @@ const Products: React.FC = () => {
                   {product.description}
                 </p>
 
-
-                {/* Stock Status */}
-                <div className="flex items-center mb-4">
-                  {product.inStock ? (
-                    <div className="flex items-center text-green-600">
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      <span className="text-sm">In Stock ({product.stockQuantity})</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center text-red-600">
-                      <span className="text-sm">Out of Stock</span>
-                    </div>
-                  )}
-                </div>
-
                 {/* Features */}
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-gray-900 mb-2">Key Features:</h4>
                   <ul className="space-y-1">
-                    {product.features.slice(0, 3).map((feature, index) => (
+                    {product.features.slice(0, 3).map((feature: string, index: number) => (
                       <li key={index} className="flex items-center text-xs text-gray-600">
                         <CheckCircle className="h-3 w-3 text-green-500 mr-1 flex-shrink-0" />
                         {feature}
@@ -181,21 +293,25 @@ const Products: React.FC = () => {
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Link>
-                  <Link
-                    to={quoteLink}
+                  <button
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setQuoteModalOpen(true);
+                    }}
                     className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700 shadow-md hover:shadow-lg"
                   >
                     <MessageCircle className="h-4 w-4 mr-1" />
                     Request Quote
-                  </Link>
+                  </button>
                 </div>
               </div>
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
 
-        {filteredProducts.length === 0 && (
+        {!isLoading && !error && filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search className="h-16 w-16 mx-auto" />
@@ -209,6 +325,17 @@ const Products: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Quote Request Modal */}
+      <QuoteRequestModal
+        isOpen={quoteModalOpen}
+        onClose={() => {
+          setQuoteModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        product={selectedProduct || undefined}
+        productId={selectedProduct?.id ? selectedProduct.id.toString() : undefined}
+      />
     </div>
     </>
   );
