@@ -12,41 +12,53 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    // Log incoming request for debugging (without password)
+    console.log(`[Admin API] Login attempt for username: "${username}"`);
+    console.log(`[Admin API] Request body keys:`, Object.keys(req.body));
+    console.log(`[Admin API] Username type:`, typeof username, `Length:`, username?.length);
+    console.log(`[Admin API] Password provided:`, password ? 'Yes' : 'No', `Length:`, password?.length);
+
     if (!username || !password) {
+      console.error(`[Admin API] Login failed: Missing username or password`);
       return res.status(400).json({ error: 'Username and password are required' });
     }
+
+    // Trim whitespace from username
+    const trimmedUsername = username.trim();
 
     const pool = getPool();
     
     // First check if user exists (without is_active filter for debugging)
     const [allUsers] = await pool.execute(
       'SELECT * FROM admin_users WHERE username = ?',
-      [username]
+      [trimmedUsername]
     );
 
     if (allUsers.length === 0) {
-      console.error(`[Admin API] Login failed: User "${username}" not found`);
+      console.error(`[Admin API] Login failed: User "${trimmedUsername}" not found`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = allUsers[0];
+    console.log(`[Admin API] User found: ID=${user.id}, Active=${user.is_active}, HasHash=${!!user.password_hash}`);
     
     // Check if user is active
     if (!user.is_active) {
-      console.error(`[Admin API] Login failed: User "${username}" is inactive`);
+      console.error(`[Admin API] Login failed: User "${trimmedUsername}" is inactive`);
       return res.status(401).json({ error: 'Account is inactive. Please contact administrator.' });
     }
 
     // Check if password_hash exists
     if (!user.password_hash) {
-      console.error(`[Admin API] Login failed: User "${username}" has no password hash`);
+      console.error(`[Admin API] Login failed: User "${trimmedUsername}" has no password hash`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    console.log(`[Admin API] Password match result:`, passwordMatch);
 
     if (!passwordMatch) {
-      console.error(`[Admin API] Login failed: Password mismatch for user "${username}"`);
+      console.error(`[Admin API] Login failed: Password mismatch for user "${trimmedUsername}"`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -62,6 +74,8 @@ router.post('/login', async (req, res) => {
       JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    console.log(`[Admin API] ✅ Login successful for user "${trimmedUsername}" (ID: ${user.id})`);
 
     res.json({
       success: true,

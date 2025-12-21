@@ -57,11 +57,6 @@ const buildDetailLines = (target: QuoteTarget | undefined, quantity: string) => 
     const { data } = target;
     const lines = [
       `• Brand / Model: ${data.brand} / ${data.model}`,
-      `• Pricing (per unit): ${formatCurrency(data.price)}${
-        data.originalPrice && data.originalPrice > data.price
-          ? ` (MRP ${formatCurrency(data.originalPrice)})`
-          : ''
-      }`,
       `• Availability: ${
         data.inStock ? `In stock (${data.stockQuantity} units)` : 'Currently out of stock'
       }`,
@@ -78,7 +73,6 @@ const buildDetailLines = (target: QuoteTarget | undefined, quantity: string) => 
   const { data } = target;
   const lines = [
     `• Duration: ${data.duration}`,
-    `• Starting price: ${formatCurrency(data.price)}`,
     `• Deliverables include: ${data.includes.slice(0, 3).join(', ')}`,
     `• Core features: ${data.features.slice(0, 3).join(', ')}`
   ];
@@ -452,14 +446,14 @@ const QuoteRequest: React.FC = () => {
                     <optgroup label="Products">
                       {products.map((product) => (
                         <option key={`product-${product.id}`} value={`product-${product.id}`}>
-                          {product.name} - {product.brand} ({formatCurrency(product.price)})
+                          {product.name} - {product.brand}
                         </option>
                       ))}
                     </optgroup>
                     <optgroup label="Services">
                       {services.map((service) => (
                         <option key={`service-${service.id}`} value={`service-${service.id}`}>
-                          {service.name} ({formatCurrency(service.price)})
+                          {service.name}
                         </option>
                       ))}
                     </optgroup>
@@ -783,8 +777,6 @@ const QuoteRequest: React.FC = () => {
                         <span className="font-medium text-gray-900">{target.data.brand} / {target.data.model}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Price</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(target.data.price)}</span>
                       </div>
                     </>
                   ) : (

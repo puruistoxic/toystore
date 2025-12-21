@@ -101,9 +101,6 @@ const Services: React.FC = () => {
                       {iconMap[service.iconName]}
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">
-                      ₹{service.price.toLocaleString()}
-                    </div>
                     <div className="text-sm text-gray-500 flex items-center justify-end">
                       <Clock className="h-4 w-4 mr-1" />
                       {service.duration}

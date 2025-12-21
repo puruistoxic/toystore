@@ -185,8 +185,10 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   const updateItem = (index: number, field: keyof InvoiceItem, value: any) => {
     const newItems = [...formData.items];
     newItems[index] = { ...newItems[index], [field]: value };
-    if (field === 'quantity' || field === 'price') {
-      newItems[index].total = newItems[index].quantity * newItems[index].price;
+    // Keep quantity and price defaults for backend compatibility
+    if (field === 'description' && !newItems[index].quantity) {
+      newItems[index].quantity = 1;
+      newItems[index].price = 0;
     }
     setFormData({ ...formData, items: newItems });
   };
@@ -203,7 +205,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
         quantity: newItems[index].quantity || 1,
         product_id: product.id || product.slug || undefined
       };
-      newItems[index].total = newItems[index].quantity * newItems[index].price;
+      // Pricing removed - no total calculation
       setFormData({ ...formData, items: newItems });
     }
   };
@@ -229,10 +231,8 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   };
 
   const calculateTotals = () => {
-    const subtotal = formData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-    const taxAmount = formData.invoice_type === 'sharing' ? 0 : (subtotal * formData.tax_rate) / 100;
-    const total = subtotal + taxAmount - formData.discount;
-    return { subtotal, taxAmount, total };
+    // Pricing removed - return zeros for backend compatibility
+    return { subtotal: 0, taxAmount: 0, total: 0 };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -467,20 +467,11 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
               <div className="space-y-4">
                 {/* Column Headers - Desktop Only */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-2 border-b border-gray-300">
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <label className="text-xs font-medium text-gray-600 uppercase">HSN Code</label>
                   </div>
-                  <div className="col-span-4">
+                  <div className="col-span-8">
                     <label className="text-xs font-medium text-gray-600 uppercase">Description</label>
-                  </div>
-                  <div className="col-span-1">
-                    <label className="text-xs font-medium text-gray-600 uppercase">Quantity</label>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs font-medium text-gray-600 uppercase">Unit Price</label>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs font-medium text-gray-600 uppercase">Amount</label>
                   </div>
                   <div className="col-span-1"></div>
                 </div>
@@ -488,7 +479,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
                     {/* Desktop Layout */}
                     <div className="hidden md:grid grid-cols-12 gap-4">
-                      <div className="col-span-2">
+                      <div className="col-span-3">
                         <input
                           type="text"
                           placeholder="HSN Code"
@@ -497,7 +488,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                         />
                       </div>
-                      <div className="col-span-4">
+                      <div className="col-span-8">
                         <ProductSearch
                           value={item.description}
                           onChange={(product) => handleProductSelect(index, product)}
@@ -505,35 +496,6 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
                           placeholder="Search or select product..."
                           className="w-full"
                         />
-                      </div>
-                      <div className="col-span-1">
-                        <input
-                          type="number"
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          step="0.01"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <input
-                          type="number"
-                          placeholder="Price"
-                          value={item.price}
-                          onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          step="0.01"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div className="col-span-2 flex items-center">
-                        <span className="text-sm font-medium text-gray-700">
-                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(
-                            (item.quantity || 0) * (item.price || 0)
-                          )}
-                        </span>
                       </div>
                       <div className="col-span-1 flex items-center justify-end">
                         <button
@@ -578,42 +540,6 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
                           className="w-full"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
-                          <input
-                            type="number"
-                            placeholder="Qty"
-                            value={item.quantity}
-                            onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                            min="0"
-                            step="0.01"
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Unit Price</label>
-                          <input
-                            type="number"
-                            placeholder="Price"
-                            value={item.price}
-                            onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
-                            min="0"
-                            step="0.01"
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
-                          />
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t border-gray-100">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium text-gray-600">Amount:</span>
-                          <span className="text-sm font-semibold text-gray-900">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(
-                              (item.quantity || 0) * (item.price || 0)
-                            )}
-                          </span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -621,103 +547,41 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
             )}
           </div>
 
-          {/* Totals */}
+          {/* Additional Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tax Rate (%) {formData.invoice_type === 'sharing' && <span className="text-gray-500 text-xs">(disabled for sharing invoices)</span>}
-                </label>
-                <input
-                  type="number"
-                  value={formData.tax_rate}
-                  onChange={(e) => setFormData({ ...formData, tax_rate: parseFloat(e.target.value) || 0 })}
-                  min="0"
-                  step="0.01"
-                  disabled={formData.invoice_type === 'sharing'}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Discount</label>
-                <input
-                  type="number"
-                  value={formData.discount}
-                  onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
-                <input
-                  type="text"
-                  value={formData.payment_terms}
-                  onChange={(e) => setFormData({ ...formData, payment_terms: e.target.value })}
-                  placeholder="e.g., Net 30"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
-                />
-              </div>
-              {mode === 'edit' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="pending_approval">Pending Approval</option>
-                    <option value="approved">Approved</option>
-                    <option value="sent">Sent</option>
-                    <option value="viewed">Viewed</option>
-                    <option value="partial">Partial</option>
-                    <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="disputed">Disputed</option>
-                    <option value="on_hold">On Hold</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="refunded">Refunded</option>
-                  </select>
-                </div>
-              )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+              <input
+                type="text"
+                value={formData.payment_terms}
+                onChange={(e) => setFormData({ ...formData, payment_terms: e.target.value })}
+                placeholder="e.g., Net 30"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
+              />
             </div>
-
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotal:</span>
-                <span className="font-medium">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(subtotal)}</span>
+            {mode === 'edit' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="pending_approval">Pending Approval</option>
+                  <option value="approved">Approved</option>
+                  <option value="sent">Sent</option>
+                  <option value="viewed">Viewed</option>
+                  <option value="partial">Partial</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
+                  <option value="disputed">Disputed</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="refunded">Refunded</option>
+                </select>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Tax ({formData.tax_rate}%):</span>
-                <span className="font-medium">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(taxAmount)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Discount:</span>
-                <span className="font-medium">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(formData.discount)}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-300">
-                <span>Total:</span>
-                <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(total)}</span>
-              </div>
-              {mode === 'edit' && invoice && (
-                <>
-                  <div className="flex justify-between text-sm pt-2 border-t border-gray-300">
-                    <span className="text-gray-600">Paid Amount:</span>
-                    <span className="font-medium text-green-600">
-                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(invoice.paid_amount || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm font-semibold">
-                    <span className="text-gray-700">Outstanding:</span>
-                    <span className={`${(total - (invoice.paid_amount || 0)) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: formData.currency }).format(total - (invoice.paid_amount || 0))}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4 border-t border-gray-200">
@@ -782,3 +646,5 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
     </AdminLayout>
   );
 }
+
+

@@ -159,3 +159,5 @@ export default function InvoiceStats({ stats }: InvoiceStatsProps) {
     </div>
   );
 }
+
+

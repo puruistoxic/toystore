@@ -255,17 +255,6 @@ export default function ProductForm({ productId }: ProductFormProps) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-          <input
-            name="price"
-            type="number"
-            step="0.01"
-            value={form.price}
-            onChange={handleChange}
-            className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-          />
-        </div>
-        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
           <div className="flex items-center space-x-2">
             <input

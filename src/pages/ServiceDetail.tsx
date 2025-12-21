@@ -152,7 +152,7 @@ const ServiceDetail: React.FC = () => {
         serviceSchema={{
           name: service.name,
           description: service.description,
-          price: service.price,
+          price: 0, // Pricing removed - set to 0 for schema compatibility
           priceCurrency: 'INR',
           provider: {
             name: 'WAINSO',
@@ -199,9 +199,6 @@ const ServiceDetail: React.FC = () => {
                   <span className="text-sm font-semibold text-gray-700 ml-2">{extra.rating}</span>
                 </div>
                 <div className="text-right bg-primary-50 rounded-lg px-4 py-2">
-                  <div className="text-3xl font-bold text-primary-600">
-                    ₹{service.price.toLocaleString()}
-                  </div>
                   <div className="text-sm text-gray-600 flex items-center justify-end">
                     <Clock className="h-4 w-4 mr-1" />
                     {service.duration}
@@ -295,14 +292,6 @@ const ServiceDetail: React.FC = () => {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Book This Service</h3>
               <div className="space-y-5">
-                <div className="text-center pb-2">
-                  <div className="text-3xl font-bold text-primary-600 mb-2">
-                    ₹{service.price.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Starting price
-                  </div>
-                </div>
 
                 <Link
                   to={`/quote-request?type=service&id=${service.id}`}

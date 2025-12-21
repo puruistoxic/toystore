@@ -181,11 +181,11 @@ const Header: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo with Tagline */}
-            <Link to="/" className="flex flex-col">
-              <div className={`text-xl sm:text-2xl font-bold ${isHomePage ? 'text-white' : 'text-primary-600'}`}>
+            <Link to="/" className="flex flex-col group" style={{ width: '200px' }}>
+              <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${isHomePage ? 'text-white' : 'text-primary-600'} transition-all group-hover:scale-105 text-center`} style={{ width: '100%', letterSpacing: '0.2em' }}>
                 WAINSO
               </div>
-              <div className={`text-[10px] sm:text-xs mt-0.5 ${isHomePage ? 'text-white/80' : 'text-gray-600'}`}>
+              <div className={`text-[10px] sm:text-[11px] mt-0.5 font-semibold ${isHomePage ? 'text-white' : 'text-primary-700'} transition-all text-center`} style={{ width: '100%', letterSpacing: '0.02em' }}>
                 Security first. Technology fast.
               </div>
             </Link>

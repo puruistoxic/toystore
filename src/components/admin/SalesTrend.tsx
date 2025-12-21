@@ -130,3 +130,5 @@ export default function SalesTrend({ data }: SalesTrendProps) {
     </div>
   );
 }
+
+

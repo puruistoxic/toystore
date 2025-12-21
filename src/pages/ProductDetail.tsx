@@ -121,21 +121,6 @@ const ProductDetail: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl font-bold text-gray-900">
-                ₹{product.price.toLocaleString()}
-              </div>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <div className="text-xl text-gray-500 line-through">
-                  ₹{product.originalPrice.toLocaleString()}
-                </div>
-              )}
-              {product.originalPrice && product.originalPrice > product.price && (
-                <div className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-semibold">
-                  Save ₹{(product.originalPrice - product.price).toLocaleString()}
-                </div>
-              )}
-            </div>
 
             <div className="flex items-center space-x-2">
               {product.inStock ? (
@@ -241,7 +226,7 @@ const ProductDetail: React.FC = () => {
               <Truck className="h-8 w-8 text-primary-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Shipping</h3>
-            <p className="text-gray-600">Free delivery on orders above ₹5,000</p>
+            <p className="text-gray-600">Free delivery available</p>
           </div>
           <div className="text-center">
             <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">

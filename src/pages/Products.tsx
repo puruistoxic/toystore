@@ -122,11 +122,6 @@ const Products: React.FC = () => {
                     Out of Stock
                   </div>
                 )}
-                {product.originalPrice && product.originalPrice > product.price && (
-                  <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                    Sale
-                  </div>
-                )}
               </div>
 
               <div className="p-6">
@@ -149,17 +144,6 @@ const Products: React.FC = () => {
                   {product.description}
                 </p>
 
-                {/* Price */}
-                <div className="flex items-center mb-4">
-                  <span className="text-2xl font-bold text-gray-900">
-                    ₹{product.price.toLocaleString()}
-                  </span>
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <span className="text-lg text-gray-500 line-through ml-2">
-                      ₹{product.originalPrice.toLocaleString()}
-                    </span>
-                  )}
-                </div>
 
                 {/* Stock Status */}
                 <div className="flex items-center mb-4">
