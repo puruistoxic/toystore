@@ -50,3 +50,4 @@ export function handleImageError(event: React.SyntheticEvent<HTMLImageElement, E
   target.src = getDataURIPlaceholder(400, 300, productName);
   target.onerror = null; // Prevent infinite loop
 }
+

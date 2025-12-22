@@ -352,11 +352,20 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
               <div className="space-y-4">
                 {/* Column Headers - Desktop Only */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-2 border-b border-gray-300">
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <label className="text-xs font-medium text-gray-600 uppercase">HSN Code</label>
                   </div>
-                  <div className="col-span-8">
+                  <div className="col-span-4">
                     <label className="text-xs font-medium text-gray-600 uppercase">Description</label>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-gray-600 uppercase">Quantity</label>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-gray-600 uppercase">Price (₹)</label>
+                  </div>
+                  <div className="col-span-1">
+                    <label className="text-xs font-medium text-gray-600 uppercase">Amount</label>
                   </div>
                   <div className="col-span-1"></div>
                 </div>
@@ -364,7 +373,7 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
                     {/* Desktop Layout */}
                     <div className="hidden md:grid grid-cols-12 gap-4">
-                      <div className="col-span-3">
+                      <div className="col-span-2">
                         <input
                           type="text"
                           placeholder="HSN Code"
@@ -373,7 +382,7 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                         />
                       </div>
-                      <div className="col-span-8">
+                      <div className="col-span-4">
                         <ProductSearch
                           value={item.description}
                           onChange={(product) => handleProductSelect(index, product)}
@@ -381,6 +390,33 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
                           placeholder="Search or select product..."
                           className="w-full"
                         />
+                      </div>
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Quantity"
+                          value={item.quantity || ''}
+                          onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Price"
+                          value={item.price || ''}
+                          onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                      <div className="col-span-1 flex items-center">
+                        <span className="text-sm font-medium text-gray-700">
+                          ₹{((item.quantity || 0) * (item.price || 0)).toFixed(2)}
+                        </span>
                       </div>
                       <div className="col-span-1 flex items-center justify-end">
                         <button
@@ -424,6 +460,36 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
                           placeholder="Search or select product..."
                           className="w-full"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Quantity"
+                          value={item.quantity || ''}
+                          onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Price (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Price"
+                          value={item.price || ''}
+                          onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                        <div className="px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm font-medium text-gray-700">
+                          ₹{((item.quantity || 0) * (item.price || 0)).toFixed(2)}
+                        </div>
                       </div>
                     </div>
                   </div>
