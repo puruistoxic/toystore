@@ -5,9 +5,11 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { invoicingApi } from '../../utils/api';
 import { Client } from '../../types/invoicing';
 import { Plus, Search, Edit, Trash2, Users, Mail, Phone, Building2 } from 'lucide-react';
+import { useAlert } from '../../contexts/AlertContext';
 
 export default function AdminClients() {
   const queryClient = useQueryClient();
+  const { showAlert, showConfirm } = useAlert();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
 
@@ -30,11 +32,21 @@ export default function AdminClients() {
   });
 
   const handleDelete = async (client: Client) => {
-    if (window.confirm(`Are you sure you want to delete ${client.name}?`)) {
+    const confirmed = await showConfirm({
+      title: 'Delete Client',
+      message: `Are you sure you want to delete ${client.name}?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       try {
         await deleteMutation.mutateAsync(client.id);
       } catch (error: any) {
-        alert(error.response?.data?.message || 'Failed to delete client');
+        await showAlert({
+          type: 'error',
+          title: 'Error',
+          message: error.response?.data?.message || 'Failed to delete client'
+        });
       }
     }
   };

@@ -6,9 +6,11 @@ import { invoicingApi, companySettingsApi } from '../../utils/api';
 import { Proposal } from '../../types/invoicing';
 import { Plus, Search, Edit, Trash2, FileText, Calendar, Download, Receipt } from 'lucide-react';
 import { generateProposalPDF } from '../../utils/pdfGenerator';
+import { useAlert } from '../../contexts/AlertContext';
 
 export default function AdminProposals() {
   const queryClient = useQueryClient();
+  const { showAlert, showConfirm } = useAlert();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -63,7 +65,11 @@ export default function AdminProposals() {
       doc.save(`Proposal-${proposal.proposal_number}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF');
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to generate PDF'
+      });
     }
   };
 
@@ -75,11 +81,21 @@ export default function AdminProposals() {
   });
 
   const handleDelete = async (proposal: Proposal) => {
-    if (window.confirm(`Are you sure you want to delete proposal ${proposal.proposal_number}?`)) {
+    const confirmed = await showConfirm({
+      title: 'Delete Proposal',
+      message: `Are you sure you want to delete proposal ${proposal.proposal_number}?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       try {
         await deleteMutation.mutateAsync(proposal.id);
       } catch (error: any) {
-        alert(error.response?.data?.message || 'Failed to delete proposal');
+        await showAlert({
+          type: 'error',
+          title: 'Error',
+          message: error.response?.data?.message || 'Failed to delete proposal'
+        });
       }
     }
   };

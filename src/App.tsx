@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
+import { AlertProvider } from './contexts/AlertContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import EnquiryPopup, { useEnquiryPopup } from './components/EnquiryPopup';
@@ -115,8 +116,9 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Router>
+        <AlertProvider>
+          <AuthProvider>
+            <Router>
             <Routes>
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -400,8 +402,9 @@ function App() {
               {/* Public Routes */}
               <Route path="/*" element={<AppContent />} />
             </Routes>
-          </Router>
-        </AuthProvider>
+            </Router>
+          </AuthProvider>
+        </AlertProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );

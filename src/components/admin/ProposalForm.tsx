@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAlert } from '../../contexts/AlertContext';
 import AdminLayout from './AdminLayout';
 import { invoicingApi, companySettingsApi } from '../../utils/api';
 import { ArrowLeft, Plus, Trash2, Download, Receipt } from 'lucide-react';
@@ -16,6 +17,7 @@ interface ProposalFormProps {
 }
 
 export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
+  const { showAlert } = useAlert();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
@@ -89,7 +91,11 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
       doc.save(`Proposal-${proposal.proposal_number}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF');
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to generate PDF'
+      });
     }
   };
 
@@ -176,11 +182,19 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.client_id) {
-      alert('Please select a client');
+      await showAlert({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Please select a client'
+      });
       return;
     }
     if (formData.items.length === 0) {
-      alert('Please add at least one item');
+      await showAlert({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Please add at least one item'
+      });
       return;
     }
     const { subtotal, taxAmount, total } = calculateTotals();
@@ -201,7 +215,11 @@ export default function ProposalForm({ mode, proposalId }: ProposalFormProps) {
         });
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || `Failed to ${mode === 'new' ? 'create' : 'update'} proposal`);
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || `Failed to ${mode === 'new' ? 'create' : 'update'} proposal`
+      });
     }
   };
 

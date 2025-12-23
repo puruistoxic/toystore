@@ -113,7 +113,14 @@ export interface InvoicePayment {
   reference_number?: string;
   notes?: string;
   created_by?: number;
+  created_by_username?: string;
+  created_by_full_name?: string;
   created_at?: string;
+  is_deleted?: number;
+  deleted_by?: number;
+  deleted_by_username?: string;
+  deleted_by_full_name?: string;
+  deleted_at?: string;
 }
 
 export interface InvoiceReminder {

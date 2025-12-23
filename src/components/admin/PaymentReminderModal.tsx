@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoicingApi } from '../../utils/api';
 import { X, Mail, Calendar, Trash2, Send, Plus } from 'lucide-react';
 import { InvoiceReminder } from '../../types/invoicing';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface PaymentReminderModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function PaymentReminderModal({
   clientEmail
 }: PaymentReminderModalProps) {
   const queryClient = useQueryClient();
+  const { showAlert, showConfirm } = useAlert();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [reminderForm, setReminderForm] = useState({
     reminder_type: 'after_due' as 'before_due' | 'on_due' | 'after_due' | 'custom',
@@ -40,17 +42,31 @@ export default function PaymentReminderModal({
 
   const sendReminderMutation = useMutation({
     mutationFn: (reminderId?: number) => invoicingApi.sendReminder(invoiceId, reminderId),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['reminders', invoiceId] });
-      alert('Reminder email sent successfully!');
+      await showAlert({
+        type: 'success',
+        title: 'Success',
+        message: 'Reminder email sent successfully!'
+      });
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.message || 'Failed to send reminder');
+    onError: async (error: any) => {
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to send reminder'
+      });
     }
   });
 
-  const handleSendNow = () => {
-    if (window.confirm('Send payment reminder email now?')) {
+  const handleSendNow = async () => {
+    const confirmed = await showConfirm({
+      title: 'Send Reminder',
+      message: 'Send payment reminder email now?',
+      confirmText: 'Send',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       sendReminderMutation.mutate(undefined);
     }
   };
@@ -66,8 +82,12 @@ export default function PaymentReminderModal({
         days_before_after: 0
       });
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.message || 'Failed to create reminder');
+    onError: async (error: any) => {
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to create reminder'
+      });
     }
   });
 
@@ -76,8 +96,12 @@ export default function PaymentReminderModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders', invoiceId] });
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.message || 'Failed to delete reminder');
+    onError: async (error: any) => {
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to delete reminder'
+      });
     }
   });
 
@@ -95,10 +119,14 @@ export default function PaymentReminderModal({
     }
   }, [reminderForm.reminder_type, reminderForm.days_before_after, dueDate]);
 
-  const handleCreateReminder = (e: React.FormEvent) => {
+  const handleCreateReminder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reminderForm.reminder_date) {
-      alert('Please select a reminder date');
+      await showAlert({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Please select a reminder date'
+      });
       return;
     }
     createReminderMutation.mutate(reminderForm);
@@ -274,8 +302,14 @@ export default function PaymentReminderModal({
                         </button>
                       )}
                       <button
-                        onClick={() => {
-                          if (window.confirm('Delete this reminder?')) {
+                        onClick={async () => {
+                          const confirmed = await showConfirm({
+                            title: 'Delete Reminder',
+                            message: 'Are you sure you want to delete this reminder?',
+                            confirmText: 'Delete',
+                            cancelText: 'Cancel'
+                          });
+                          if (confirmed) {
                             deleteReminderMutation.mutate(reminder.id);
                           }
                         }}

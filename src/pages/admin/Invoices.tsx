@@ -8,9 +8,11 @@ import { Plus, Search, Edit, Trash2, FileText, Calendar, DollarSign, Download, M
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import PaymentReminderModal from '../../components/admin/PaymentReminderModal';
 import PaymentManagementModal from '../../components/admin/PaymentManagementModal';
+import { useAlert } from '../../contexts/AlertContext';
 
 export default function AdminInvoices() {
   const queryClient = useQueryClient();
+  const { showAlert, showConfirm } = useAlert();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [reminderModalInvoice, setReminderModalInvoice] = useState<Invoice | null>(null);
@@ -41,7 +43,11 @@ export default function AdminInvoices() {
       doc.save(`Invoice-${invoice.invoice_number}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF');
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to generate PDF'
+      });
     }
   };
 
@@ -53,11 +59,21 @@ export default function AdminInvoices() {
   });
 
   const handleDelete = async (invoice: Invoice) => {
-    if (window.confirm(`Are you sure you want to delete invoice ${invoice.invoice_number}?`)) {
+    const confirmed = await showConfirm({
+      title: 'Delete Invoice',
+      message: `Are you sure you want to delete invoice ${invoice.invoice_number}?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       try {
         await deleteMutation.mutateAsync(invoice.id);
       } catch (error: any) {
-        alert(error.response?.data?.message || 'Failed to delete invoice');
+        await showAlert({
+          type: 'error',
+          title: 'Error',
+          message: error.response?.data?.message || 'Failed to delete invoice'
+        });
       }
     }
   };
@@ -311,7 +327,15 @@ export default function AdminInvoices() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
+                  <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => setPaymentModalInvoice(invoice)}
+                      className="flex items-center px-3 py-2 text-sm text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation"
+                      title="Payment Management"
+                    >
+                      <CreditCard className="w-4 h-4 mr-1" />
+                      <span className="hidden xs:inline">Payments</span>
+                    </button>
                     <button
                       onClick={() => setReminderModalInvoice(invoice)}
                       className="flex items-center px-3 py-2 text-sm text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-md touch-manipulation"

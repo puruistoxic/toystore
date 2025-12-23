@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAlert } from '../../contexts/AlertContext';
 import AdminLayout from './AdminLayout';
 import { invoicingApi, companySettingsApi } from '../../utils/api';
 import { ArrowLeft, Plus, Trash2, Download, Mail } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   const [searchParams] = useSearchParams();
   const proposalId = searchParams.get('proposal_id');
   const queryClient = useQueryClient();
+  const { showAlert } = useAlert();
   const [formData, setFormData] = useState({
     client_id: '',
     proposal_id: '',
@@ -143,7 +145,11 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
       doc.save(`Invoice-${invoice.invoice_number}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF');
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to generate PDF'
+      });
     }
   };
 
@@ -231,18 +237,36 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   };
 
   const calculateTotals = () => {
-    // Pricing removed - return zeros for backend compatibility
-    return { subtotal: 0, taxAmount: 0, total: 0 };
+    const subtotal = formData.items.reduce((sum, item) => {
+      return sum + ((item.quantity || 0) * (item.price || 0));
+    }, 0);
+
+    // Apply tax only if invoice_type is 'confirmed' (with GST)
+    const taxAmount = formData.invoice_type === 'confirmed' 
+      ? (subtotal * (formData.tax_rate || 18)) / 100 
+      : 0;
+    
+    const total = subtotal + taxAmount - (formData.discount || 0);
+
+    return { subtotal, taxAmount, total };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.client_id) {
-      alert('Please select a client');
+      await showAlert({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Please select a client'
+      });
       return;
     }
     if (formData.items.length === 0) {
-      alert('Please add at least one item');
+      await showAlert({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Please add at least one item'
+      });
       return;
     }
     const { subtotal, taxAmount, total } = calculateTotals();
@@ -263,7 +287,11 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
         });
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || `Failed to ${mode === 'new' ? 'create' : 'update'} invoice`);
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || `Failed to ${mode === 'new' ? 'create' : 'update'} invoice`
+      });
     }
   };
 
@@ -289,17 +317,17 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
 
   return (
     <AdminLayout title={pageTitle}>
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button onClick={() => navigate('/admin/invoices')} className="text-gray-600 hover:text-gray-900">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <button onClick={() => navigate('/admin/invoices')} className="text-gray-600 hover:text-gray-900 touch-manipulation flex-shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                 {mode === 'new' ? 'New Invoice' : 'Edit Invoice'}
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
                 {mode === 'edit' && invoice?.invoice_number && (
                   <span className="font-medium text-teal-600">Invoice #: {invoice.invoice_number}</span>
                 )}
@@ -312,10 +340,10 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
             </div>
           </div>
           {mode === 'edit' && invoice && (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-shrink-0">
               <button
                 onClick={() => setShowReminderModal(true)}
-                className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm touch-manipulation w-full sm:w-auto"
                 title="Payment Reminders"
               >
                 <Mail className="w-4 h-4 mr-2" />
@@ -323,10 +351,11 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
               </button>
               <button
                 onClick={handleDownloadPDF}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm touch-manipulation w-full sm:w-auto"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Download PDF
+                <span className="hidden sm:inline">Download PDF</span>
+                <span className="sm:hidden">PDF</span>
               </button>
             </div>
           )}
@@ -346,7 +375,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -467,11 +496,20 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
               <div className="space-y-4">
                 {/* Column Headers - Desktop Only */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-2 border-b border-gray-300">
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <label className="text-xs font-medium text-gray-600 uppercase">HSN Code</label>
                   </div>
-                  <div className="col-span-8">
+                  <div className="col-span-4">
                     <label className="text-xs font-medium text-gray-600 uppercase">Description</label>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-gray-600 uppercase">Quantity</label>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-gray-600 uppercase">Price (₹)</label>
+                  </div>
+                  <div className="col-span-1">
+                    <label className="text-xs font-medium text-gray-600 uppercase">Amount</label>
                   </div>
                   <div className="col-span-1"></div>
                 </div>
@@ -604,6 +642,43 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
             )}
           </div>
 
+          {/* Totals Section */}
+          {formData.items.length > 0 && (
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-200">
+              <div className="flex justify-end">
+                <div className="w-full sm:w-auto sm:min-w-[280px] space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  {formData.invoice_type === 'confirmed' && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Tax ({formData.tax_rate}%):</span>
+                        <span className="font-medium text-gray-900">₹{taxAmount.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                  {formData.discount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Discount:</span>
+                      <span className="font-medium text-red-600">-₹{formData.discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-300">
+                    <span className="text-gray-900">Total:</span>
+                    <span className="text-teal-600">₹{total.toFixed(2)}</span>
+                  </div>
+                  {formData.invoice_type === 'sharing' && (
+                    <div className="text-xs text-gray-500 mt-2">
+                      * Sharing invoice (without GST)
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Additional Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -645,14 +720,14 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
             <button
               type="button"
               onClick={() => navigate('/admin/invoices')}
-              className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation text-sm font-medium"
+              className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation text-sm font-medium w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 touch-manipulation text-sm font-medium"
+              className="px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 touch-manipulation text-sm font-medium w-full sm:w-auto"
             >
               {isSubmitting ? (mode === 'new' ? 'Creating...' : 'Updating...') : (mode === 'new' ? 'Create Invoice' : 'Update Invoice')}
             </button>
@@ -664,7 +739,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
           <div className="mt-6">
             <PaymentManagement
               invoiceId={invoice.id}
-              invoiceTotal={total}
+              invoiceTotal={total > 0 ? total : (invoice.total || 0)}
               paidAmount={invoice.paid_amount || 0}
               currency={formData.currency}
             />

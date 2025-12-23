@@ -671,7 +671,7 @@ router.get('/invoices', authenticateToken, async (req, res) => {
       SELECT i.*, c.name as client_name, c.email as client_email, c.phone as client_phone, c.company as client_company,
        c.address as client_address, c.city as client_city, c.state as client_state,
        c.country as client_country, c.postal_code as client_postal_code, c.tax_id as client_tax_id,
-      (SELECT COALESCE(SUM(amount), 0) FROM invoice_payments WHERE invoice_id = i.id) as paid_amount
+      (SELECT COALESCE(SUM(amount), 0) FROM invoice_payments WHERE invoice_id = i.id AND (is_deleted = 0 OR is_deleted IS NULL)) as paid_amount
       FROM invoices i
       LEFT JOIN clients c ON i.client_id = c.id
       WHERE 1=1
@@ -731,7 +731,7 @@ router.get('/invoices/:id', authenticateToken, async (req, res) => {
       `SELECT i.*, c.name as client_name, c.email as client_email, c.phone as client_phone, c.company as client_company,
        c.address as client_address, c.city as client_city, c.state as client_state,
        c.country as client_country, c.postal_code as client_postal_code, c.tax_id as client_tax_id,
-       (SELECT COALESCE(SUM(amount), 0) FROM invoice_payments WHERE invoice_id = i.id) as paid_amount
+       (SELECT COALESCE(SUM(amount), 0) FROM invoice_payments WHERE invoice_id = i.id AND (is_deleted = 0 OR is_deleted IS NULL)) as paid_amount
        FROM invoices i
        LEFT JOIN clients c ON i.client_id = c.id
        WHERE i.id = ?`,
@@ -930,7 +930,16 @@ router.get('/invoices/:id/payments', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
     const [rows] = await pool.execute(
-      'SELECT * FROM invoice_payments WHERE invoice_id = ? ORDER BY payment_date DESC, created_at DESC',
+      `SELECT ip.*, 
+       u.username as created_by_username,
+       u.full_name as created_by_full_name,
+       deleted_user.username as deleted_by_username,
+       deleted_user.full_name as deleted_by_full_name
+       FROM invoice_payments ip
+       LEFT JOIN admin_users u ON ip.created_by = u.id
+       LEFT JOIN admin_users deleted_user ON ip.deleted_by = deleted_user.id
+       WHERE ip.invoice_id = ? AND (ip.is_deleted = 0 OR ip.is_deleted IS NULL) 
+       ORDER BY ip.payment_date DESC, ip.created_at DESC`,
       [req.params.id]
     );
     const payments = rows.map(row => formatDataFromDB(row, []));
@@ -959,15 +968,16 @@ router.post('/invoices/:id/payments', authenticateToken, async (req, res) => {
     }
 
     // Insert payment
+    const userId = req.user?.id || req.user?.user_id || req.user?.userId || null;
     await pool.execute(
       `INSERT INTO invoice_payments (invoice_id, amount, payment_date, payment_method, reference_number, notes, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [invoiceId, paymentAmount, payment_date, payment_method || 'bank_transfer', reference_number, notes, req.user.userId || req.user.id]
+      [invoiceId, paymentAmount, payment_date, payment_method || 'bank_transfer', reference_number, notes, userId]
     );
 
     // Update invoice paid amount and status
     const [paymentRows] = await pool.execute(
-      'SELECT COALESCE(SUM(amount), 0) as total_paid FROM invoice_payments WHERE invoice_id = ?',
+      'SELECT COALESCE(SUM(amount), 0) as total_paid FROM invoice_payments WHERE invoice_id = ? AND is_deleted = 0',
       [invoiceId]
     );
     const totalPaid = parseFloat(paymentRows[0].total_paid);
@@ -1006,9 +1016,9 @@ router.delete('/invoices/:id/payments/:paymentId', authenticateToken, async (req
   try {
     const pool = getPool();
     const { id: invoiceId, paymentId } = req.params;
+    const userId = req.user?.id || req.user?.user_id || req.user?.userId || null;
 
-    // Delete payment
-    // Get payment details before deletion for audit log
+    // Get payment details before soft deletion for audit log
     const [paymentRows] = await pool.execute(
       'SELECT * FROM invoice_payments WHERE id = ? AND invoice_id = ?',
       [paymentId, invoiceId]
@@ -1020,15 +1030,25 @@ router.delete('/invoices/:id/payments/:paymentId', authenticateToken, async (req
 
     const paymentToDelete = paymentRows[0];
 
-    // Delete payment
-    await pool.execute('DELETE FROM invoice_payments WHERE id = ? AND invoice_id = ?', [paymentId, invoiceId]);
+    // Check if already deleted
+    if (paymentToDelete.is_deleted) {
+      return res.status(400).json({ error: 'Payment has already been deleted' });
+    }
+
+    // Soft delete payment (mark as deleted instead of actually deleting)
+    // Ensure userId is null (not undefined) if not available
+    const deletedBy = userId || null;
+    await pool.execute(
+      'UPDATE invoice_payments SET is_deleted = 1, deleted_by = ?, deleted_at = NOW() WHERE id = ? AND invoice_id = ?',
+      [deletedBy, paymentId, invoiceId]
+    );
 
     // Log payment deletion
-    await addAuditLog(req, 'DELETE', 'payment', invoiceId, `Payment of ${paymentToDelete.amount} deleted`, paymentToDelete, null);
+    await addAuditLog(req, 'DELETE', 'payment', invoiceId, `Payment of ${paymentToDelete.amount} deleted`, paymentToDelete, { ...paymentToDelete, is_deleted: 1, deleted_by: deletedBy, deleted_at: new Date() });
 
-    // Update invoice paid amount and status
+    // Update invoice paid amount and status (only count non-deleted payments)
     const [totalPaymentRows] = await pool.execute(
-      'SELECT COALESCE(SUM(amount), 0) as total_paid FROM invoice_payments WHERE invoice_id = ?',
+      'SELECT COALESCE(SUM(amount), 0) as total_paid FROM invoice_payments WHERE invoice_id = ? AND is_deleted = 0',
       [invoiceId]
     );
     const totalPaid = parseFloat(totalPaymentRows[0].total_paid);

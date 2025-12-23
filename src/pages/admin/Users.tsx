@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { usersApi } from '../../utils/api';
 import { Plus, Search, Edit, Trash2, Users, Mail, Shield, UserCheck, UserX } from 'lucide-react';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface AdminUser {
   id: number;
@@ -18,6 +19,7 @@ interface AdminUser {
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();
+  const { showAlert, showConfirm } = useAlert();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -42,11 +44,21 @@ export default function AdminUsers() {
   });
 
   const handleDelete = async (user: AdminUser) => {
-    if (window.confirm(`Are you sure you want to deactivate ${user.username}?`)) {
+    const confirmed = await showConfirm({
+      title: 'Deactivate User',
+      message: `Are you sure you want to deactivate ${user.username}?`,
+      confirmText: 'Deactivate',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       try {
         await deleteMutation.mutateAsync(user.id);
       } catch (error: any) {
-        alert(error.response?.data?.message || 'Failed to deactivate user');
+        await showAlert({
+          type: 'error',
+          title: 'Error',
+          message: error.response?.data?.message || 'Failed to deactivate user'
+        });
       }
     }
   };

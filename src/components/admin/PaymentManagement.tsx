@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoicingApi } from '../../utils/api';
 import { InvoicePayment } from '../../types/invoicing';
 import { Plus, Trash2, DollarSign, Calendar, CreditCard, FileText } from 'lucide-react';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface PaymentManagementProps {
   invoiceId: string;
@@ -18,6 +19,7 @@ export default function PaymentManagement({
   currency = 'INR'
 }: PaymentManagementProps) {
   const queryClient = useQueryClient();
+  const { showAlert, showConfirm } = useAlert();
   const [showAddForm, setShowAddForm] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
@@ -51,8 +53,12 @@ export default function PaymentManagement({
         notes: ''
       });
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.message || 'Failed to record payment');
+    onError: async (error: any) => {
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to record payment'
+      });
     }
   });
 
@@ -64,8 +70,12 @@ export default function PaymentManagement({
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.message || 'Failed to delete payment');
+    onError: async (error: any) => {
+      await showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to delete payment'
+      });
     }
   });
 
@@ -106,20 +116,39 @@ export default function PaymentManagement({
     return '💰';
   };
 
-  const outstandingAmount = invoiceTotal - paidAmount;
-  const paymentPercentage = invoiceTotal > 0 ? (paidAmount / invoiceTotal) * 100 : 0;
+  // Derive paid amount from payments so UI updates immediately after changes
+  const totalPaidFromPayments = payments.reduce(
+    (sum, p) => sum + (parseFloat(p.amount?.toString() || '0') || 0),
+    0
+  );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Use live payments once loaded; fall back to prop while query is loading
+  const paymentsLoaded = !isLoading;
+  const effectivePaidAmount = paymentsLoaded ? totalPaidFromPayments : paidAmount;
+  const effectiveInvoiceTotal = parseFloat(invoiceTotal?.toString() || '0');
+  const outstandingAmount = Math.max(effectiveInvoiceTotal - effectivePaidAmount, 0);
+  const paymentPercentage =
+    effectiveInvoiceTotal > 0 ? (effectivePaidAmount / effectiveInvoiceTotal) * 100 : 0;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amount = parseFloat(paymentForm.amount);
     
     if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid payment amount');
+      await showAlert({
+        type: 'warning',
+        title: 'Invalid Amount',
+        message: 'Please enter a valid payment amount'
+      });
       return;
     }
 
     if (amount > outstandingAmount) {
-      alert(`Payment amount cannot exceed outstanding amount of ${formatCurrency(outstandingAmount)}`);
+      await showAlert({
+        type: 'warning',
+        title: 'Amount Exceeded',
+        message: `Payment amount cannot exceed outstanding amount of ${formatCurrency(outstandingAmount)}`
+      });
       return;
     }
 
@@ -132,8 +161,8 @@ export default function PaymentManagement({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Payment Management</h3>
           <p className="text-sm text-gray-600 mt-1">Record and track partial payments</p>
@@ -141,7 +170,7 @@ export default function PaymentManagement({
         <button
           type="button"
           onClick={() => setShowAddForm(!showAddForm)}
-          className="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
+          className="inline-flex items-center justify-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium w-full sm:w-auto touch-manipulation"
         >
           <Plus className="w-4 h-4 mr-2" />
           {showAddForm ? 'Cancel' : 'Add Payment'}
@@ -149,47 +178,49 @@ export default function PaymentManagement({
       </div>
 
       {/* Payment Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-blue-900">Total Amount</p>
-              <p className="text-2xl font-bold text-blue-900 mt-1">{formatCurrency(invoiceTotal)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-blue-900 mt-1">{formatCurrency(invoiceTotal)}</p>
             </div>
-            <DollarSign className="w-8 h-8 text-blue-600" />
+            <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0 ml-2" />
           </div>
         </div>
         <div className="bg-green-50 rounded-lg p-4 border border-green-200">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-green-900">Paid Amount</p>
-              <p className="text-2xl font-bold text-green-900 mt-1">{formatCurrency(paidAmount)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-900 mt-1">
+                {formatCurrency(effectivePaidAmount)}
+              </p>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0 ml-2">
               <div className="text-xs text-green-700 font-medium">{paymentPercentage.toFixed(1)}%</div>
             </div>
           </div>
         </div>
-        <div className={`rounded-lg p-4 border ${
+        <div className={`rounded-lg p-4 border sm:col-span-2 lg:col-span-1 ${
           outstandingAmount > 0 
             ? 'bg-orange-50 border-orange-200' 
             : 'bg-gray-50 border-gray-200'
         }`}>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className={`text-sm font-medium ${
                 outstandingAmount > 0 ? 'text-orange-900' : 'text-gray-900'
               }`}>
                 Outstanding
               </p>
-              <p className={`text-2xl font-bold mt-1 ${
+              <p className={`text-xl sm:text-2xl font-bold mt-1 ${
                 outstandingAmount > 0 ? 'text-orange-900' : 'text-gray-900'
               }`}>
                 {formatCurrency(outstandingAmount)}
               </p>
             </div>
             {outstandingAmount === 0 && (
-              <div className="text-green-600 text-sm font-medium">✓ Paid</div>
+              <div className="text-green-600 text-sm font-medium flex-shrink-0 ml-2">✓ Paid</div>
             )}
           </div>
         </div>
@@ -213,8 +244,8 @@ export default function PaymentManagement({
 
       {/* Add Payment Form */}
       {showAddForm && (
-        <form onSubmit={handleSubmit} className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <form onSubmit={handleSubmit} className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-6 border border-gray-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Payment Amount <span className="text-red-500">*</span>
@@ -227,35 +258,35 @@ export default function PaymentManagement({
                 max={outstandingAmount}
                 step="0.01"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
               />
               {outstandingAmount > 0 && (
-                <div className="flex items-center space-x-2 mt-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   <button
                     type="button"
                     onClick={() => handleQuickAmount(25)}
-                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-700"
+                    className="text-xs px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 touch-manipulation"
                   >
                     25%
                   </button>
                   <button
                     type="button"
                     onClick={() => handleQuickAmount(50)}
-                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-700"
+                    className="text-xs px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 touch-manipulation"
                   >
                     50%
                   </button>
                   <button
                     type="button"
                     onClick={() => handleQuickAmount(75)}
-                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-700"
+                    className="text-xs px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 touch-manipulation"
                   >
                     75%
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentForm({ ...paymentForm, amount: outstandingAmount.toFixed(2) })}
-                    className="text-xs px-2 py-1 bg-teal-100 hover:bg-teal-200 rounded text-teal-700 font-medium"
+                    className="text-xs px-3 py-1.5 bg-teal-100 hover:bg-teal-200 rounded text-teal-700 font-medium touch-manipulation"
                   >
                     Full
                   </button>
@@ -272,7 +303,7 @@ export default function PaymentManagement({
                 value={paymentForm.payment_date}
                 onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
               />
             </div>
 
@@ -284,7 +315,7 @@ export default function PaymentManagement({
                 value={paymentForm.payment_method}
                 onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value as any })}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
               >
                 <option value="cash">Cash</option>
                 <option value="bank_transfer">Bank Transfer</option>
@@ -305,34 +336,34 @@ export default function PaymentManagement({
                 value={paymentForm.reference_number}
                 onChange={(e) => setPaymentForm({ ...paymentForm, reference_number: e.target.value })}
                 placeholder="Transaction ID, Cheque No., etc."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
               <textarea
                 value={paymentForm.notes}
                 onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
                 rows={3}
                 placeholder="Additional payment details or remarks..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
               />
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium touch-manipulation w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createPaymentMutation.isPending}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 text-sm font-medium"
+              className="px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 text-sm font-medium touch-manipulation w-full sm:w-auto"
             >
               {createPaymentMutation.isPending ? 'Recording...' : 'Record Payment'}
             </button>
@@ -358,56 +389,65 @@ export default function PaymentManagement({
             {payments.map((payment) => (
               <div
                 key={payment.id}
-                className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <div className="bg-teal-100 p-2 rounded-lg">
-                      <span className="text-2xl">{getPaymentMethodIcon(payment.payment_method)}</span>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
+                    <div className="bg-teal-100 p-2 rounded-lg flex-shrink-0">
+                      <span className="text-xl sm:text-2xl">{getPaymentMethodIcon(payment.payment_method)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <p className="text-lg font-bold text-gray-900">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-2 mb-2">
+                        <p className="text-base sm:text-lg font-bold text-gray-900">
                           {formatCurrency(payment.amount)}
                         </p>
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium w-fit">
                           {getPaymentMethodLabel(payment.payment_method)}
                         </span>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
                         <div className="flex items-center space-x-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          <span>{formatDate(payment.payment_date)}</span>
+                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="truncate">{formatDate(payment.payment_date)}</span>
                         </div>
                         {payment.reference_number && (
-                          <div className="flex items-center space-x-2">
-                            <CreditCard className="w-4 h-4 text-gray-400" />
-                            <span className="font-mono text-xs">{payment.reference_number}</span>
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <CreditCard className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span className="font-mono text-xs truncate">{payment.reference_number}</span>
                           </div>
                         )}
                       </div>
                       {payment.notes && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600 break-words">
                           <strong>Notes:</strong> {payment.notes}
                         </div>
                       )}
-                      <div className="mt-2 flex items-center space-x-4 text-xs text-gray-400">
+                      <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:space-x-4 gap-1 sm:gap-0 text-xs text-gray-400 break-words">
                         {payment.created_at && (
-                          <span>Recorded on {formatDate(payment.created_at)}</span>
+                          <span className="break-words">Recorded on {formatDate(payment.created_at)}</span>
                         )}
                         {payment.created_by && (
-                          <span className="text-gray-500">• Recorded by User ID: {payment.created_by}</span>
+                          <span className="text-gray-500 break-words">
+                            {payment.created_at && <span className="hidden sm:inline"> • </span>}
+                            Recorded by: {payment.created_by_full_name || payment.created_by_username || `User ID: ${payment.created_by}`}
+                          </span>
                         )}
                       </div>
                     </div>
                   </div>
                   <button
-                    onClick={() => {
-                      if (window.confirm('Delete this payment record?')) {
+                    onClick={async () => {
+                      const confirmed = await showConfirm({
+                        title: 'Delete Payment',
+                        message: 'Are you sure you want to delete this payment record? This action cannot be undone.',
+                        confirmText: 'Delete',
+                        cancelText: 'Cancel'
+                      });
+                      if (confirmed) {
                         deletePaymentMutation.mutate(payment.id);
                       }
                     }}
-                    className="ml-4 p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                    className="self-end sm:self-start p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors touch-manipulation flex-shrink-0"
                     title="Delete payment"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -434,7 +474,7 @@ export default function PaymentManagement({
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total Paid:</span>
                 <span className="font-medium text-green-600">
-                  {formatCurrency(payments.reduce((sum, p) => sum + p.amount, 0))}
+                  {formatCurrency(payments.reduce((sum, p) => sum + (parseFloat(p.amount?.toString() || '0') || 0), 0))}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
