@@ -17,6 +17,11 @@ export default function AdminInvoices() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [reminderModalInvoice, setReminderModalInvoice] = useState<Invoice | null>(null);
   const [paymentModalInvoice, setPaymentModalInvoice] = useState<Invoice | null>(null);
+  const handleClosePaymentModal = () => {
+    setPaymentModalInvoice(null);
+    // Ensure list reflects latest payments after modal interactions
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  };
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices', statusFilter, search],
@@ -388,7 +393,7 @@ export default function AdminInvoices() {
       {paymentModalInvoice && (
         <PaymentManagementModal
           isOpen={!!paymentModalInvoice}
-          onClose={() => setPaymentModalInvoice(null)}
+          onClose={handleClosePaymentModal}
           invoice={paymentModalInvoice}
         />
       )}
