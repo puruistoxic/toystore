@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, Building, Factory, Filter } from 'lucide-react';
 import SEO from '../SEO';
 import { ContentItem } from '../../types/content';
+import { hybridSearch } from '../../utils/fuzzySearch';
 
 interface GenericListingTemplateProps {
   items: ContentItem[];
@@ -29,19 +30,23 @@ const GenericListingTemplate: React.FC<GenericListingTemplateProps> = ({
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const title = item.title || item.name || '';
-      const matchesSearch =
-        title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.shortDescription && item.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      const matchesFilter =
-        selectedFilter === 'all' ||
-        (filterOptions?.find((f) => f.id === selectedFilter)?.filter(item) ?? true);
-
-      return matchesSearch && matchesFilter;
-    });
+    let filtered = items;
+    
+    // Apply filter first
+    if (selectedFilter !== 'all' && filterOptions) {
+      const filterFn = filterOptions.find((f) => f.id === selectedFilter)?.filter;
+      if (filterFn) {
+        filtered = filtered.filter(filterFn);
+      }
+    }
+    
+    // Apply smart fuzzy search
+    if (searchTerm) {
+      const searchFields: (keyof ContentItem)[] = ['title', 'name', 'description', 'shortDescription'];
+      filtered = hybridSearch(filtered, searchTerm, searchFields);
+    }
+    
+    return filtered;
   }, [items, searchTerm, selectedFilter, filterOptions]);
 
   const defaultRenderCard = (item: ContentItem) => {

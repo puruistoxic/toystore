@@ -5,6 +5,8 @@ import SEO from '../components/SEO';
 import { caseStudies } from '../data/caseStudies';
 import { industries } from '../data/industries';
 import { locations } from '../data/locations';
+import { hybridSearch } from '../utils/fuzzySearch';
+import { CaseStudy } from '../types/content';
 
 const CaseStudies: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,16 +14,22 @@ const CaseStudies: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
 
   const filteredCaseStudies = useMemo(() => {
-    return caseStudies.filter((cs) => {
-      const matchesSearch =
-        cs.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cs.description.toLowerCase().includes(searchTerm.toLowerCase());
-
+    let filtered = caseStudies;
+    
+    // Apply filters first
+    filtered = filtered.filter((cs: any) => {
       const matchesIndustry = selectedIndustry === 'all' || cs.industry === selectedIndustry;
       const matchesLocation = selectedLocation === 'all' || cs.location === selectedLocation;
-
-      return matchesSearch && matchesIndustry && matchesLocation;
+      return matchesIndustry && matchesLocation;
     });
+    
+    // Apply smart fuzzy search
+    if (searchTerm) {
+      const searchFields: (keyof CaseStudy)[] = ['title', 'description'];
+      filtered = hybridSearch(filtered, searchTerm, searchFields);
+    }
+    
+    return filtered;
   }, [searchTerm, selectedIndustry, selectedLocation]);
 
   return (

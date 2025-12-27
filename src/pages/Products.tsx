@@ -18,6 +18,7 @@ import type { Product } from '../types/catalog';
 import SEO from '../components/SEO';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
 import QuoteRequestModal from '../components/QuoteRequestModal';
+import { hybridSearch } from '../utils/fuzzySearch';
 
 // Smart function to determine if an item is a service (not a product)
 function isServiceItem(dbProduct: any): boolean {
@@ -142,17 +143,18 @@ const Products: React.FC = () => {
   ];
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product: Product) => {
-      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-      const search = searchTerm.toLowerCase();
-      const matchesSearch =
-        product.name.toLowerCase().includes(search) ||
-        product.description.toLowerCase().includes(search) ||
-        (product.brand && product.brand.toLowerCase().includes(search)) ||
-        (product.model && product.model.toLowerCase().includes(search));
-
-      return matchesCategory && matchesSearch;
+    // First filter by category
+    let filtered = products.filter((product: Product) => {
+      return selectedCategory === 'all' || product.category === selectedCategory;
     });
+    
+    // Then apply smart fuzzy search
+    if (searchTerm) {
+      const searchFields: (keyof Product)[] = ['name', 'description', 'brand', 'model'];
+      filtered = hybridSearch(filtered, searchTerm, searchFields);
+    }
+    
+    return filtered;
   }, [products, selectedCategory, searchTerm]);
 
   return (

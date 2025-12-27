@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
 import { Search, Plus, X } from 'lucide-react';
+import { hybridSearch } from '../../utils/fuzzySearch';
 
 interface Product {
   id: string;
@@ -144,7 +145,15 @@ export default function ProductSearch({
     }
   };
 
-  const displayProducts = searchTerm.length >= 1 ? products.slice(0, 20) : (isOpen ? allProducts.slice(0, 10) : []);
+  // Apply fuzzy search to products for better matching
+  const displayProducts = useMemo(() => {
+    if (searchTerm.length >= 1) {
+      // Use hybrid search for better multi-word and typo tolerance
+      const searchFields: (keyof Product)[] = ['name', 'description', 'category', 'brand', 'hsn_code'];
+      return hybridSearch(products, searchTerm, searchFields).slice(0, 20);
+    }
+    return isOpen ? allProducts.slice(0, 10) : [];
+  }, [searchTerm, products, allProducts, isOpen]);
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>

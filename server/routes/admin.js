@@ -135,9 +135,14 @@ router.get('/users', authenticateToken, async (req, res) => {
     const params = [];
 
     if (search) {
-      query += ' AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)';
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      // Smart multi-word search: handles words in any order
+      const { buildSmartSearchCondition } = require('../utils/searchHelper');
+      const searchFields = ['username', 'email', 'full_name'];
+      const { condition, params: searchParams } = buildSmartSearchCondition(search, searchFields);
+      if (condition) {
+        query += ` AND ${condition}`;
+        params.push(...searchParams);
+      }
     }
 
     if (role) {

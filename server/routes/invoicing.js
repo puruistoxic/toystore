@@ -327,9 +327,14 @@ router.get('/proposals', authenticateToken, async (req, res) => {
     }
 
     if (search) {
-      query += ' AND (p.proposal_number LIKE ? OR p.title LIKE ? OR c.name LIKE ?)';
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      // Smart multi-word search: handles words in any order
+      const { buildSmartSearchCondition } = require('../utils/searchHelper');
+      const searchFields = ['p.proposal_number', 'p.title', 'c.name'];
+      const { condition, params: searchParams } = buildSmartSearchCondition(search, searchFields);
+      if (condition) {
+        query += ` AND ${condition}`;
+        params.push(...searchParams);
+      }
     }
 
     query += ' ORDER BY p.created_at DESC';
@@ -695,9 +700,14 @@ router.get('/invoices', authenticateToken, async (req, res) => {
     }
 
     if (search) {
-      query += ' AND (i.invoice_number LIKE ? OR i.title LIKE ? OR c.name LIKE ?)';
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      // Smart multi-word search: handles words in any order
+      const { buildSmartSearchCondition } = require('../utils/searchHelper');
+      const searchFields = ['i.invoice_number', 'i.title', 'c.name'];
+      const { condition, params: searchParams } = buildSmartSearchCondition(search, searchFields);
+      if (condition) {
+        query += ` AND ${condition}`;
+        params.push(...searchParams);
+      }
     }
 
     query += ' ORDER BY i.created_at DESC';

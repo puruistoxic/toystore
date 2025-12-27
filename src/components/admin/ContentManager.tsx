@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { Plus, Edit, Trash2, Search, ArrowLeft, AlertCircle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { hybridSearch } from '../../utils/fuzzySearch';
 
 interface ContentManagerProps {
   title: string;
@@ -73,17 +74,19 @@ export default function ContentManager({
 
   // Filter items based on search
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      if (itemFilter && !itemFilter(item)) {
-        return false;
-      }
-      if (!searchTerm) return true;
-      const searchLower = searchTerm.toLowerCase();
-      return searchFields.some((field) => {
-        const value = item[field];
-        return value && String(value).toLowerCase().includes(searchLower);
-      });
-    });
+    let filtered = items;
+    
+    // Apply item filter first
+    if (itemFilter) {
+      filtered = filtered.filter(itemFilter);
+    }
+    
+    // Apply smart fuzzy search
+    if (searchTerm) {
+      filtered = hybridSearch(filtered, searchTerm, searchFields);
+    }
+    
+    return filtered;
   }, [items, searchTerm, searchFields, itemFilter]);
 
   // Pagination calculations

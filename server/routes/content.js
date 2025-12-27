@@ -3,6 +3,7 @@ const { getPool } = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 const { logAudit, getEntityName } = require('../middleware/auditLog');
 const { v4: uuidv4 } = require('uuid');
+const { buildSmartSearchCondition } = require('../utils/searchHelper');
 
 const router = express.Router();
 
@@ -254,9 +255,13 @@ router.get('/products', async (req, res) => {
     }
     
     if (search) {
-      query += ' AND (name LIKE ? OR description LIKE ? OR category LIKE ? OR brand LIKE ? OR hsn_code LIKE ?)';
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+      // Smart multi-word search: handles words in any order
+      const searchFields = ['name', 'description', 'category', 'brand', 'hsn_code'];
+      const { condition, params: searchParams } = buildSmartSearchCondition(search, searchFields);
+      if (condition) {
+        query += ` AND ${condition}`;
+        params.push(...searchParams);
+      }
     }
     
     query += ' ORDER BY created_at DESC';

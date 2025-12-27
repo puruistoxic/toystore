@@ -8,12 +8,14 @@ import {
   MessageCircle,
   Clock,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Search
 } from 'lucide-react';
 import { services } from '../data/services';
 import type { Service } from '../types/catalog';
 import SEO from '../components/SEO';
 import QuoteRequestModal from '../components/QuoteRequestModal';
+import { hybridSearch } from '../utils/fuzzySearch';
 
 const Services: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -42,12 +44,24 @@ const Services: React.FC = () => {
     MessageCircle: <MessageCircle className="h-8 w-8" />
   };
 
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
   const filteredServices = useMemo(() => {
-    if (selectedCategory === 'all') {
-      return services;
+    let filtered = services;
+    
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter((service) => service.category === selectedCategory);
     }
-    return services.filter((service) => service.category === selectedCategory);
-  }, [selectedCategory]);
+    
+    // Apply smart fuzzy search
+    if (searchTerm) {
+      const searchFields: (keyof Service)[] = ['name', 'description'];
+      filtered = hybridSearch(filtered, searchTerm, searchFields);
+    }
+    
+    return filtered;
+  }, [selectedCategory, searchTerm]);
 
   return (
     <>
@@ -71,8 +85,23 @@ const Services: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Filter */}
+      {/* Search and Category Filter */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search services..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        
+        {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-2">
           {categories.map((category) => (
             <button
