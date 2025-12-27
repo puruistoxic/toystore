@@ -200,19 +200,33 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   };
 
   const handleProductSelect = (index: number, product: any) => {
-    if (product) {
-      const newItems = [...formData.items];
-      const hsnCode = product.hsn_code || product.hsnCode || '';
-      newItems[index] = {
-        ...newItems[index],
-        description: product.name,
-        hsn_code: hsnCode,
-        price: product.price || 0,
-        quantity: newItems[index].quantity || 1,
-        product_id: product.id || product.slug || undefined
-      };
-      // Pricing removed - no total calculation
-      setFormData({ ...formData, items: newItems });
+    try {
+      console.log('[InvoiceForm] handleProductSelect called:', { index, product });
+      if (product) {
+        const newItems = [...formData.items];
+        const hsnCode = product.hsn_code || product.hsnCode || '';
+        newItems[index] = {
+          ...newItems[index],
+          description: product.name || '',
+          hsn_code: hsnCode,
+          price: product.price || 0,
+          quantity: newItems[index].quantity || 1,
+          product_id: product.id || product.slug || undefined
+        };
+        console.log('[InvoiceForm] Updated item:', newItems[index]);
+        // Pricing removed - no total calculation
+        setFormData({ ...formData, items: newItems });
+        
+        // Force a re-render by updating the form data
+        // This ensures ProductSearch component receives the updated value
+        setTimeout(() => {
+          setFormData(prev => ({ ...prev, items: newItems }));
+        }, 0);
+      } else {
+        console.warn('[InvoiceForm] handleProductSelect called with null/undefined product');
+      }
+    } catch (error: any) {
+      console.error('[InvoiceForm] Error in handleProductSelect:', error);
     }
   };
 
@@ -221,12 +235,33 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
     setShowQuickAddModal(true);
   };
 
-  const handleProductAdded = (product: any) => {
-    if (quickAddItemIndex !== null) {
-      handleProductSelect(quickAddItemIndex, product);
+  const handleProductAdded = async (product: any) => {
+    try {
+      console.log('[InvoiceForm] handleProductAdded called with product:', product);
+      console.log('[InvoiceForm] quickAddItemIndex:', quickAddItemIndex);
+      if (quickAddItemIndex !== null && product) {
+        // Invalidate and refetch products queries immediately
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['products'] }),
+          queryClient.invalidateQueries({ queryKey: ['products', 'all'] }),
+          queryClient.invalidateQueries({ queryKey: ['products', 'search'] }),
+          // Force refetch
+          queryClient.refetchQueries({ queryKey: ['products', 'all'] }),
+          queryClient.refetchQueries({ queryKey: ['products', 'search'] })
+        ]);
+        
+        // Add a small delay to ensure queries are refetched before updating
+        setTimeout(() => {
+          handleProductSelect(quickAddItemIndex, product);
+        }, 200);
+      } else {
+        console.warn('[InvoiceForm] Cannot add product - quickAddItemIndex is null or product is missing');
+      }
+      setShowQuickAddModal(false);
+      setQuickAddItemIndex(null);
+    } catch (error: any) {
+      console.error('[InvoiceForm] Error in handleProductAdded:', error);
     }
-    setShowQuickAddModal(false);
-    setQuickAddItemIndex(null);
   };
 
   const removeItem = (index: number) => {

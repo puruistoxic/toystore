@@ -242,14 +242,14 @@ router.get('/products', async (req, res) => {
     
     // Smart filtering: exclude service-like items by default (unless explicitly included)
     if (exclude_services !== 'false') {
-      // Exclude service categories
-      query += ` AND category NOT IN ('Installation Service', 'Maintenance Service', 'Visit Charge', 'Software Service', 'Internet Service', 'Service')`;
-      // Exclude service-like names (but allow if category is clearly a product category)
+      // Exclude service categories (handle NULL categories - they should pass through)
+      query += ` AND (category IS NULL OR category NOT IN ('Installation Service', 'Maintenance Service', 'Visit Charge', 'Software Service', 'Internet Service', 'Service'))`;
+      // Exclude service-like names (but allow if category is clearly a product category or NULL)
       query += ` AND (
         LOWER(name) NOT LIKE '%installation service%' 
         AND LOWER(name) NOT LIKE '%visit charge%'
         AND LOWER(name) NOT LIKE '%maintenance service%'
-        AND (LOWER(name) NOT LIKE '%service%' OR LOWER(category) IN ('hardware', 'software', 'networking', 'security', 'erp', 'accessories', 'cctv', 'gps'))
+        AND (LOWER(name) NOT LIKE '%service%' OR category IS NULL OR LOWER(category) IN ('hardware', 'software', 'networking', 'security', 'erp', 'accessories', 'cctv', 'gps'))
       )`;
     }
     
@@ -663,7 +663,7 @@ router.post('/brands', authenticateToken, async (req, res) => {
 
     const entityName = data.name || null;
     await addAuditLog(req, 'CREATE', 'brand', brandId, entityName, null, data);
-    res.json({ success: true, message: 'Brand created successfully' });
+    res.json({ success: true, id: brandId, message: 'Brand created successfully' });
   } catch (error) {
     console.error('[Content API] Create brand error:', error);
     
@@ -1416,7 +1416,7 @@ router.post('/categories', authenticateToken, async (req, res) => {
 
     const entityName = data.name || null;
     await addAuditLog(req, 'CREATE', 'category', categoryId, entityName, null, data);
-    res.json({ success: true, message: 'Category created successfully' });
+    res.json({ success: true, id: categoryId, message: 'Category created successfully' });
   } catch (error) {
     console.error('[Content API] Create category error:', error);
     

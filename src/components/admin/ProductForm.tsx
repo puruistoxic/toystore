@@ -201,8 +201,8 @@ export default function ProductForm({ productId }: ProductFormProps) {
       if (isEdit) {
         await api.put(`/content/products/${productId}`, payload);
       } else {
-        // simple id generation, can be replaced by backend UUID
-        payload.id = Date.now().toString();
+        // Let backend generate UUID - don't include id in payload
+        delete payload.id;
         await api.post('/content/products', payload);
       }
 
@@ -523,14 +523,15 @@ function MasterQuickAddModal({ title, endpoint, onClose, onCreated }: MasterQuic
     setError(null);
 
     try {
-      const id = Date.now().toString();
-      await api.post(endpoint, {
-        id,
+      // Let backend generate UUID - don't include id
+      const response = await api.post(endpoint, {
         name: name.trim(),
         slug: slug.trim() || name.trim().toLowerCase().replace(/\s+/g, '-'),
         is_active: true
       });
-      await onCreated(slug || id, name.trim());
+      // Backend returns the generated ID
+      const generatedId = response.data?.id || response.data?.slug || slug.trim() || name.trim().toLowerCase().replace(/\s+/g, '-');
+      await onCreated(generatedId, name.trim());
     } catch (e: any) {
       setError(e.response?.data?.error || 'Failed to create item');
     } finally {

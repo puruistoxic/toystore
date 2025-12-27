@@ -6,6 +6,7 @@ import { Search, Plus, X } from 'lucide-react';
 interface Product {
   id: string;
   name: string;
+  slug?: string;
   description?: string;
   price?: number;
   hsn_code?: string;
@@ -40,34 +41,72 @@ export default function ProductSearch({
       const response = await api.get('/content/products', {
         params: { 
           search: searchTerm || undefined,
-          is_active: true 
+          is_active: true,
+          exclude_services: 'false' // Include all products, don't filter services
         }
       });
       return response.data || [];
     },
     enabled: isOpen,
-    staleTime: 30000
+    staleTime: 0, // Always refetch to get latest products
+    refetchOnMount: true
   });
 
   // Load all products for initial display
   const { data: allProducts = [] } = useQuery({
     queryKey: ['products', 'all'],
     queryFn: async () => {
-      const response = await api.get('/content/products');
+      const response = await api.get('/content/products', {
+        params: {
+          exclude_services: 'false' // Include all products, don't filter services
+        }
+      });
       return (response.data || []).filter((p: Product) => p.is_active !== false);
     },
-    staleTime: 60000
+    staleTime: 0, // Always refetch to get latest products
+    refetchOnMount: true
   });
 
   useEffect(() => {
-    // If value is set but no product selected, try to find it
-    if (value && !selectedProduct) {
-      const found = allProducts.find((p: Product) => p.name === value || p.id === value);
+    // Sync with external value prop
+    if (value) {
+      // Check if current selection matches the value
+      const currentMatches = selectedProduct && (
+        selectedProduct.name === value || 
+        selectedProduct.id === value || 
+        selectedProduct.slug === value
+      );
+      
+      if (currentMatches) {
+        // Already synced, ensure searchTerm matches
+        if (searchTerm !== selectedProduct.name) {
+          setSearchTerm(selectedProduct.name);
+        }
+        return;
+      }
+      
+      // Try to find the product in allProducts
+      const found = allProducts.find((p: Product) => 
+        p.name === value || p.id === value || p.slug === value
+      );
+      
       if (found) {
         setSelectedProduct(found);
+        setSearchTerm(found.name);
+      } else {
+        // Product not found in list yet, but value is set - show the value
+        // This happens when a new product is just created
+        setSearchTerm(value);
+        // Keep selectedProduct as null for now, it will be set when products refresh
+      }
+    } else {
+      // Value is empty, clear selection
+      if (selectedProduct || searchTerm) {
+        setSelectedProduct(null);
+        setSearchTerm('');
       }
     }
-  }, [value, allProducts, selectedProduct]);
+  }, [value, allProducts]); // Watch allProducts array for changes
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -115,7 +154,7 @@ export default function ProductSearch({
         </div>
         <input
           type="text"
-          value={selectedProduct ? selectedProduct.name : searchTerm}
+          value={selectedProduct ? selectedProduct.name : (value || searchTerm || '')}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
@@ -198,6 +237,7 @@ export default function ProductSearch({
     </div>
   );
 }
+
 
 
 

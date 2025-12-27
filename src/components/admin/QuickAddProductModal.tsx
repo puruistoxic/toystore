@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../utils/api';
 import { X, Plus } from 'lucide-react';
 import MasterQuickAddModal from './MasterQuickAddModal';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface QuickAddProductModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function QuickAddProductModal({
   onProductAdded
 }: QuickAddProductModalProps) {
   const queryClient = useQueryClient();
+  const { showAlert } = useAlert();
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -51,86 +53,6 @@ export default function QuickAddProductModal({
     }
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      // Generate ID (required by backend)
-      const id = Date.now().toString();
-      
-      // Generate slug from name
-      const slug = data.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '') || `product-${id}`;
-      
-      const payload = {
-        id: id,
-        name: data.name.trim(),
-        slug: slug,
-        price: data.price && data.price.trim() ? parseFloat(data.price) : null,
-        hsn_code: data.hsn_code && data.hsn_code.trim() ? data.hsn_code.trim() : null,
-        category: data.category && data.category.trim() ? data.category.trim() : null,
-        brand: data.brand && data.brand.trim() ? data.brand.trim() : null,
-        description: data.description && data.description.trim() ? data.description.trim() : null,
-        short_description: data.description && data.description.trim() ? data.description.trim() : null,
-        is_active: true
-      };
-
-      const response = await api.post('/content/products', payload);
-      return response.data;
-    },
-    onSuccess: async (responseData) => {
-      // Invalidate products query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      
-      // Try to fetch the created product by ID
-      if (responseData.id) {
-        try {
-          const response = await api.get(`/content/products/${responseData.id}`);
-          onProductAdded(response.data);
-          handleClose();
-          return;
-        } catch (error) {
-          console.warn('Could not fetch created product by ID, trying search');
-        }
-      }
-      
-      // Fallback: Try to fetch by searching for the product name
-      try {
-        const response = await api.get('/content/products', {
-          params: { search: formData.name, is_active: true }
-        });
-        if (response.data && response.data.length > 0) {
-          // Find the exact match (most recent)
-          const found = response.data.find((p: any) => p.name === formData.name);
-          if (found) {
-            onProductAdded(found);
-            handleClose();
-            return;
-          }
-        }
-      } catch (error) {
-        console.warn('Could not fetch created product, using form data');
-      }
-      
-      // Final fallback: Use form data to construct product object
-      const newProduct = {
-        id: responseData.id || Date.now().toString(),
-        name: formData.name,
-        price: formData.price ? parseFloat(formData.price) : null,
-        hsn_code: formData.hsn_code || null,
-        description: formData.description || null,
-        category: formData.category || null,
-        brand: formData.brand || null
-      };
-      
-      onProductAdded(newProduct);
-      handleClose();
-    },
-    onError: (error: any) => {
-      setError(error.response?.data?.error || 'Failed to create product');
-    }
-  });
-
   const handleClose = () => {
     setFormData({
       name: '',
@@ -143,6 +65,161 @@ export default function QuickAddProductModal({
     setError(null);
     onClose();
   };
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      // Let backend generate UUID - don't send ID from frontend
+      // Generate slug from name (backend will also generate if not provided)
+      const slug = data.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      
+      const payload: any = {
+        // Don't include id - let backend generate UUID
+        name: data.name.trim(),
+        slug: slug || undefined, // Let backend generate if empty
+        is_active: true
+      };
+      
+      // Only include fields that have values
+      if (data.price && data.price.trim()) {
+        const priceValue = parseFloat(data.price);
+        if (!isNaN(priceValue)) {
+          payload.price = priceValue;
+        }
+      }
+      
+      if (data.hsn_code && data.hsn_code.trim()) {
+        payload.hsn_code = data.hsn_code.trim();
+      }
+      
+      if (data.category && data.category.trim()) {
+        payload.category = data.category.trim();
+      }
+      
+      if (data.brand && data.brand.trim()) {
+        payload.brand = data.brand.trim();
+      }
+      
+      if (data.description && data.description.trim()) {
+        payload.description = data.description.trim();
+        payload.short_description = data.description.trim();
+      }
+
+      console.log('[QuickAddProductModal] Creating product with payload:', payload);
+      const response = await api.post('/content/products', payload);
+      console.log('[QuickAddProductModal] Product creation response:', response.data);
+      return response.data;
+    },
+    onSuccess: async (responseData) => {
+      try {
+        console.log('[QuickAddProductModal] Product created successfully, responseData:', responseData);
+        
+        // Invalidate products query to refresh the list
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+        queryClient.invalidateQueries({ queryKey: ['products', 'all'] });
+        queryClient.invalidateQueries({ queryKey: ['products', 'search'] });
+        
+        // Wait a brief moment for database to commit
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Try to fetch the created product by ID
+        const productId = responseData?.id;
+        if (productId) {
+          try {
+            console.log('[QuickAddProductModal] Fetching product by ID:', productId);
+            const response = await api.get(`/content/products/${productId}`);
+            if (response.data) {
+              console.log('[QuickAddProductModal] Product fetched successfully:', response.data);
+              onProductAdded(response.data);
+              handleClose();
+              return;
+            } else {
+              console.warn('[QuickAddProductModal] Product fetched but response.data is empty');
+            }
+          } catch (error: any) {
+            console.warn('[QuickAddProductModal] Could not fetch created product by ID, trying search:', error);
+            console.warn('[QuickAddProductModal] Error details:', error.response?.data || error.message);
+          }
+        } else {
+          console.warn('[QuickAddProductModal] No ID in responseData:', responseData);
+        }
+        
+        // Fallback: Try to fetch by searching for the product name
+        try {
+          console.log('[QuickAddProductModal] Searching for product by name:', formData.name.trim());
+          const response = await api.get('/content/products', {
+            params: { search: formData.name.trim(), is_active: true }
+          });
+          if (response.data && response.data.length > 0) {
+            // Find the exact match (most recent)
+            const found = response.data.find((p: any) => 
+              p.name && p.name.trim().toLowerCase() === formData.name.trim().toLowerCase()
+            );
+            if (found) {
+              console.log('[QuickAddProductModal] Product found by search:', found);
+              onProductAdded(found);
+              handleClose();
+              return;
+            }
+            // If no exact match, use the first result
+            if (response.data[0]) {
+              console.log('[QuickAddProductModal] Using first search result:', response.data[0]);
+              onProductAdded(response.data[0]);
+              handleClose();
+              return;
+            }
+          }
+        } catch (error: any) {
+          console.warn('[QuickAddProductModal] Could not fetch created product by search:', error);
+        }
+        
+      // Final fallback: Use form data to construct product object
+      // Use the ID from responseData (should be UUID from backend)
+      const newProduct: any = {
+        id: responseData?.id || null, // Backend should always return an ID
+        name: formData.name.trim(),
+        price: formData.price && formData.price.trim() ? parseFloat(formData.price) : 0,
+        hsn_code: formData.hsn_code && formData.hsn_code.trim() ? formData.hsn_code.trim() : null,
+        description: formData.description && formData.description.trim() ? formData.description.trim() : null,
+        category: formData.category && formData.category.trim() ? formData.category.trim() : null,
+        brand: formData.brand && formData.brand.trim() ? formData.brand.trim() : null,
+        is_active: true
+      };
+        
+        // Ensure product has required fields for invoice/proposal forms
+        if (!newProduct.price || isNaN(newProduct.price)) {
+          newProduct.price = 0;
+        }
+        
+        console.log('[QuickAddProductModal] Using fallback product object:', newProduct);
+        onProductAdded(newProduct);
+        handleClose();
+      } catch (error: any) {
+        console.error('[QuickAddProductModal] Error in onSuccess handler:', error);
+        const errorMessage = error.message || 'Failed to process created product';
+        setError(errorMessage);
+        await showAlert({
+          type: 'error',
+          title: 'Error Processing Product',
+          message: errorMessage
+        });
+      }
+    },
+    onError: async (error: any) => {
+      console.error('[QuickAddProductModal] Product creation error:', error);
+      console.error('[QuickAddProductModal] Error response:', error.response);
+      console.error('[QuickAddProductModal] Error response data:', error.response?.data);
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to create product';
+      setError(errorMessage);
+      await showAlert({
+        type: 'error',
+        title: 'Error Creating Product',
+        message: errorMessage
+      });
+    }
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -340,6 +417,7 @@ export default function QuickAddProductModal({
     </div>
   );
 }
+
 
 
 

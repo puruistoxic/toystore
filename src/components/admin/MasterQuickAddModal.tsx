@@ -30,13 +30,15 @@ export default function MasterQuickAddModal({ title, endpoint, onClose, onCreate
     setError(null);
 
     try {
-      // Backend will generate the ID
-      await api.post(endpoint, {
+      // Backend will generate the UUID
+      const response = await api.post(endpoint, {
         name: name.trim(),
         slug: slug.trim() || generateSlug(name.trim()),
         is_active: true
       });
-      await onCreated(slug.trim() || generateSlug(name.trim()), name.trim());
+      // Use the ID from backend response, fallback to slug if ID not in response
+      const generatedId = response.data?.id || response.data?.slug || slug.trim() || generateSlug(name.trim());
+      await onCreated(generatedId, name.trim());
     } catch (e: any) {
       setError(e.response?.data?.error || 'Failed to create item');
     } finally {
