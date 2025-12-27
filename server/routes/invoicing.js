@@ -493,13 +493,12 @@ router.post('/proposals', authenticateToken, async (req, res) => {
     const proposalId = req.body.id || uuidv4();
     const proposalNumber = req.body.proposal_number || await generateProposalNumber(pool);
 
-    // Calculate totals
+    // Calculate totals with GST-inclusive price support
+    const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
     const items = req.body.items || [];
-    const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0);
     const taxRate = parseFloat(req.body.tax_rate || 0);
-    const taxAmount = (subtotal * taxRate) / 100;
     const discount = parseFloat(req.body.discount || 0);
-    const total = subtotal + taxAmount - discount;
+    const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount, 'confirmed');
 
     const data = prepareDataForDB(req.body, [
       'id', 'proposal_number', 'client_id', 'title', 'description', 'items',
@@ -765,13 +764,12 @@ router.post('/invoices', authenticateToken, async (req, res) => {
     const invoiceType = req.body.invoice_type || 'confirmed';
     const invoiceNumber = req.body.invoice_number || await generateInvoiceNumber(pool, invoiceType);
 
-    // Calculate totals
+    // Calculate totals with GST-inclusive price support
+    const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
     const items = req.body.items || [];
-    const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0);
     const taxRate = parseFloat(req.body.tax_rate || 0);
-    const taxAmount = (subtotal * taxRate) / 100;
     const discount = parseFloat(req.body.discount || 0);
-    const total = subtotal + taxAmount - discount;
+    const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount, invoiceType);
 
     const data = prepareDataForDB(req.body, [
       'id', 'invoice_number', 'proposal_id', 'client_id', 'title', 'description', 'items',
@@ -828,21 +826,12 @@ router.put('/invoices/:id', authenticateToken, async (req, res) => {
     const oldData = formatDataFromDB(oldRows[0], ['items']);
     const invoiceType = req.body.invoice_type || oldData.invoice_type || 'confirmed';
 
-    // Calculate totals
+    // Calculate totals with GST-inclusive price support
+    const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
     const items = req.body.items || [];
-    const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0);
+    const taxRate = parseFloat(req.body.tax_rate || 0);
     const discount = parseFloat(req.body.discount || 0);
-    
-    // For sharing invoices, don't calculate tax
-    let taxRate = 0;
-    let taxAmount = 0;
-    let total = subtotal - discount;
-    
-    if (invoiceType !== 'sharing') {
-      taxRate = parseFloat(req.body.tax_rate || 0);
-      taxAmount = (subtotal * taxRate) / 100;
-      total = subtotal + taxAmount - discount;
-    }
+    const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount, invoiceType);
 
     const data = prepareDataForDB(req.body, [
       'proposal_id', 'client_id', 'title', 'description', 'items', 'subtotal', 'tax_rate', 'tax_amount',

@@ -75,6 +75,26 @@ const GenericListingTemplate: React.FC<GenericListingTemplateProps> = ({
         <p className="text-gray-600 mb-4 line-clamp-2">
           {item.shortDescription || item.description}
         </p>
+        {/* Additional metadata */}
+        {(item.category || item.brand || item.location) && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {item.category && (
+              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                {item.category}
+              </span>
+            )}
+            {item.brand && (
+              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                {item.brand}
+              </span>
+            )}
+            {item.location && (
+              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-50 text-green-700">
+                {item.location}
+              </span>
+            )}
+          </div>
+        )}
         {item.stats && (
           <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
             {item.stats.projectsCompleted && (

@@ -31,7 +31,12 @@ function prepareDataForDB(data, fields) {
       }
     } else {
       // Set to null for undefined, null, or empty string values
-      result[field] = null;
+      // Exception: boolean fields should preserve false values
+      if (typeof data[field] === 'boolean' && data[field] === false) {
+        result[field] = false;
+      } else {
+        result[field] = null;
+      }
     }
   });
   return result;
@@ -332,18 +337,19 @@ router.post('/products', authenticateToken, async (req, res) => {
     }
 
     const data = prepareDataForDB({ ...req.body, id: productId, slug }, [
-      'id', 'name', 'slug', 'description', 'short_description', 'price', 'category',
+      'id', 'name', 'slug', 'description', 'short_description', 'price', 'price_includes_gst', 'category',
       'brand', 'hsn_code', 'image', 'images', 'features', 'specifications', 'warranty',
       'seo_title', 'seo_description', 'seo_keywords', 'is_active'
     ]);
 
     await pool.execute(
-      `INSERT INTO products (id, name, slug, description, short_description, price, category, 
+      `INSERT INTO products (id, name, slug, description, short_description, price, price_includes_gst, category, 
        brand, hsn_code, image, images, features, specifications, warranty, seo_title, seo_description, 
-       seo_keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       seo_keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.id, data.name, data.slug, data.description, data.short_description,
-        data.price, data.category, data.brand, data.hsn_code, data.image, data.images,
+        data.price, (data.price_includes_gst !== undefined && data.price_includes_gst !== null) ? data.price_includes_gst : false,
+        data.category, data.brand, data.hsn_code, data.image, data.images,
         data.features, data.specifications, data.warranty,
         data.seo_title, data.seo_description, data.seo_keywords,
         data.is_active !== undefined ? data.is_active : true
@@ -369,19 +375,20 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
     const oldData = oldRows.length > 0 ? formatDataFromDB(oldRows[0], ['images', 'features', 'specifications', 'seo_keywords']) : null;
     
     const data = prepareDataForDB(req.body, [
-      'name', 'slug', 'description', 'short_description', 'price', 'category',
+      'name', 'slug', 'description', 'short_description', 'price', 'price_includes_gst', 'category',
       'brand', 'hsn_code', 'image', 'images', 'features', 'specifications', 'warranty',
       'seo_title', 'seo_description', 'seo_keywords', 'is_active'
     ]);
 
     await pool.execute(
       `UPDATE products SET name = ?, slug = ?, description = ?, short_description = ?, 
-       price = ?, category = ?, brand = ?, hsn_code = ?, image = ?, images = ?, features = ?, 
+       price = ?, price_includes_gst = ?, category = ?, brand = ?, hsn_code = ?, image = ?, images = ?, features = ?, 
        specifications = ?, warranty = ?, seo_title = ?, seo_description = ?, 
        seo_keywords = ?, is_active = ?, updated_at = NOW() WHERE id = ?`,
       [
         data.name, data.slug, data.description, data.short_description,
-        data.price, data.category, data.brand, data.hsn_code, data.image, data.images,
+        data.price, (data.price_includes_gst !== undefined && data.price_includes_gst !== null) ? data.price_includes_gst : false,
+        data.category, data.brand, data.hsn_code, data.image, data.images,
         data.features, data.specifications, data.warranty,
         data.seo_title, data.seo_description, data.seo_keywords,
         data.is_active !== undefined ? data.is_active : true,

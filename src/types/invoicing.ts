@@ -24,6 +24,7 @@ export interface ProposalItem {
   total?: number;
   hsn_code?: string;
   product_id?: string;
+  price_includes_gst?: boolean; // Whether the price already includes GST
 }
 
 export interface Proposal {
@@ -65,6 +66,7 @@ export interface InvoiceItem {
   total?: number;
   hsn_code?: string;
   product_id?: string;
+  price_includes_gst?: boolean; // Whether the price already includes GST
 }
 
 export interface Invoice {

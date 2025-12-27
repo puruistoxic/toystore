@@ -150,7 +150,7 @@ const Products: React.FC = () => {
     
     // Then apply smart fuzzy search
     if (searchTerm) {
-      const searchFields: (keyof Product)[] = ['name', 'description', 'brand', 'model'];
+      const searchFields: (keyof Product)[] = ['name', 'description', 'category', 'brand', 'model'];
       filtered = hybridSearch(filtered, searchTerm, searchFields);
     }
     
@@ -254,15 +254,23 @@ const Products: React.FC = () => {
               </div>
 
               <div className="p-6">
-                {/* Brand and Rating */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">{product.brand}</span>
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="text-sm text-gray-600 ml-1">
-                      {product.rating} ({product.reviews})
+                {/* Category and Brand Badges */}
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  {product.category && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                      {product.category}
                     </span>
-                  </div>
+                  )}
+                  {product.brand && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {product.brand}
+                    </span>
+                  )}
+                  {product.model && product.model !== product.name && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                      {product.model}
+                    </span>
+                  )}
                 </div>
 
                 {/* Product Name */}

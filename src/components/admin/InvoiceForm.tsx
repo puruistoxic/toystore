@@ -211,7 +211,8 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
           hsn_code: hsnCode,
           price: product.price || 0,
           quantity: newItems[index].quantity || 1,
-          product_id: product.id || product.slug || undefined
+          product_id: product.id || product.slug || undefined,
+          price_includes_gst: product.price_includes_gst !== undefined ? product.price_includes_gst : false
         };
         console.log('[InvoiceForm] Updated item:', newItems[index]);
         // Pricing removed - no total calculation
@@ -272,18 +273,37 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   };
 
   const calculateTotals = () => {
-    const subtotal = formData.items.reduce((sum, item) => {
-      return sum + ((item.quantity || 0) * (item.price || 0));
-    }, 0);
+    const taxRate = formData.tax_rate || 18;
+    let subtotal = 0;
+    let totalTaxAmount = 0;
 
-    // Apply tax only if invoice_type is 'confirmed' (with GST)
-    const taxAmount = formData.invoice_type === 'confirmed' 
-      ? (subtotal * (formData.tax_rate || 18)) / 100 
-      : 0;
-    
-    const total = subtotal + taxAmount - (formData.discount || 0);
+    // Calculate subtotal and tax for each item
+    formData.items.forEach((item) => {
+      const itemPrice = item.price || 0;
+      const quantity = item.quantity || 0;
+      const itemTotal = itemPrice * quantity;
+      
+      if (formData.invoice_type === 'confirmed' && item.price_includes_gst) {
+        // Price already includes GST - extract base price and tax
+        // base_price = price / (1 + tax_rate/100)
+        // tax = price - base_price
+        const basePrice = itemTotal / (1 + taxRate / 100);
+        const itemTax = itemTotal - basePrice;
+        subtotal += basePrice;
+        totalTaxAmount += itemTax;
+      } else if (formData.invoice_type === 'confirmed') {
+        // Price excludes GST - add tax on top
+        subtotal += itemTotal;
+        totalTaxAmount += (itemTotal * taxRate) / 100;
+      } else {
+        // Sharing invoice - no tax
+        subtotal += itemTotal;
+      }
+    });
 
-    return { subtotal, taxAmount, total };
+    const total = subtotal + totalTaxAmount - (formData.discount || 0);
+
+    return { subtotal, taxAmount: totalTaxAmount, total };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

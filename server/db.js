@@ -209,6 +209,7 @@ async function initializeTables() {
         description TEXT,
         short_description TEXT,
         price DECIMAL(10,2),
+        price_includes_gst BOOLEAN DEFAULT FALSE,
         category VARCHAR(100),
         brand VARCHAR(100),
         hsn_code VARCHAR(20),
@@ -232,6 +233,20 @@ async function initializeTables() {
         INDEX idx_products_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    // Add price_includes_gst column if it doesn't exist (for existing databases)
+    try {
+      await connection.execute(`
+        ALTER TABLE products 
+        ADD COLUMN price_includes_gst BOOLEAN DEFAULT FALSE 
+        AFTER price
+      `);
+    } catch (error) {
+      // Column might already exist, ignore error
+      if (!error.message.includes('Duplicate column name')) {
+        console.warn('Warning: Could not add price_includes_gst column:', error.message);
+      }
+    }
 
     // Create locations table
     await connection.execute(`

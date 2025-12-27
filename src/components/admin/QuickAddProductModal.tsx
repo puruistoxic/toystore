@@ -21,6 +21,7 @@ export default function QuickAddProductModal({
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    price_includes_gst: false,
     hsn_code: '',
     category: '',
     brand: '',
@@ -88,6 +89,11 @@ export default function QuickAddProductModal({
         if (!isNaN(priceValue)) {
           payload.price = priceValue;
         }
+      }
+      
+      // Include price_includes_gst if explicitly set
+      if (data.price_includes_gst !== undefined) {
+        payload.price_includes_gst = data.price_includes_gst;
       }
       
       if (data.hsn_code && data.hsn_code.trim()) {
@@ -181,6 +187,7 @@ export default function QuickAddProductModal({
         id: responseData?.id || null, // Backend should always return an ID
         name: formData.name.trim(),
         price: formData.price && formData.price.trim() ? parseFloat(formData.price) : 0,
+        price_includes_gst: formData.price_includes_gst || false,
         hsn_code: formData.hsn_code && formData.hsn_code.trim() ? formData.hsn_code.trim() : null,
         description: formData.description && formData.description.trim() ? formData.description.trim() : null,
         category: formData.category && formData.category.trim() ? formData.category.trim() : null,
@@ -296,6 +303,22 @@ export default function QuickAddProductModal({
                 maxLength={20}
               />
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              id="priceIncludesGst"
+              type="checkbox"
+              checked={formData.price_includes_gst}
+              onChange={(e) => setFormData({ ...formData, price_includes_gst: e.target.checked })}
+              className="h-4 w-4 text-teal-600 border-gray-300 rounded"
+            />
+            <label htmlFor="priceIncludesGst" className="text-sm text-gray-700">
+              Price includes GST
+            </label>
+            <span className="text-xs text-gray-500 ml-2">
+              (Check if the product price already includes GST)
+            </span>
           </div>
 
           <div>

@@ -56,7 +56,7 @@ const Services: React.FC = () => {
     
     // Apply smart fuzzy search
     if (searchTerm) {
-      const searchFields: (keyof Service)[] = ['name', 'description'];
+      const searchFields: (keyof Service)[] = ['name', 'description', 'category'];
       filtered = hybridSearch(filtered, searchTerm, searchFields);
     }
     

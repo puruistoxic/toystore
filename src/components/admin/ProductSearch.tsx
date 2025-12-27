@@ -202,21 +202,33 @@ export default function ProductSearch({
                 <li
                   key={product.id}
                   onClick={() => handleSelect(product)}
-                  className="px-4 py-2 hover:bg-teal-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  className="px-4 py-2.5 hover:bg-teal-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                      <div className="text-sm font-semibold text-gray-900 truncate mb-1">
                         {product.name}
                       </div>
-                      {product.category && (
-                        <div className="text-xs text-gray-500">
-                          {product.category} {product.brand && `• ${product.brand}`}
-                        </div>
-                      )}
-                      {product.price && (
-                        <div className="text-xs text-gray-600 mt-1">
-                          ₹{product.price.toLocaleString('en-IN')}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mb-1">
+                        {product.category && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-700">
+                            {product.category}
+                          </span>
+                        )}
+                        {product.brand && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700">
+                            {product.brand}
+                          </span>
+                        )}
+                        {product.hsn_code && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-purple-50 text-purple-700">
+                            HSN: {product.hsn_code}
+                          </span>
+                        )}
+                      </div>
+                      {product.description && (
+                        <div className="text-xs text-gray-500 line-clamp-1 mt-1">
+                          {product.description}
                         </div>
                       )}
                     </div>

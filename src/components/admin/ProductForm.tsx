@@ -11,6 +11,7 @@ interface ProductFormState {
   name: string;
   slug: string;
   price: string;
+  priceIncludesGst: boolean;
   category: string;
   brand: string;
   hsnCode: string;
@@ -30,6 +31,7 @@ const emptyState: ProductFormState = {
   name: '',
   slug: '',
   price: '',
+  priceIncludesGst: false,
   category: '',
   brand: '',
   hsnCode: '',
@@ -69,6 +71,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
           name: data.name || '',
           slug: data.slug || '',
           price: data.price != null ? String(data.price) : '',
+          priceIncludesGst: data.price_includes_gst === true,
           category: data.category || '',
           brand: data.brand || '',
           hsnCode: data.hsn_code || '',
@@ -184,6 +187,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
         description: form.description.trim(),
         short_description: form.shortDescription.trim(),
         price: form.price ? parseFloat(form.price) : null,
+        price_includes_gst: form.priceIncludesGst,
         category: form.category.trim() || null,
         brand: form.brand.trim() || null,
         hsn_code: form.hsnCode.trim() || null,
@@ -324,6 +328,22 @@ export default function ProductForm({ productId }: ProductFormProps) {
           <p className="mt-1 text-xs text-gray-500">
             HSN (Harmonized System of Nomenclature) code required for GST invoicing. Common codes: 8528 (CCTV/Video equipment), 8526 (GPS devices), 8531 (Security systems)
           </p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <input
+            id="priceIncludesGst"
+            name="priceIncludesGst"
+            type="checkbox"
+            checked={form.priceIncludesGst}
+            onChange={handleChange}
+            className="h-4 w-4 text-teal-600 border-gray-300 rounded"
+          />
+          <label htmlFor="priceIncludesGst" className="text-sm text-gray-700">
+            Price includes GST
+          </label>
+          <span className="text-xs text-gray-500 ml-2">
+            (Check if the product price already includes GST)
+          </span>
         </div>
         <div className="flex items-center space-x-2 mt-6 md:mt-8">
           <input

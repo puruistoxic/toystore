@@ -25,7 +25,9 @@ const CaseStudies: React.FC = () => {
     
     // Apply smart fuzzy search
     if (searchTerm) {
-      const searchFields: (keyof CaseStudy)[] = ['title', 'description'];
+      // Note: industry and location are IDs, so we search by their resolved names
+      // For now, search in title, description, and shortDescription
+      const searchFields: (keyof CaseStudy)[] = ['title', 'description', 'shortDescription'];
       filtered = hybridSearch(filtered, searchTerm, searchFields);
     }
     

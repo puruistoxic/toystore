@@ -32,7 +32,7 @@ export default function AdminProducts() {
             )
           }
         ]}
-        searchFields={['name', 'category', 'brand', 'description']}
+        searchFields={['name', 'category', 'brand', 'description', 'hsn_code', 'model']}
       />
     </AdminLayout>
   );
