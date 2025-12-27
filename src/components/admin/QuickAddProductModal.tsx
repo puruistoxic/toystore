@@ -58,6 +58,7 @@ export default function QuickAddProductModal({
     setFormData({
       name: '',
       price: '',
+      price_includes_gst: false,
       hsn_code: '',
       category: '',
       brand: '',
