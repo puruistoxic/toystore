@@ -164,3 +164,4 @@ A: Yes, edit the product in the admin interface and toggle the "Price includes G
 
 **Q: What if I have a mix of GST-exclusive and GST-inclusive products?**
 A: That's perfectly fine! Each product can have its own setting, and the system handles them correctly in the same invoice.
+

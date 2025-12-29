@@ -47,3 +47,4 @@ function calculateInvoiceTotals(items, taxRate, discount = 0, invoiceType = 'con
 module.exports = {
   calculateInvoiceTotals
 };
+

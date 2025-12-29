@@ -122,27 +122,27 @@ export default function AdminClients() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Client
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Contact
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {clients.map((client: Client) => (
-                      <tr key={client.id} className="hover:bg-gray-50">
-                        <td className="px-4 lg:px-6 py-4">
+                      <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 xl:px-6 py-4">
                           <div className="flex items-center">
                             <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mr-3 flex-shrink-0">
-                              <span className="text-teal-600 font-semibold">
+                              <span className="text-teal-600 font-semibold text-sm">
                                 {client.name.charAt(0).toUpperCase()}
                               </span>
                             </div>
@@ -150,32 +150,32 @@ export default function AdminClients() {
                               <div className="text-sm font-medium text-gray-900 truncate">{client.name}</div>
                               {client.company && (
                                 <div className="text-sm text-gray-500 flex items-center mt-1">
-                                  <Building2 className="w-3 h-3 mr-1 flex-shrink-0" />
+                                  <Building2 className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
                                   <span className="truncate">{client.company}</span>
                                 </div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           <div className="text-sm text-gray-900">
                             {client.email && (
                               <div className="flex items-center mb-1">
-                                <Mail className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
+                                <Mail className="w-3.5 h-3.5 mr-1.5 text-gray-400 flex-shrink-0" />
                                 <span className="truncate">{client.email}</span>
                               </div>
                             )}
                             {client.phone && (
                               <div className="flex items-center">
-                                <Phone className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
+                                <Phone className="w-3.5 h-3.5 mr-1.5 text-gray-400 flex-shrink-0" />
                                 <span className="truncate">{client.phone}</span>
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                               client.status === 'active'
                                 ? 'bg-green-100 text-green-800'
                                 : client.status === 'inactive'
@@ -186,17 +186,17 @@ export default function AdminClients() {
                             {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4 text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
+                        <td className="px-4 xl:px-6 py-4 text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-1 xl:space-x-2">
                             <Link
                               to={`/admin/clients/${client.id}/edit`}
-                              className="p-2 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation transition-colors"
                             >
                               <Edit className="w-4 h-4" />
                             </Link>
                             <button
                               onClick={() => handleDelete(client)}
-                              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -209,21 +209,21 @@ export default function AdminClients() {
               </div>
             </div>
 
-            {/* Mobile/Tablet Card View */}
-            <div className="lg:hidden space-y-3">
+            {/* Tablet/Mobile Card View */}
+            <div className="lg:hidden space-y-3 sm:space-y-4">
               {clients.map((client: Client) => (
-                <div key={client.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-start justify-between mb-3">
+                <div key={client.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+                  <div className="flex items-start justify-between mb-3 gap-2">
                     <div className="flex items-center flex-1 min-w-0 pr-2">
-                      <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center mr-3 flex-shrink-0">
-                        <span className="text-teal-600 font-semibold text-base">
+                      <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-teal-100 flex items-center justify-center mr-3 flex-shrink-0">
+                        <span className="text-teal-600 font-semibold text-sm sm:text-base">
                           {client.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-base font-semibold text-gray-900 truncate">{client.name}</div>
+                        <div className="text-sm sm:text-base font-semibold text-gray-900 truncate">{client.name}</div>
                         {client.company && (
-                          <div className="text-sm text-gray-500 flex items-center mt-1">
+                          <div className="text-xs sm:text-sm text-gray-500 flex items-center mt-1">
                             <Building2 className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
                             <span className="truncate">{client.company}</span>
                           </div>
@@ -231,7 +231,7 @@ export default function AdminClients() {
                       </div>
                     </div>
                     <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
+                      className={`px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
                         client.status === 'active'
                           ? 'bg-green-100 text-green-800'
                           : client.status === 'inactive'
@@ -244,7 +244,7 @@ export default function AdminClients() {
                   </div>
                   
                   {(client.email || client.phone) && (
-                    <div className="space-y-2 mb-4 pl-0">
+                    <div className="space-y-2 mb-3 sm:mb-4">
                       {client.email && (
                         <a
                           href={`mailto:${client.email}`}
@@ -269,14 +269,14 @@ export default function AdminClients() {
                   <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
                     <Link
                       to={`/admin/clients/${client.id}/edit`}
-                      className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation min-w-[80px]"
+                      className="flex items-center justify-center px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation transition-colors min-w-[80px] sm:min-w-[100px]"
                     >
                       <Edit className="w-4 h-4 mr-1.5" />
                       <span>Edit</span>
                     </Link>
                     <button
                       onClick={() => handleDelete(client)}
-                      className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation min-w-[80px]"
+                      className="flex items-center justify-center px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation transition-colors min-w-[80px] sm:min-w-[100px]"
                     >
                       <Trash2 className="w-4 h-4 mr-1.5" />
                       <span>Delete</span>

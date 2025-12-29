@@ -133,24 +133,24 @@ export default function ContentManager({
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-4">
               <Link
                 to="/admin/dashboard"
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 flex-shrink-0"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                <p className="text-sm text-gray-600 mt-1">Manage {title.toLowerCase()}</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Manage {title.toLowerCase()}</p>
               </div>
             </div>
             <Link
               to={`${basePath}/new`}
-              className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+              className="flex items-center justify-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Add New</span>
             </Link>
           </div>
@@ -158,7 +158,7 @@ export default function ContentManager({
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {message && (
           <div
             className={`mb-6 p-4 rounded-lg flex items-start ${
@@ -183,17 +183,17 @@ export default function ContentManager({
         )}
 
         {/* Search + optional filters */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={`Search ${title.toLowerCase()}...`}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="block w-full pl-9 sm:pl-10 pr-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
           {filters && (
@@ -203,8 +203,8 @@ export default function ContentManager({
           )}
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -212,12 +212,12 @@ export default function ContentManager({
                   {displayFields.map((field) => (
                     <th
                       key={field.key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       {field.label}
                     </th>
                   ))}
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -227,7 +227,7 @@ export default function ContentManager({
                   <tr>
                     <td
                       colSpan={displayFields.length + 1}
-                      className="px-6 py-8 text-center text-gray-500"
+                      className="px-4 lg:px-6 py-8 text-center text-gray-500"
                     >
                       {searchTerm ? 'No items found matching your search' : 'No items found'}
                     </td>
@@ -236,7 +236,7 @@ export default function ContentManager({
                   paginatedItems.map((item, index) => (
                     <tr key={item.id} className="hover:bg-gray-50">
                       {displayFields.map((field) => (
-                        <td key={field.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td key={field.key} className="px-4 lg:px-6 py-4 text-sm text-gray-900">
                           {field.key === '#' 
                             ? startIndex + index + 1
                             : field.render
@@ -244,17 +244,19 @@ export default function ContentManager({
                             : String(item[field.key] || '-')}
                         </td>
                       ))}
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           <Link
                             to={`${basePath}/${item.id}/edit`}
-                            className="text-teal-600 hover:text-teal-900"
+                            className="text-teal-600 hover:text-teal-900 p-1 rounded hover:bg-teal-50 transition-colors"
+                            title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </Link>
                           <button
                             onClick={() => setDeleteConfirm(item.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                            title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -268,9 +270,68 @@ export default function ContentManager({
           </div>
         </div>
 
+        {/* Mobile Card View */}
+        <div className="lg:hidden space-y-3 sm:space-y-4">
+          {paginatedItems.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8 text-center">
+              <p className="text-sm sm:text-base text-gray-500">
+                {searchTerm ? 'No items found matching your search' : 'No items found'}
+              </p>
+            </div>
+          ) : (
+            paginatedItems.map((item, index) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                      <span className="text-xs font-medium text-gray-500">#{startIndex + index + 1}</span>
+                      {displayFields.find(f => f.key === 'name') && (
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 break-words">
+                          {item.name || '-'}
+                        </h3>
+                      )}
+                    </div>
+                    {displayFields.filter(f => f.key !== '#' && f.key !== 'name').map((field) => (
+                      <div key={field.key} className="mb-2 last:mb-0">
+                        <div className="text-xs font-medium text-gray-500 mb-1">
+                          {field.label}:
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-900 break-words">
+                          {field.render
+                            ? field.render(item[field.key], item)
+                            : String(item[field.key] || '-')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-2 sm:gap-3 pt-3 border-t border-gray-200">
+                  <Link
+                    to={`${basePath}/${item.id}/edit`}
+                    className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-lg transition-colors touch-manipulation"
+                  >
+                    <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Edit</span>
+                  </Link>
+                  <button
+                    onClick={() => setDeleteConfirm(item.id)}
+                    className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors touch-manipulation"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         {/* Pagination */}
         {filteredItems.length > itemsPerPage && (
-          <div className="mt-6 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200 sm:px-6">
+          <div className="mt-4 sm:mt-6 flex items-center justify-between bg-white px-3 sm:px-4 lg:px-6 py-3 rounded-lg border border-gray-200">
             <div className="flex flex-1 justify-between sm:hidden">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -356,22 +417,22 @@ export default function ContentManager({
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
-              <p className="text-gray-600 mb-6">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full shadow-xl">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Confirm Delete</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
                 Are you sure you want to delete this item? This action cannot be undone.
               </p>
-              <div className="flex justify-end space-x-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 sm:space-x-0">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm sm:text-base"
                 >
                   Delete
                 </button>

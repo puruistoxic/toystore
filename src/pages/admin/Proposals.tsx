@@ -7,6 +7,7 @@ import { Proposal } from '../../types/invoicing';
 import { Plus, Search, Edit, Trash2, FileText, Calendar, Download, Receipt } from 'lucide-react';
 import { generateProposalPDF } from '../../utils/pdfGenerator';
 import { useAlert } from '../../contexts/AlertContext';
+import { formatDateOnly } from '../../utils/dateUtils';
 
 export default function AdminProposals() {
   const queryClient = useQueryClient();
@@ -81,6 +82,16 @@ export default function AdminProposals() {
   });
 
   const handleDelete = async (proposal: Proposal) => {
+    // Check if proposal is accepted and has an invoice
+    if (proposal.status === 'accepted' && proposal.has_invoice === 1) {
+      await showAlert({
+        type: 'error',
+        title: 'Cannot Delete Proposal',
+        message: 'This proposal has been converted to an invoice and cannot be deleted. Please delete the associated invoice first.'
+      });
+      return;
+    }
+
     const confirmed = await showConfirm({
       title: 'Delete Proposal',
       message: `Are you sure you want to delete proposal ${proposal.proposal_number}?`,
@@ -98,6 +109,11 @@ export default function AdminProposals() {
         });
       }
     }
+  };
+
+  const canDeleteProposal = (proposal: Proposal) => {
+    // Proposals can only be deleted if they are not accepted with an invoice
+    return !(proposal.status === 'accepted' && proposal.has_invoice === 1);
   };
 
   const formatCurrency = (amount: number, currency: string = 'INR') => {
@@ -191,91 +207,118 @@ export default function AdminProposals() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Proposal
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Client
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Amount
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Valid Until
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {proposals.map((proposal: Proposal) => (
-                      <tr key={proposal.id} className="hover:bg-gray-50">
-                        <td className="px-4 lg:px-6 py-4">
+                      <tr key={proposal.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 xl:px-6 py-4">
                           <div>
                             <div className="text-sm font-medium text-gray-900">{proposal.proposal_number}</div>
-                            <div className="text-sm text-gray-500">{proposal.title}</div>
+                            <div className="text-sm text-gray-500 mt-0.5">{proposal.title}</div>
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           <div className="text-sm text-gray-900">{proposal.client_name || 'N/A'}</div>
                           {proposal.client_company && (
-                            <div className="text-sm text-gray-500">{proposal.client_company}</div>
+                            <div className="text-sm text-gray-500 mt-0.5">{proposal.client_company}</div>
                           )}
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           <div className="text-sm font-medium text-gray-900">
                             {formatCurrency(proposal.total, proposal.currency)}
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           {proposal.valid_until ? (
                             <div className="flex items-center text-sm text-gray-500">
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {new Date(proposal.valid_until).toLocaleDateString()}
+                              <Calendar className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                              <span>{formatDateOnly(proposal.valid_until)}</span>
                             </div>
                           ) : (
                             <span className="text-sm text-gray-400">-</span>
                           )}
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(proposal.status)}`}>
+                        <td className="px-4 xl:px-6 py-4">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(proposal.status)}`}>
                             {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4 text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
+                        <td className="px-4 xl:px-6 py-4 text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-1 xl:space-x-2">
                             <button
                               onClick={() => handleDownloadPDF(proposal)}
-                              className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation transition-colors"
                               title="Download PDF"
                             >
                               <Download className="w-4 h-4" />
                             </button>
-                            {proposal.status === 'accepted' && (
+                            {proposal.status === 'accepted' && (!proposal.has_invoice || proposal.has_invoice === 0) && (
                               <button
                                 onClick={() => handleConvertToInvoice(proposal)}
-                                className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation"
+                                className="p-1.5 xl:p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation transition-colors"
                                 title="Convert to Invoice"
                               >
                                 <Receipt className="w-4 h-4" />
                               </button>
                             )}
-                            <Link
-                              to={`/admin/proposals/${proposal.id}/edit`}
-                              className="p-2 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Link>
-                            <button
-                              onClick={() => handleDelete(proposal)}
-                              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {proposal.status === 'accepted' && proposal.has_invoice === 1 && (
+                              <span 
+                                className="p-1.5 xl:p-2 text-gray-400 cursor-not-allowed"
+                                title="This proposal has already been converted to an invoice. Delete the invoice to convert again."
+                              >
+                                <Receipt className="w-4 h-4" />
+                              </span>
+                            )}
+                            {canDeleteProposal(proposal) ? (
+                              <Link
+                                to={`/admin/proposals/${proposal.id}/edit`}
+                                className="p-1.5 xl:p-2 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Link>
+                            ) : (
+                              <span 
+                                className="p-1.5 xl:p-2 text-gray-400 cursor-not-allowed"
+                                title="This proposal has been converted to an invoice and is read-only. Delete the invoice to edit."
+                              >
+                                <Edit className="w-4 h-4" />
+                              </span>
+                            )}
+                            {canDeleteProposal(proposal) ? (
+                              <button
+                                onClick={() => handleDelete(proposal)}
+                                className="p-1.5 xl:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation transition-colors"
+                                title="Delete Proposal"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <span 
+                                className="p-1.5 xl:p-2 text-gray-400 cursor-not-allowed"
+                                title="This proposal has been converted to an invoice and cannot be deleted. Delete the invoice first."
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -285,80 +328,110 @@ export default function AdminProposals() {
               </div>
             </div>
 
-            {/* Mobile/Tablet Card View */}
-            <div className="lg:hidden space-y-4">
+            {/* Tablet/Mobile Card View */}
+            <div className="lg:hidden space-y-3 sm:space-y-4">
               {proposals.map((proposal: Proposal) => (
-                <div key={proposal.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-start justify-between mb-3">
+                <div key={proposal.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+                  <div className="flex items-start justify-between mb-3 gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">{proposal.proposal_number}</div>
-                      <div className="text-sm text-gray-500 truncate">{proposal.title}</div>
+                      <div className="text-sm sm:text-base font-semibold text-gray-900 truncate">{proposal.proposal_number}</div>
+                      <div className="text-xs sm:text-sm text-gray-500 truncate mt-0.5">{proposal.title}</div>
                     </div>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(proposal.status)}`}>
+                    <span className={`px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${getStatusColor(proposal.status)}`}>
                       {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
                     </span>
                   </div>
                   
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-2.5 sm:space-y-3 mb-3 sm:mb-4">
                     <div>
-                      <span className="text-xs text-gray-500">Client:</span>
-                      <div className="text-sm font-medium text-gray-900">{proposal.client_name || 'N/A'}</div>
+                      <span className="text-xs text-gray-500 font-medium">Client:</span>
+                      <div className="text-sm sm:text-base font-medium text-gray-900 mt-0.5">{proposal.client_name || 'N/A'}</div>
                       {proposal.client_company && (
-                        <div className="text-sm text-gray-500">{proposal.client_company}</div>
+                        <div className="text-xs sm:text-sm text-gray-500 mt-0.5">{proposal.client_company}</div>
                       )}
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                       <div>
-                        <span className="text-xs text-gray-500">Amount:</span>
-                        <div className="text-sm font-medium text-gray-900">
+                        <span className="text-xs text-gray-500 font-medium">Amount:</span>
+                        <div className="text-sm sm:text-base font-semibold text-gray-900 mt-0.5">
                           {formatCurrency(proposal.total, proposal.currency)}
                         </div>
                       </div>
                       {proposal.valid_until && (
                         <div>
-                          <span className="text-xs text-gray-500">Valid Until:</span>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {new Date(proposal.valid_until).toLocaleDateString()}
+                          <span className="text-xs text-gray-500 font-medium">Valid Until:</span>
+                          <div className="flex items-center text-sm text-gray-500 mt-0.5">
+                            <Calendar className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                            <span>{formatDateOnly(proposal.valid_until)}</span>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
+                  <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 pt-3 border-t border-gray-100">
                     <button
                       onClick={() => handleDownloadPDF(proposal)}
-                      className="flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation"
+                      className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
                       title="Download PDF"
                     >
-                      <Download className="w-4 h-4 mr-1" />
+                      <Download className="w-4 h-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Download</span>
                     </button>
-                    {proposal.status === 'accepted' && (
+                    {proposal.status === 'accepted' && (!proposal.has_invoice || proposal.has_invoice === 0) && (
                       <button
                         onClick={() => handleConvertToInvoice(proposal)}
-                        className="flex items-center px-3 py-2 text-sm text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation"
+                        className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
                         title="Convert to Invoice"
                       >
-                        <Receipt className="w-4 h-4 mr-1" />
+                        <Receipt className="w-4 h-4 sm:mr-1.5" />
                         <span className="hidden sm:inline">Convert</span>
                       </button>
                     )}
-                    <Link
-                      to={`/admin/proposals/${proposal.id}/edit`}
-                      className="flex items-center px-3 py-2 text-sm text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation"
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(proposal)}
-                      className="flex items-center px-3 py-2 text-sm text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      <span className="hidden sm:inline">Delete</span>
-                    </button>
+                    {proposal.status === 'accepted' && proposal.has_invoice === 1 && (
+                      <span 
+                        className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-400 cursor-not-allowed min-w-[44px] sm:min-w-0"
+                        title="This proposal has already been converted to an invoice. Delete the invoice to convert again."
+                      >
+                        <Receipt className="w-4 h-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Converted</span>
+                      </span>
+                    )}
+                    {canDeleteProposal(proposal) ? (
+                      <Link
+                        to={`/admin/proposals/${proposal.id}/edit`}
+                        className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
+                      >
+                        <Edit className="w-4 h-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </Link>
+                    ) : (
+                      <span 
+                        className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-400 cursor-not-allowed min-w-[44px] sm:min-w-0"
+                        title="This proposal has been converted to an invoice and is read-only. Delete the invoice to edit."
+                      >
+                        <Edit className="w-4 h-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </span>
+                    )}
+                    {canDeleteProposal(proposal) ? (
+                      <button
+                        onClick={() => handleDelete(proposal)}
+                        className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
+                        title="Delete Proposal"
+                      >
+                        <Trash2 className="w-4 h-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+                    ) : (
+                      <span 
+                        className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-400 cursor-not-allowed min-w-[44px] sm:min-w-0"
+                        title="This proposal has been converted to an invoice and cannot be deleted. Delete the invoice first."
+                      >
+                        <Trash2 className="w-4 h-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

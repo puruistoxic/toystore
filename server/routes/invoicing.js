@@ -303,7 +303,8 @@ router.get('/proposals', authenticateToken, async (req, res) => {
     let query = `
       SELECT p.*, c.name as client_name, c.email as client_email, c.phone as client_phone, c.company as client_company,
        c.address as client_address, c.city as client_city, c.state as client_state,
-       c.country as client_country, c.postal_code as client_postal_code, c.tax_id as client_tax_id
+       c.country as client_country, c.postal_code as client_postal_code, c.tax_id as client_tax_id,
+       CASE WHEN EXISTS (SELECT 1 FROM invoices i WHERE i.proposal_id = p.id AND i.is_deleted = 0) THEN 1 ELSE 0 END as has_invoice
       FROM proposals p
       LEFT JOIN clients c ON p.client_id = c.id
       WHERE 1=1
@@ -416,7 +417,8 @@ router.get('/proposals/:id', authenticateToken, async (req, res) => {
     const [rows] = await pool.execute(
       `SELECT p.*, c.name as client_name, c.email as client_email, c.phone as client_phone, c.company as client_company,
        c.address as client_address, c.city as client_city, c.state as client_state,
-       c.country as client_country, c.postal_code as client_postal_code, c.tax_id as client_tax_id
+       c.country as client_country, c.postal_code as client_postal_code, c.tax_id as client_tax_id,
+       CASE WHEN EXISTS (SELECT 1 FROM invoices i WHERE i.proposal_id = p.id AND i.is_deleted = 0) THEN 1 ELSE 0 END as has_invoice
        FROM proposals p
        LEFT JOIN clients c ON p.client_id = c.id
        WHERE p.id = ?`,
@@ -492,34 +494,46 @@ router.post('/proposals', authenticateToken, async (req, res) => {
     const pool = getPool();
     const proposalId = req.body.id || uuidv4();
     const proposalNumber = req.body.proposal_number || await generateProposalNumber(pool);
+    const proposalType = req.body.proposal_type || 'confirmed';
 
     // Calculate totals with GST-inclusive price support
     const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
     const items = req.body.items || [];
     const taxRate = parseFloat(req.body.tax_rate || 0);
     const discount = parseFloat(req.body.discount || 0);
-    const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount, 'confirmed');
+    const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount, proposalType);
 
     const data = prepareDataForDB(req.body, [
       'id', 'proposal_number', 'client_id', 'title', 'description', 'items',
       'subtotal', 'tax_rate', 'tax_amount', 'discount', 'total', 'currency',
-      'valid_until', 'status', 'notes', 'terms'
+      'valid_until', 'status', 'proposal_type', 'payment_terms', 'token_amount',
+      'warranty_details', 'work_completion_period', 'notes', 'terms'
     ]);
 
     data.id = proposalId;
     data.proposal_number = proposalNumber;
+    data.proposal_type = proposalType;
     data.subtotal = subtotal;
-    data.tax_amount = taxAmount;
-    data.total = total;
+    // For sharing proposals, don't calculate tax
+    if (proposalType === 'sharing') {
+      data.tax_rate = 0;
+      data.tax_amount = 0;
+      data.total = subtotal - (data.discount || 0);
+    } else {
+      data.tax_amount = taxAmount;
+      data.total = total;
+    }
     data.created_by = req.user.userId || req.user.id;
 
     await pool.execute(
-      `INSERT INTO proposals (id, proposal_number, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, valid_until, status, notes, terms, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO proposals (id, proposal_number, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, valid_until, status, proposal_type, payment_terms, token_amount, warranty_details, work_completion_period, notes, terms, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.id, data.proposal_number, data.client_id, data.title, data.description,
         data.items, data.subtotal, data.tax_rate || 0, data.tax_amount, data.discount || 0,
         data.total, data.currency || 'INR', data.valid_until, data.status || 'draft',
+        data.proposal_type || 'confirmed', data.payment_terms || null, data.token_amount || 0,
+        data.warranty_details || null, data.work_completion_period || null,
         data.notes, data.terms, data.created_by
       ]
     );
@@ -537,6 +551,7 @@ router.put('/proposals/:id', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
     const proposalId = req.params.id;
+    const proposalType = req.body.proposal_type || 'confirmed';
 
     // Get old data for audit log
     const [oldRows] = await pool.execute('SELECT * FROM proposals WHERE id = ?', [proposalId]);
@@ -545,31 +560,41 @@ router.put('/proposals/:id', authenticateToken, async (req, res) => {
     }
     const oldData = formatDataFromDB(oldRows[0], ['items']);
 
-    // Calculate totals
+    // Calculate totals with GST-inclusive price support
+    const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
     const items = req.body.items || [];
-    const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0);
     const taxRate = parseFloat(req.body.tax_rate || 0);
-    const taxAmount = (subtotal * taxRate) / 100;
     const discount = parseFloat(req.body.discount || 0);
-    const total = subtotal + taxAmount - discount;
+    const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount, proposalType);
 
     const data = prepareDataForDB(req.body, [
       'client_id', 'title', 'description', 'items', 'subtotal', 'tax_rate', 'tax_amount',
-      'discount', 'total', 'currency', 'valid_until', 'status', 'notes', 'terms'
+      'discount', 'total', 'currency', 'valid_until', 'status', 'proposal_type', 'payment_terms', 'token_amount',
+      'warranty_details', 'work_completion_period', 'notes', 'terms'
     ]);
 
+    data.proposal_type = proposalType;
     data.subtotal = subtotal;
-    data.tax_amount = taxAmount;
-    data.total = total;
+    // For sharing proposals, don't calculate tax
+    if (proposalType === 'sharing') {
+      data.tax_rate = 0;
+      data.tax_amount = 0;
+      data.total = subtotal - (data.discount || 0);
+    } else {
+      data.tax_amount = taxAmount;
+      data.total = total;
+    }
 
     await pool.execute(
       `UPDATE proposals SET client_id = ?, title = ?, description = ?, items = ?, subtotal = ?, tax_rate = ?,
-       tax_amount = ?, discount = ?, total = ?, currency = ?, valid_until = ?, status = ?, notes = ?, terms = ?
+       tax_amount = ?, discount = ?, total = ?, currency = ?, valid_until = ?, status = ?, proposal_type = ?, payment_terms = ?, token_amount = ?, warranty_details = ?, work_completion_period = ?, notes = ?, terms = ?
        WHERE id = ?`,
       [
         data.client_id, data.title, data.description, data.items, data.subtotal,
         data.tax_rate || 0, data.tax_amount, data.discount || 0, data.total,
-        data.currency || 'INR', data.valid_until, data.status, data.notes, data.terms, proposalId
+        data.currency || 'INR', data.valid_until, data.status, data.proposal_type || 'confirmed',
+        data.payment_terms || null, data.token_amount || 0, data.warranty_details || null,
+        data.work_completion_period || null, data.notes, data.terms, proposalId
       ]
     );
 
@@ -593,6 +618,20 @@ router.delete('/proposals/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
     const oldData = formatDataFromDB(oldRows[0], ['items']);
+
+    // Check if proposal is accepted and has an invoice
+    if (oldData.status === 'accepted') {
+      const [invoiceRows] = await pool.execute(
+        'SELECT COUNT(*) as count FROM invoices WHERE proposal_id = ? AND is_deleted = 0',
+        [proposalId]
+      );
+      if (invoiceRows[0].count > 0) {
+        return res.status(400).json({ 
+          error: 'Cannot delete proposal', 
+          message: 'This proposal has been converted to an invoice and cannot be deleted. Please delete the associated invoice first.' 
+        });
+      }
+    }
 
     await pool.execute(
       'UPDATE proposals SET is_deleted = 1, deleted_at = NOW() WHERE id = ?',
@@ -635,6 +674,76 @@ router.post('/proposals/:id/restore', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('[Invoicing API] Restore proposal error:', error);
     res.status(500).json({ error: 'Failed to restore proposal', message: error.message });
+  }
+});
+
+// ==================== ENTITY HISTORY ====================
+
+// Get history for a specific entity (proposal, invoice, or client)
+router.get('/history/:entityType/:entityId', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const { entityType, entityId } = req.params;
+    
+    // Validate entity type
+    const validEntityTypes = ['proposal', 'invoice', 'client'];
+    if (!validEntityTypes.includes(entityType)) {
+      return res.status(400).json({ error: 'Invalid entity type' });
+    }
+    
+    // Validate entity ID
+    if (!entityId || entityId.trim() === '') {
+      return res.status(400).json({ error: 'Entity ID is required' });
+    }
+    
+    // Get all audit logs for this entity, ordered by date descending
+    const [rows] = await pool.execute(
+      `SELECT 
+        id, user_id, username, action, entity_type, entity_id, entity_name,
+        changes, ip_address, user_agent, created_at
+       FROM audit_logs 
+       WHERE entity_type = ? AND entity_id = ?
+       ORDER BY created_at DESC`,
+      [entityType, entityId.trim()]
+    );
+    
+    // Parse JSON changes field
+    const history = rows.map(row => {
+      let changes = null;
+      if (row.changes) {
+        try {
+          changes = typeof row.changes === 'string' ? JSON.parse(row.changes) : row.changes;
+        } catch (parseError) {
+          console.warn('[Invoicing API] Failed to parse changes JSON for history entry:', row.id, parseError);
+          changes = null;
+        }
+      }
+      
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        username: row.username,
+        action: row.action,
+        entity_type: row.entity_type,
+        entity_id: row.entity_id,
+        entity_name: row.entity_name,
+        changes: changes,
+        ip_address: row.ip_address,
+        user_agent: row.user_agent,
+        created_at: row.created_at
+      };
+    });
+    
+    res.json({ history });
+  } catch (error) {
+    console.error('[Invoicing API] Get history error:', error);
+    console.error('[Invoicing API] Error details:', {
+      entityType: req.params.entityType,
+      entityId: req.params.entityId,
+      errorMessage: error.message,
+      errorStack: error.stack
+    });
+    res.status(500).json({ error: 'Failed to fetch history', message: error.message });
   }
 });
 
@@ -790,19 +899,107 @@ router.post('/invoices', authenticateToken, async (req, res) => {
       data.tax_amount = taxAmount;
       data.total = total;
     }
-    data.paid_amount = 0;
+    
+    // Check if this invoice is created from a proposal - carry forward all details
+    let tokenAmount = 0;
+    if (data.proposal_id) {
+      // Check if proposal has already been converted to an invoice (that is not deleted)
+      const [existingInvoiceRows] = await pool.execute(
+        'SELECT id, invoice_number, is_deleted FROM invoices WHERE proposal_id = ? AND is_deleted = 0',
+        [data.proposal_id]
+      );
+      if (existingInvoiceRows.length > 0) {
+        return res.status(400).json({ 
+          error: 'Proposal already converted', 
+          message: `This proposal has already been converted to invoice ${existingInvoiceRows[0].invoice_number}. Please delete the existing invoice first if you want to convert again.`
+        });
+      }
+      
+      const [proposalRows] = await pool.execute(
+        'SELECT * FROM proposals WHERE id = ?',
+        [data.proposal_id]
+      );
+      if (proposalRows.length > 0) {
+        const proposal = formatDataFromDB(proposalRows[0], ['items']);
+        
+        // Carry forward proposal type to invoice type
+        if (!data.invoice_type) {
+          data.invoice_type = proposal.proposal_type || 'confirmed';
+        }
+        
+        // Carry forward payment terms
+        if (!data.payment_terms && proposal.payment_terms) {
+          data.payment_terms = proposal.payment_terms;
+        }
+        
+        // Carry forward advance payment/token amount (for both 'token' and custom payment terms)
+        if (proposal.token_amount && parseFloat(proposal.token_amount || 0) > 0) {
+          tokenAmount = parseFloat(proposal.token_amount);
+        }
+        
+        // Carry forward notes and terms if not already provided
+        if (!data.notes && proposal.notes) {
+          data.notes = proposal.notes;
+        }
+        if (!data.terms && proposal.terms) {
+          data.terms = proposal.terms;
+        }
+        
+        // Carry forward warranty details and work completion period
+        if (!data.warranty_details && proposal.warranty_details) {
+          data.warranty_details = proposal.warranty_details;
+        }
+        if (!data.work_completion_period && proposal.work_completion_period) {
+          data.work_completion_period = proposal.work_completion_period;
+        }
+      }
+    }
+    
+    data.paid_amount = tokenAmount;
     data.created_by = req.user.userId || req.user.id;
 
     await pool.execute(
-      `INSERT INTO invoices (id, invoice_number, proposal_id, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, issue_date, due_date, status, invoice_type, payment_terms, notes, terms, paid_amount, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO invoices (id, invoice_number, proposal_id, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, issue_date, due_date, status, invoice_type, payment_terms, warranty_details, work_completion_period, notes, terms, paid_amount, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.id, data.invoice_number, data.proposal_id, data.client_id, data.title, data.description,
         data.items, data.subtotal, data.tax_rate || 0, data.tax_amount, data.discount || 0,
         data.total, data.currency || 'INR', data.issue_date, data.due_date, data.status || 'draft',
-        data.invoice_type || 'confirmed', data.payment_terms, data.notes, data.terms, data.paid_amount, data.created_by
+        data.invoice_type || 'confirmed', data.payment_terms || null, data.warranty_details || null, data.work_completion_period || null,
+        data.notes || null, data.terms || null, data.paid_amount || 0, data.created_by
       ]
     );
+
+    // If advance payment exists, create a payment entry
+    if (tokenAmount > 0) {
+      const userId = req.user?.id || req.user?.user_id || req.user?.userId || null;
+      const paymentNotes = data.proposal_id 
+        ? 'Advance payment from proposal'
+        : 'Advance payment';
+      
+      await pool.execute(
+        `INSERT INTO invoice_payments (invoice_id, amount, payment_date, payment_method, reference_number, notes, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          invoiceId,
+          tokenAmount,
+          data.issue_date || new Date().toISOString().split('T')[0],
+          'bank_transfer',
+          'ADVANCE-PAYMENT',
+          paymentNotes,
+          userId
+        ]
+      );
+      
+      // Update invoice status based on advance payment amount
+      if (tokenAmount >= data.total) {
+        await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', ['paid', invoiceId]);
+        data.status = 'paid';
+      } else if (tokenAmount > 0) {
+        await pool.execute('UPDATE invoices SET status = ? WHERE id = ?', ['partial', invoiceId]);
+        data.status = 'partial';
+      }
+    }
 
     await addAuditLog(req, 'CREATE', 'invoice', invoiceId, data.title, null, data);
 

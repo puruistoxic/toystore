@@ -61,7 +61,8 @@ const menuSections: MenuSection[] = [
       { label: 'States', icon: MapPin, to: '/admin/states' },
       { label: 'Localities', icon: MapPin, to: '/admin/localities' },
       { label: 'Categories', icon: Package, to: '/admin/categories' },
-      { label: 'Brands', icon: Award, to: '/admin/brands' }
+      { label: 'Brands', icon: Award, to: '/admin/brands' },
+      { label: 'Templates', icon: FileText, to: '/admin/templates' }
     ]
   },
   {
@@ -347,7 +348,7 @@ export default function AdminLayout({ title, children }: AdminLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="w-full max-w-7xl mx-auto">{children}</div>
         </main>
       </div>

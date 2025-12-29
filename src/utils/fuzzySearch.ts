@@ -73,38 +73,62 @@ export function smartSearch<T extends Record<string, any>>(
   }
 
   // For multi-word queries, score items based on how many words match
+  // Combine all searchable fields into a single searchable string for better matching
   const scoredItems = items.map(item => {
     let score = 0;
     let matchedWords = 0;
 
+    // Combine all searchable field values into one string for comprehensive matching
+    const combinedSearchText = searchFields
+      .map(field => {
+        const value = item[field];
+        return value ? String(value).toLowerCase() : '';
+      })
+      .filter(Boolean)
+      .join(' ');
+
     for (const word of searchWords) {
       let wordMatched = false;
-      for (const field of searchFields) {
-        const fieldValue = item[field];
-        if (fieldValue) {
-          const normalizedValue = String(fieldValue).toLowerCase();
-          
-          // Exact word match (highest score)
-          if (normalizedValue.includes(word)) {
-            score += 10;
-            wordMatched = true;
-            break;
-          }
-          
-          // Fuzzy match (partial word)
-          if (normalizedValue.length >= word.length) {
-            // Check if all characters of word appear in order
-            let charIndex = 0;
-            for (let i = 0; i < normalizedValue.length && charIndex < word.length; i++) {
-              if (normalizedValue[i] === word[charIndex]) {
-                charIndex++;
-              }
-            }
-            if (charIndex === word.length) {
-              score += 5;
+      
+      // Check in combined text first (most flexible)
+      if (combinedSearchText.includes(word)) {
+        score += 10;
+        wordMatched = true;
+      } else {
+        // Check individual fields for exact word match
+        for (const field of searchFields) {
+          const fieldValue = item[field];
+          if (fieldValue) {
+            const normalizedValue = String(fieldValue).toLowerCase();
+            
+            // Exact word match (highest score)
+            if (normalizedValue.includes(word)) {
+              score += 10;
               wordMatched = true;
               break;
             }
+            
+            // Check if word appears as a whole word (not just substring)
+            const wordsInField = normalizedValue.split(/\s+/);
+            if (wordsInField.some(fieldWord => fieldWord.includes(word) || word.includes(fieldWord))) {
+              score += 8;
+              wordMatched = true;
+              break;
+            }
+          }
+        }
+        
+        // Fuzzy match (partial word) - check if all characters appear in order
+        if (!wordMatched && combinedSearchText.length >= word.length) {
+          let charIndex = 0;
+          for (let i = 0; i < combinedSearchText.length && charIndex < word.length; i++) {
+            if (combinedSearchText[i] === word[charIndex]) {
+              charIndex++;
+            }
+          }
+          if (charIndex === word.length) {
+            score += 5;
+            wordMatched = true;
           }
         }
       }
@@ -123,10 +147,17 @@ export function smartSearch<T extends Record<string, any>>(
   });
 
   // Filter items that matched at least one word and sort by score
+  // For multi-word queries, prioritize items that matched all words
   return scoredItems
     .filter(({ matchedWords }) => matchedWords > 0)
     .sort((a, b) => {
-      // First sort by number of matched words (descending)
+      // First, prioritize items that matched ALL words
+      const aMatchedAll = a.matchedWords === searchWords.length;
+      const bMatchedAll = b.matchedWords === searchWords.length;
+      if (aMatchedAll !== bMatchedAll) {
+        return bMatchedAll ? 1 : -1;
+      }
+      // Then sort by number of matched words (descending)
       if (b.matchedWords !== a.matchedWords) {
         return b.matchedWords - a.matchedWords;
       }
@@ -163,3 +194,5 @@ export function hybridSearch<T extends Record<string, any>>(
     ignoreLocation: true,
   });
 }
+
+

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { invoicingApi } from '../../utils/api';
 import { ArrowLeft } from 'lucide-react';
+import EntityHistory from '../../components/admin/EntityHistory';
 
 export default function ClientEdit() {
   const navigate = useNavigate();
@@ -89,7 +90,10 @@ export default function ClientEdit() {
 
   return (
     <AdminLayout title="Edit Client">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Main Form Content */}
+          <div className="flex-1 min-w-0 space-y-6">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/admin/clients')}
@@ -276,6 +280,20 @@ export default function ClientEdit() {
             </button>
           </div>
         </form>
+          </div>
+
+          {/* History Sidebar - Only visible on wide screens (lg and above, 1024px+) */}
+          {id && (
+            <div className="hidden lg:block w-80 flex-shrink-0">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-[140px]">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Change History</h3>
+                <div className="max-h-[calc(100vh-200px)] overflow-y-auto -mx-1 px-1">
+                  <EntityHistory entityType="client" entityId={id} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

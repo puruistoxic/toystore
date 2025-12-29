@@ -6,6 +6,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   id?: string;
   height?: number;
+  disabled?: boolean;
 }
 
 const toolbarOptions = [
@@ -14,7 +15,7 @@ const toolbarOptions = [
   'link removeformat | code'
 ].join(' ');
 
-export default function RichTextEditor({ value, onChange, id, height = 280 }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, id, height = 280, disabled = false }: RichTextEditorProps) {
   const apiKey = process.env.REACT_APP_TINYMCE_API_KEY || undefined;
 
   return (
@@ -23,6 +24,7 @@ export default function RichTextEditor({ value, onChange, id, height = 280 }: Ri
       apiKey={apiKey}
       value={value}
       onEditorChange={(content) => onChange(content)}
+      disabled={disabled}
       init={{
         height,
         menubar: false,
@@ -43,7 +45,7 @@ export default function RichTextEditor({ value, onChange, id, height = 280 }: Ri
           'help',
           'wordcount'
         ],
-        toolbar: toolbarOptions,
+        toolbar: disabled ? false : toolbarOptions,
         branding: false,
         statusbar: false,
         content_style:

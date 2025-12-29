@@ -37,3 +37,4 @@ function buildSmartSearchCondition(searchTerm, fields) {
 module.exports = {
   buildSmartSearchCondition
 };
+

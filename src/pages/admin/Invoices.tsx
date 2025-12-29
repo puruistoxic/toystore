@@ -9,6 +9,7 @@ import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import PaymentReminderModal from '../../components/admin/PaymentReminderModal';
 import PaymentManagementModal from '../../components/admin/PaymentManagementModal';
 import { useAlert } from '../../contexts/AlertContext';
+import { formatDateOnly } from '../../utils/dateUtils';
 
 export default function AdminInvoices() {
   const queryClient = useQueryClient();
@@ -183,99 +184,99 @@ export default function AdminInvoices() {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Invoice
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Client
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Amount
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Due Date
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 xl:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {invoices.map((invoice: Invoice) => (
-                      <tr key={invoice.id} className="hover:bg-gray-50">
-                        <td className="px-4 lg:px-6 py-4">
+                      <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 xl:px-6 py-4">
                           <div>
                             <div className="text-sm font-medium text-gray-900">{invoice.invoice_number}</div>
-                            <div className="text-sm text-gray-500">{invoice.title}</div>
+                            <div className="text-sm text-gray-500 mt-0.5">{invoice.title}</div>
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           <div className="text-sm text-gray-900">{invoice.client_name || 'N/A'}</div>
                           {invoice.client_company && (
-                            <div className="text-sm text-gray-500">{invoice.client_company}</div>
+                            <div className="text-sm text-gray-500 mt-0.5">{invoice.client_company}</div>
                           )}
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           <div className="text-sm font-medium text-gray-900">
                             {formatCurrency(invoice.total, invoice.currency)}
                           </div>
                           {invoice.paid_amount && invoice.paid_amount > 0 && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 mt-0.5">
                               Paid: {formatCurrency(invoice.paid_amount, invoice.currency)}
                             </div>
                           )}
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-4 xl:px-6 py-4">
                           <div className="flex items-center text-sm text-gray-500">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {new Date(invoice.due_date).toLocaleDateString()}
+                            <Calendar className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                            <span>{formatDateOnly(invoice.due_date)}</span>
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                        <td className="px-4 xl:px-6 py-4">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
                             {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4 text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
+                        <td className="px-4 xl:px-6 py-4 text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-1 xl:space-x-2">
                             <button
                               onClick={() => setPaymentModalInvoice(invoice)}
-                              className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation transition-colors"
                               title="Payment Management"
                             >
                               <CreditCard className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setReminderModalInvoice(invoice)}
-                              className="p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-md touch-manipulation transition-colors"
                               title="Payment Reminders"
                             >
                               <Mail className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDownloadPDF(invoice)}
-                              className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation transition-colors"
                               title="Download PDF"
                             >
                               <Download className="w-4 h-4" />
                             </button>
                             <Link
                               to={`/admin/invoices/${invoice.id}/edit`}
-                              className="p-2 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation transition-colors"
                             >
                               <Edit className="w-4 h-4" />
                             </Link>
                             <button
                               onClick={() => handleDelete(invoice)}
-                              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation"
+                              className="p-1.5 xl:p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -288,87 +289,87 @@ export default function AdminInvoices() {
               </div>
             </div>
 
-            {/* Mobile/Tablet Card View */}
-            <div className="lg:hidden space-y-4">
+            {/* Tablet/Mobile Card View */}
+            <div className="lg:hidden space-y-3 sm:space-y-4">
               {invoices.map((invoice: Invoice) => (
-                <div key={invoice.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-start justify-between mb-3">
+                <div key={invoice.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+                  <div className="flex items-start justify-between mb-3 gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">{invoice.invoice_number}</div>
-                      <div className="text-sm text-gray-500 truncate">{invoice.title}</div>
+                      <div className="text-sm sm:text-base font-semibold text-gray-900 truncate">{invoice.invoice_number}</div>
+                      <div className="text-xs sm:text-sm text-gray-500 truncate mt-0.5">{invoice.title}</div>
                     </div>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(invoice.status)}`}>
+                    <span className={`px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${getStatusColor(invoice.status)}`}>
                       {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                     </span>
                   </div>
                   
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-2.5 sm:space-y-3 mb-3 sm:mb-4">
                     <div>
-                      <span className="text-xs text-gray-500">Client:</span>
-                      <div className="text-sm font-medium text-gray-900">{invoice.client_name || 'N/A'}</div>
+                      <span className="text-xs text-gray-500 font-medium">Client:</span>
+                      <div className="text-sm sm:text-base font-medium text-gray-900 mt-0.5">{invoice.client_name || 'N/A'}</div>
                       {invoice.client_company && (
-                        <div className="text-sm text-gray-500">{invoice.client_company}</div>
+                        <div className="text-xs sm:text-sm text-gray-500 mt-0.5">{invoice.client_company}</div>
                       )}
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                       <div>
-                        <span className="text-xs text-gray-500">Amount:</span>
-                        <div className="text-sm font-medium text-gray-900">
+                        <span className="text-xs text-gray-500 font-medium">Amount:</span>
+                        <div className="text-sm sm:text-base font-semibold text-gray-900 mt-0.5">
                           {formatCurrency(invoice.total, invoice.currency)}
                         </div>
                         {invoice.paid_amount && invoice.paid_amount > 0 && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 mt-0.5">
                             Paid: {formatCurrency(invoice.paid_amount, invoice.currency)}
                           </div>
                         )}
                       </div>
                       <div>
-                        <span className="text-xs text-gray-500">Due Date:</span>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {new Date(invoice.due_date).toLocaleDateString()}
+                        <span className="text-xs text-gray-500 font-medium">Due Date:</span>
+                        <div className="flex items-center text-sm text-gray-500 mt-0.5">
+                          <Calendar className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                          <span>{formatDateOnly(invoice.due_date)}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                  <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 pt-3 border-t border-gray-100">
                     <button
                       onClick={() => setPaymentModalInvoice(invoice)}
-                      className="flex items-center px-3 py-2 text-sm text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation"
+                      className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
                       title="Payment Management"
                     >
-                      <CreditCard className="w-4 h-4 mr-1" />
-                      <span className="hidden xs:inline">Payments</span>
+                      <CreditCard className="w-4 h-4 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Payments</span>
                     </button>
                     <button
                       onClick={() => setReminderModalInvoice(invoice)}
-                      className="flex items-center px-3 py-2 text-sm text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-md touch-manipulation"
+                      className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
                       title="Payment Reminders"
                     >
-                      <Mail className="w-4 h-4 mr-1" />
+                      <Mail className="w-4 h-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Reminders</span>
                     </button>
                     <button
                       onClick={() => handleDownloadPDF(invoice)}
-                      className="flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation"
+                      className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
                       title="Download PDF"
                     >
-                      <Download className="w-4 h-4 mr-1" />
+                      <Download className="w-4 h-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Download</span>
                     </button>
                     <Link
                       to={`/admin/invoices/${invoice.id}/edit`}
-                      className="flex items-center px-3 py-2 text-sm text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation"
+                      className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
                     >
-                      <Edit className="w-4 h-4 mr-1" />
+                      <Edit className="w-4 h-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Edit</span>
                     </Link>
                     <button
                       onClick={() => handleDelete(invoice)}
-                      className="flex items-center px-3 py-2 text-sm text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation"
+                      className="flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md touch-manipulation transition-colors min-w-[44px] sm:min-w-0"
                     >
-                      <Trash2 className="w-4 h-4 mr-1" />
+                      <Trash2 className="w-4 h-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Delete</span>
                     </button>
                   </div>

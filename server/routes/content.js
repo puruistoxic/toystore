@@ -2042,5 +2042,208 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
   }
 });
 
+// ==================== TEMPLATES ====================
+router.get('/templates', async (req, res) => {
+  try {
+    const pool = getPool();
+    const { category, only_deleted, include_deleted } = req.query;
+    let query = 'SELECT * FROM templates WHERE 1=1';
+    const params = [];
+
+    if (category) {
+      query += ' AND category = ?';
+      params.push(category);
+    }
+
+    if (only_deleted === 'true') {
+      query += ' AND is_deleted = 1';
+    } else if (include_deleted !== 'true') {
+      query += ' AND is_deleted = 0';
+    }
+
+    query += ' ORDER BY category, name ASC';
+
+    const [rows] = await pool.execute(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('[Content API] Get templates error:', error);
+    res.status(500).json({ error: 'Failed to fetch templates', message: error.message });
+  }
+});
+
+router.get('/templates/:id', async (req, res) => {
+  try {
+    const pool = getPool();
+    const templateId = decodeURIComponent(req.params.id);
+    const [rows] = await pool.execute('SELECT * FROM templates WHERE id = ?', [templateId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('[Content API] Get template error:', error);
+    res.status(500).json({ error: 'Failed to fetch template', message: error.message });
+  }
+});
+
+router.post('/templates', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const { name, category, content, is_active = true } = req.body;
+
+    if (!name || !category || !content) {
+      return res.status(400).json({ error: 'Name, category, and content are required' });
+    }
+
+    const validCategories = ['warranty', 'payment', 'notes', 'terms', 'work_completion'];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    const id = uuidv4();
+    const userId = req.user?.userId || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    await pool.execute(
+      `INSERT INTO templates (id, name, category, content, is_active, created_by, updated_by) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, name, category, content, is_active, userId, userId]
+    );
+
+    const [newTemplate] = await pool.execute('SELECT * FROM templates WHERE id = ?', [id]);
+    await addAuditLog(req, 'CREATE', 'template', id, name, null, newTemplate[0]);
+    res.status(201).json(newTemplate[0]);
+  } catch (error) {
+    console.error('[Content API] Create template error:', error);
+    res.status(500).json({ error: 'Failed to create template', message: error.message });
+  }
+});
+
+router.put('/templates/:id', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const templateId = decodeURIComponent(req.params.id);
+    const { name, category, content, is_active } = req.body;
+
+    console.log('[Content API] Updating template:', templateId);
+    console.log('[Content API] Request body:', { name, category, content: content ? content.substring(0, 100) + '...' : null, is_active });
+
+    // Get old data for audit log
+    const [oldRows] = await pool.execute('SELECT * FROM templates WHERE id = ?', [templateId]);
+    if (oldRows.length === 0) {
+      console.error('[Content API] Template not found:', templateId);
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    const oldData = oldRows[0];
+
+    const validCategories = ['warranty', 'payment', 'notes', 'terms', 'work_completion'];
+    if (category && !validCategories.includes(category)) {
+      return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    const userId = req.user?.userId || req.user?.id;
+    if (!userId) {
+      console.error('[Content API] User ID not found in req.user:', req.user);
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const updateFields = [];
+    const params = [];
+
+    if (name !== undefined && name !== null) {
+      updateFields.push('name = ?');
+      params.push(String(name));
+    }
+    if (category !== undefined && category !== null) {
+      updateFields.push('category = ?');
+      params.push(String(category));
+    }
+    if (content !== undefined && content !== null) {
+      updateFields.push('content = ?');
+      params.push(String(content));
+    }
+    if (is_active !== undefined && is_active !== null) {
+      updateFields.push('is_active = ?');
+      params.push(Boolean(is_active));
+    }
+    
+    // Always update updated_by and updated_at
+    updateFields.push('updated_by = ?');
+    params.push(Number(userId));
+    
+    // Add templateId for WHERE clause
+    params.push(String(templateId));
+
+    if (updateFields.length === 1) {
+      // Only updated_by field, no actual updates
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const updateQuery = `UPDATE templates SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
+    console.log('[Content API] Update query:', updateQuery);
+    console.log('[Content API] Update params:', params);
+
+    await pool.execute(updateQuery, params);
+
+    const [updatedTemplate] = await pool.execute('SELECT * FROM templates WHERE id = ?', [templateId]);
+    if (updatedTemplate.length === 0) {
+      return res.status(404).json({ error: 'Template not found after update' });
+    }
+    await addAuditLog(req, 'UPDATE', 'template', templateId, updatedTemplate[0].name, oldData, updatedTemplate[0]);
+    res.json(updatedTemplate[0]);
+  } catch (error) {
+    console.error('[Content API] Update template error:', error);
+    console.error('[Content API] Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to update template', message: error.message });
+  }
+});
+
+router.delete('/templates/:id', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const templateId = decodeURIComponent(req.params.id);
+    const [template] = await pool.execute('SELECT * FROM templates WHERE id = ?', [templateId]);
+    if (template.length === 0) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    await pool.execute(
+      'UPDATE templates SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [templateId]
+    );
+
+    await addAuditLog(req, 'DELETE', 'template', templateId, template[0].name, template[0], null);
+    res.json({ message: 'Template deleted successfully' });
+  } catch (error) {
+    console.error('[Content API] Delete template error:', error);
+    res.status(500).json({ error: 'Failed to delete template', message: error.message });
+  }
+});
+
+router.post('/templates/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const templateId = decodeURIComponent(req.params.id);
+    const [template] = await pool.execute('SELECT * FROM templates WHERE id = ?', [templateId]);
+    if (template.length === 0) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    await pool.execute(
+      'UPDATE templates SET is_deleted = 0, deleted_at = NULL WHERE id = ?',
+      [templateId]
+    );
+
+    const [restoredTemplate] = await pool.execute('SELECT * FROM templates WHERE id = ?', [templateId]);
+    await addAuditLog(req, 'RESTORE', 'template', templateId, restoredTemplate[0].name, null, restoredTemplate[0]);
+    res.json(restoredTemplate[0]);
+  } catch (error) {
+    console.error('[Content API] Restore template error:', error);
+    res.status(500).json({ error: 'Failed to restore template', message: error.message });
+  }
+});
+
 module.exports = router;
 

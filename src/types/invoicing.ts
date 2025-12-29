@@ -52,11 +52,17 @@ export interface Proposal {
   currency: string;
   valid_until?: string;
   status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  proposal_type?: 'confirmed' | 'sharing';
+  payment_terms?: string;
+  token_amount?: number;
+  warranty_details?: string;
+  work_completion_period?: string;
   notes?: string;
   terms?: string;
   created_by?: number;
   created_at?: string;
   updated_at?: string;
+  has_invoice?: number; // 1 if proposal has been converted to invoice (not deleted), 0 otherwise
 }
 
 export interface InvoiceItem {
@@ -98,6 +104,8 @@ export interface Invoice {
   status: 'draft' | 'pending_approval' | 'approved' | 'sent' | 'viewed' | 'partial' | 'paid' | 'overdue' | 'disputed' | 'on_hold' | 'cancelled' | 'refunded';
   invoice_type?: 'confirmed' | 'sharing';
   payment_terms?: string;
+  warranty_details?: string;
+  work_completion_period?: string;
   notes?: string;
   terms?: string;
   paid_amount?: number;

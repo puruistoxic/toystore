@@ -42,7 +42,8 @@ async function initDatabase() {
     connectionLimit: 10,
     queueLimit: 0,
     connectTimeout: 10000,
-    ssl: false
+    ssl: false,
+    timezone: 'Z' // Use UTC timezone for all database operations
   });
 
   // Test connection with primary host
@@ -242,9 +243,11 @@ async function initializeTables() {
         AFTER price
       `);
     } catch (error) {
-      // Column might already exist, ignore error
-      if (!error.message.includes('Duplicate column name')) {
-        console.warn('Warning: Could not add price_includes_gst column:', error.message);
+      // Column might already exist, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add price_includes_gst column:', error.message);
       }
     }
 
@@ -578,6 +581,11 @@ async function initializeTables() {
         currency VARCHAR(10) DEFAULT 'INR',
         valid_until DATE,
         status ENUM('draft', 'sent', 'accepted', 'rejected', 'expired') DEFAULT 'draft',
+        proposal_type ENUM('confirmed', 'sharing') DEFAULT 'confirmed',
+        payment_terms VARCHAR(255),
+        token_amount DECIMAL(10,2) DEFAULT 0,
+        warranty_details TEXT,
+        work_completion_period VARCHAR(255),
         notes TEXT,
         terms TEXT,
         created_by INT,
@@ -615,6 +623,8 @@ async function initializeTables() {
         status ENUM('draft', 'pending_approval', 'approved', 'sent', 'viewed', 'partial', 'paid', 'overdue', 'disputed', 'on_hold', 'cancelled', 'refunded') DEFAULT 'draft',
         invoice_type ENUM('confirmed', 'sharing') DEFAULT 'confirmed',
         payment_terms VARCHAR(255),
+        warranty_details TEXT,
+        work_completion_period VARCHAR(255),
         notes TEXT,
         terms TEXT,
         paid_amount DECIMAL(10,2) DEFAULT 0,
@@ -634,16 +644,114 @@ async function initializeTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
+    // Add proposal_type, payment_terms, and token_amount columns to proposals table (for existing databases)
+    try {
+      await connection.execute(`
+        ALTER TABLE proposals 
+        ADD COLUMN proposal_type ENUM('confirmed', 'sharing') DEFAULT 'confirmed'
+      `);
+      console.log('[Database] Added proposal_type column to proposals table');
+    } catch (error) {
+      // Column already exists, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add proposal_type column:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(`
+        ALTER TABLE proposals 
+        ADD COLUMN payment_terms VARCHAR(255) DEFAULT NULL
+      `);
+      console.log('[Database] Added payment_terms column to proposals table');
+    } catch (error) {
+      // Column already exists, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add payment_terms column:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(`
+        ALTER TABLE proposals 
+        ADD COLUMN token_amount DECIMAL(10,2) DEFAULT 0
+      `);
+      console.log('[Database] Added token_amount column to proposals table');
+    } catch (error) {
+      // Column already exists, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add token_amount column:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(`
+        ALTER TABLE proposals 
+        ADD COLUMN warranty_details TEXT DEFAULT NULL
+      `);
+      console.log('[Database] Added warranty_details column to proposals table');
+    } catch (error) {
+      // Column already exists, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add warranty_details column:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(`
+        ALTER TABLE proposals 
+        ADD COLUMN work_completion_period VARCHAR(255) DEFAULT NULL
+      `);
+      console.log('[Database] Added work_completion_period column to proposals table');
+    } catch (error) {
+      // Column already exists, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add work_completion_period column:', error.message);
+      }
+    }
+
     // Add invoice_type column if it doesn't exist (for existing databases)
     try {
       await connection.execute(`
         ALTER TABLE invoices 
         ADD COLUMN invoice_type ENUM('confirmed', 'sharing') DEFAULT 'confirmed'
       `);
+      console.log('[Database] Added invoice_type column to invoices table');
     } catch (error) {
-      // Column already exists, ignore error
-      if (!error.message.includes('Duplicate column name')) {
+      // Column already exists, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
         console.warn('[Database] Could not add invoice_type column:', error.message);
+      }
+    }
+
+    // Add warranty_details and work_completion_period columns to invoices table (for existing databases)
+    try {
+      await connection.execute('ALTER TABLE invoices ADD COLUMN warranty_details TEXT DEFAULT NULL');
+      console.log('[Database] Added warranty_details column to invoices table');
+    } catch (error) {
+      if (error.message && !error.message.includes('Duplicate column name') && error.code !== 'ER_DUP_FIELDNAME') {
+        console.error('[Database] Error adding warranty_details column:', error.message);
+      }
+    }
+    
+    try {
+      await connection.execute('ALTER TABLE invoices ADD COLUMN work_completion_period VARCHAR(255) DEFAULT NULL');
+      console.log('[Database] Added work_completion_period column to invoices table');
+    } catch (error) {
+      if (error.message && !error.message.includes('Duplicate column name') && error.code !== 'ER_DUP_FIELDNAME') {
+        console.error('[Database] Error adding work_completion_period column:', error.message);
       }
     }
 
@@ -653,9 +761,12 @@ async function initializeTables() {
         ALTER TABLE invoices 
         MODIFY COLUMN status ENUM('draft', 'pending_approval', 'approved', 'sent', 'viewed', 'partial', 'paid', 'overdue', 'disputed', 'on_hold', 'cancelled', 'refunded') DEFAULT 'draft'
       `);
+      console.log('[Database] Updated invoice status enum');
     } catch (error) {
       // Column might not exist or enum values might already be updated
-      if (!error.message.includes('Duplicate column name') && !error.message.includes('Unknown column')) {
+      if (error.message.includes('Duplicate column name') || error.message.includes('Unknown column') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column doesn't exist or enum already updated, no action needed
+      } else {
         console.warn('[Database] Could not update status enum:', error.message);
       }
     }
@@ -737,8 +848,10 @@ async function initializeTables() {
         ADD COLUMN bank_account_name VARCHAR(255)
       `);
     } catch (error) {
-      // Column already exists, ignore error
-      if (!error.message.includes('Duplicate column name')) {
+      // Column already exists, ignore error silently
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
         console.warn('[Database] Could not add bank_account_name column:', error.message);
       }
     }
@@ -767,6 +880,107 @@ async function initializeTables() {
           '© 2024 WAINSO. All rights reserved. | Est. 2017 | 8+ Years in Business'
         )
       `);
+    }
+
+    // Create templates table for proposal/invoice templates
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS templates (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category ENUM('warranty', 'payment', 'notes', 'terms', 'work_completion') NOT NULL,
+        content TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
+        created_by INT,
+        updated_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_category (category),
+        INDEX idx_templates_is_deleted (is_deleted),
+        INDEX idx_templates_is_active (is_active),
+        FOREIGN KEY (created_by) REFERENCES admin_users(id) ON DELETE SET NULL,
+        FOREIGN KEY (updated_by) REFERENCES admin_users(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Create default templates if not exists
+    const [existingTemplates] = await connection.execute('SELECT id FROM templates LIMIT 1');
+    if (existingTemplates.length === 0) {
+      const defaultTemplates = [
+        {
+          id: 'template-warranty-cctv-comprehensive',
+          name: 'CCTV Comprehensive Warranty',
+          category: 'warranty',
+          content: `<ol>
+<li>1 year comprehensive warranty on all CCTV equipment (Cameras, DVR/NVR, Storage Devices)</li>
+<li>On-site service and support during warranty period</li>
+<li>Warranty covers manufacturing defects and component failures</li>
+<li>Warranty does NOT cover:
+<ul>
+<li>Physical damage due to mishandling</li>
+<li>Damage due to power surges or incorrect voltage</li>
+<li>Water damage or exposure to extreme conditions</li>
+<li>Tampering or unauthorized modifications</li>
+</ul>
+</li>
+<li>Extended warranty available at additional cost</li>
+<li>AMC (Annual Maintenance Contract) available post-warranty period</li>
+</ol>`
+        },
+        {
+          id: 'template-notes-standard-cctv',
+          name: 'Standard CCTV Installation Notes',
+          category: 'notes',
+          content: `<ol>
+<li>Broadband Connection will be provided by Client to make System online</li>
+<li>Two Free service visits (one service each month)</li>
+<li>Two persons will be provided by client till the work is finished</li>
+<li>This Quotation is valid for 15 Days from the Date of Quotation</li>
+<li>Products which are not mentioned in above Quotation will be charged separately</li>
+<li>Wiring through Batton/PVC/Flexi and Cat 6 Wire will be charged as per Actual Used in site</li>
+<li>Site completion cost may vary by 5-10%</li>
+</ol>`
+        },
+        {
+          id: 'template-terms-standard',
+          name: 'Standard Terms & Conditions',
+          category: 'terms',
+          content: `<ol>
+<li>This quotation is valid for 15 days from the date of issue</li>
+<li>Prices are subject to change without prior notice</li>
+<li>All payments to be made as per agreed payment terms</li>
+<li>Delivery timeline starts after receipt of advance payment</li>
+<li>Installation charges are included unless otherwise specified</li>
+<li>Client is responsible for providing necessary permissions and access</li>
+<li>Any additional work or changes will be charged separately</li>
+<li>Company reserves the right to modify terms if required</li>
+</ol>`
+        },
+        {
+          id: 'template-payment-token',
+          name: 'Token Money',
+          category: 'payment',
+          content: `<ol>
+<li>Token amount to be paid to confirm the order</li>
+<li>Balance payment as per agreed terms</li>
+</ol>`
+        },
+        {
+          id: 'template-work-completion-standard',
+          name: 'Standard Completion Period',
+          category: 'work_completion',
+          content: `15-30 working days after advance payment`
+        }
+      ];
+
+      for (const template of defaultTemplates) {
+        await connection.execute(
+          'INSERT INTO templates (id, name, category, content, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+          [template.id, template.name, template.category, template.content, true]
+        );
+      }
+      console.log('[Database] Default templates created');
     }
 
     // Create default admin user if not exists

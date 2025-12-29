@@ -52,6 +52,9 @@ import CategoryNew from './pages/admin/CategoryNew';
 import CategoryEdit from './pages/admin/CategoryEdit';
 import BrandNew from './pages/admin/BrandNew';
 import BrandEdit from './pages/admin/BrandEdit';
+import AdminTemplates from './pages/admin/Templates';
+import TemplateNew from './pages/admin/TemplateNew';
+import TemplateEdit from './pages/admin/TemplateEdit';
 import AdminClients from './pages/admin/Clients';
 import ClientNew from './pages/admin/ClientNew';
 import ClientEdit from './pages/admin/ClientEdit';
@@ -256,6 +259,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <BrandEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/templates"
+                element={
+                  <ProtectedRoute>
+                    <AdminTemplates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/templates/new"
+                element={
+                  <ProtectedRoute>
+                    <TemplateNew />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/templates/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <TemplateEdit />
                   </ProtectedRoute>
                 }
               />

@@ -22,6 +22,7 @@ interface ProductSearchProps {
   onAddNew?: () => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function ProductSearch({
@@ -29,7 +30,8 @@ export default function ProductSearch({
   onChange,
   onAddNew,
   placeholder = 'Search products...',
-  className = ''
+  className = '',
+  disabled = false
 }: ProductSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -165,12 +167,13 @@ export default function ProductSearch({
           type="text"
           value={selectedProduct ? selectedProduct.name : (value || searchTerm || '')}
           onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => !disabled && setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full pl-10 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+          disabled={disabled}
+          className="w-full pl-10 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
-          {selectedProduct && (
+          {selectedProduct && !disabled && (
             <button
               type="button"
               onClick={handleClear}
@@ -179,7 +182,7 @@ export default function ProductSearch({
               <X className="h-4 w-4" />
             </button>
           )}
-          {onAddNew && (
+          {onAddNew && !disabled && (
             <button
               type="button"
               onClick={onAddNew}
@@ -192,7 +195,7 @@ export default function ProductSearch({
         </div>
       </div>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
           {isLoading && searchTerm.length >= 2 ? (
             <div className="p-4 text-center text-sm text-gray-500">Searching...</div>
@@ -258,6 +261,8 @@ export default function ProductSearch({
     </div>
   );
 }
+
+
 
 
 

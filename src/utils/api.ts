@@ -74,6 +74,10 @@ export const invoicingApi = {
   deleteClient: (id: string) => 
     api.delete(`/invoicing/clients/${id}`),
 
+  // History
+  getHistory: (entityType: 'proposal' | 'invoice' | 'client', entityId: string) =>
+    api.get(`/invoicing/history/${entityType}/${entityId}`),
+
   // Proposals
   getProposals: (params?: { status?: string; client_id?: string; search?: string }) => 
     api.get('/invoicing/proposals', { params }),

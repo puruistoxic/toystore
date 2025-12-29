@@ -4,6 +4,7 @@ import { invoicingApi } from '../../utils/api';
 import { InvoicePayment } from '../../types/invoicing';
 import { Plus, Trash2, DollarSign, Calendar, CreditCard, FileText } from 'lucide-react';
 import { useAlert } from '../../contexts/AlertContext';
+import { getCurrentLocalDate, formatDateOnly } from '../../utils/dateUtils';
 
 interface PaymentManagementProps {
   invoiceId: string;
@@ -23,7 +24,7 @@ export default function PaymentManagement({
   const [showAddForm, setShowAddForm] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: getCurrentLocalDate(),
     payment_method: 'bank_transfer' as 'cash' | 'bank_transfer' | 'cheque' | 'credit_card' | 'debit_card' | 'upi' | 'other',
     reference_number: '',
     notes: ''
@@ -47,7 +48,7 @@ export default function PaymentManagement({
       setShowAddForm(false);
       setPaymentForm({
         amount: '',
-        payment_date: new Date().toISOString().split('T')[0],
+        payment_date: getCurrentLocalDate(),
         payment_method: 'bank_transfer',
         reference_number: '',
         notes: ''
@@ -87,11 +88,7 @@ export default function PaymentManagement({
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return formatDateOnly(dateStr);
   };
 
   const getPaymentMethodLabel = (method: string) => {

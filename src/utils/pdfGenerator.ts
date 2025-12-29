@@ -126,6 +126,76 @@ function formatDate(dateString: string): string {
   return `${day}/${month}/${year}`;
 }
 
+// Convert HTML to plain text (for TinyMCE content)
+function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  
+  let text = html;
+  
+  // Handle ordered lists (<ol>) - preserve numbering
+  // First, extract list items and number them
+  const olMatches = text.match(/<ol[^>]*>([\s\S]*?)<\/ol>/gi);
+  if (olMatches) {
+    olMatches.forEach((olMatch, olIndex) => {
+      const liMatches = olMatch.match(/<li[^>]*>([\s\S]*?)<\/li>/gi);
+      if (liMatches) {
+        let numberedList = '';
+        liMatches.forEach((liMatch, liIndex) => {
+          const liContent = liMatch.replace(/<[^>]+>/g, '').trim();
+          numberedList += `${liIndex + 1}. ${liContent}\n`;
+        });
+        text = text.replace(olMatch, numberedList);
+      }
+    });
+  }
+  
+  // Handle unordered lists (<ul>) - convert to numbered format
+  const ulMatches = text.match(/<ul[^>]*>([\s\S]*?)<\/ul>/gi);
+  if (ulMatches) {
+    ulMatches.forEach((ulMatch, ulIndex) => {
+      const liMatches = ulMatch.match(/<li[^>]*>([\s\S]*?)<\/li>/gi);
+      if (liMatches) {
+        let numberedList = '';
+        liMatches.forEach((liMatch, liIndex) => {
+          const liContent = liMatch.replace(/<[^>]+>/g, '').trim();
+          numberedList += `${liIndex + 1}. ${liContent}\n`;
+        });
+        text = text.replace(ulMatch, numberedList);
+      }
+    });
+  }
+  
+  // Convert common HTML elements to newlines
+  text = text.replace(/<br\s*\/?>/gi, '\n'); // <br> or <br/>
+  text = text.replace(/<\/p>/gi, '\n'); // End of paragraph
+  text = text.replace(/<\/div>/gi, '\n'); // End of div
+  text = text.replace(/<\/li>/gi, '\n'); // End of list item (for any remaining)
+  text = text.replace(/<li[^>]*>/gi, ''); // Start of list item (remove tag, keep content)
+  text = text.replace(/<\/ul>/gi, '\n'); // End of unordered list
+  text = text.replace(/<\/ol>/gi, '\n'); // End of ordered list
+  
+  // Remove all other HTML tags
+  text = text.replace(/<[^>]+>/g, '');
+  
+  // Decode HTML entities
+  text = text.replace(/&nbsp;/g, ' ');
+  text = text.replace(/&amp;/g, '&');
+  text = text.replace(/&lt;/g, '<');
+  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+  
+  // Clean up extra whitespace and normalize line breaks
+  // Ensure each numbered point is on its own line
+  text = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0) // Remove empty lines
+    .join('\n'); // Join with single newline between each line
+  
+  return text;
+}
+
 // Helper function to draw invoice header (everything above the table)
 function drawInvoiceHeader(
   doc: jsPDF,
@@ -590,36 +660,6 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
     doc.text('Authorized Signature', pageWidth - margin, signatureY, { align: 'right' });
   }
 
-  // Terms and Notes (only if there's enough space, otherwise skip to avoid unnecessary page break)
-  let termsY = signatureY + 10;
-  if (termsY > pageHeight - 30) {
-    // Not enough space, skip terms/notes to avoid unnecessary page break
-    termsY = pageHeight;
-  }
-  
-  if (invoice.terms) {
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Terms & Conditions:', margin, totalsY);
-    totalsY += 4;
-    doc.setFont('helvetica', 'normal');
-    const termsLines = doc.splitTextToSize(invoice.terms, pageWidth - (margin * 2));
-    doc.text(termsLines, margin, totalsY);
-    totalsY += termsLines.length * 4.5;
-  }
-
-  if (invoice.notes) {
-    totalsY += 5;
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Notes:', margin, totalsY);
-    totalsY += 4;
-    doc.setFont('helvetica', 'normal');
-    const notesLines = doc.splitTextToSize(invoice.notes, pageWidth - (margin * 2));
-    doc.text(notesLines, margin, totalsY);
-    totalsY += notesLines.length * 4;
-  }
-
   // Add footer text and page number on last page (footer rendered only here)
   addPageNumber(totalPages, totalPages);
 
@@ -983,8 +1023,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   // Subtotal (first row)
   totalsTableData.push(['SUBTOTAL', formatNumberOnly(proposal.subtotal)]);
   
-  // GST
-  if (proposal.tax_amount > 0) {
+  // GST (only if proposal type is confirmed, not sharing)
+  const isSharingProposal = (proposal as any).proposal_type === 'sharing';
+  if (!isSharingProposal && proposal.tax_amount > 0) {
     totalsTableData.push([`GST ${proposal.tax_rate}%`, formatNumberOnly(proposal.tax_amount)]);
   }
   
@@ -995,6 +1036,14 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   
   // Final TOTAL
   totalsTableData.push(['TOTAL', formatNumberOnly(proposal.total)]);
+  
+  // Advance Payment / Token Amount (if applicable) - shown after total
+  if (proposal.token_amount && proposal.token_amount > 0) {
+    totalsTableData.push(['ADVANCE PAYMENT', formatNumberOnly(proposal.token_amount)]);
+    // Balance Due after advance payment
+    const balanceDue = proposal.total - proposal.token_amount;
+    totalsTableData.push(['BALANCE DUE', formatNumberOnly(balanceDue)]);
+  }
   
   // Calculate totals table width (same as items table)
   const totalsTableWidth = tableWidth * 0.28; // Label + Value columns
@@ -1031,8 +1080,24 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   const totalsFinalY = (doc as any).lastAutoTable.finalY;
   let totalsY = totalsFinalY;
 
-  // Amount in Words - Improved styling
-  totalsY += 10;
+  // Amount in Words
+  // Check if we need a new page before adding this section
+  if (totalsY + 20 > pageHeight - 40) {
+    doc.addPage();
+    totalsY = margin + 10;
+    totalsY = drawProposalHeader(
+      doc,
+      proposal,
+      companySettings,
+      pageWidth,
+      margin,
+      fontSize,
+      fontSizeTitle,
+      fontSizeHeading
+    ) + 10;
+  }
+  
+  totalsY += 5;
   doc.setFontSize(fontSize);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 103, 103); // #006767
@@ -1042,11 +1107,45 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   doc.setTextColor(0, 0, 0);
   const amountInWords = numberToWords(proposal.total);
   const wordsLines = doc.splitTextToSize(amountInWords, pageWidth - (margin * 2));
-  doc.text(wordsLines, margin, totalsY);
-  totalsY += wordsLines.length * 4 + 10;
+  wordsLines.forEach((line: string) => {
+    if (totalsY + 4 > pageHeight - 40) {
+      doc.addPage();
+      totalsY = margin + 10;
+      totalsY = drawProposalHeader(
+        doc,
+        proposal,
+        companySettings,
+        pageWidth,
+        margin,
+        fontSize,
+        fontSizeTitle,
+        fontSizeHeading
+      ) + 10;
+    }
+    doc.text(line, margin, totalsY);
+    totalsY += 4;
+  });
+  totalsY += 5;
 
-  // Bank Account Details - Improved styling
+  // Bank Account Details (moved here - right after Amount in Words)
   if (companySettings.bank_name || companySettings.bank_account_number) {
+    // Check if we need a new page before adding this section
+    if (totalsY + 30 > pageHeight - 40) {
+      doc.addPage();
+      totalsY = margin + 10;
+      totalsY = drawProposalHeader(
+        doc,
+        proposal,
+        companySettings,
+        pageWidth,
+        margin,
+        fontSize,
+        fontSizeTitle,
+        fontSizeHeading
+      ) + 10;
+    }
+    
+    totalsY += 5;
     doc.setFontSize(fontSize);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 103, 103); // #006767
@@ -1082,52 +1181,390 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
     }
   }
 
-  // Authorized Signature - Bottom Right (only if there's space)
-  const signatureY = totalsY + 15;
-  if (signatureY < pageHeight - 20) {
-    doc.setFont('helvetica', 'normal');
+  // Payment Terms Section (moved after Account Details)
+  if (proposal.payment_terms) {
+    // Check if we need a new page before adding this section
+    if (totalsY + 20 > pageHeight - 40) {
+      doc.addPage();
+      totalsY = margin + 10;
+      totalsY = drawProposalHeader(
+        doc,
+        proposal,
+        companySettings,
+        pageWidth,
+        margin,
+        fontSize,
+        fontSizeTitle,
+        fontSizeHeading
+      ) + 10;
+    }
+    
+    totalsY += 5;
     doc.setFontSize(fontSize);
-    doc.text('Authorized Signature', pageWidth - margin, signatureY, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 103, 103); // #006767
+    doc.text('Payment Terms:', margin, totalsY);
+    totalsY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    
+    // Format payment terms (handle HTML from TinyMCE and numbered list format)
+    const paymentTermsText = htmlToPlainText(proposal.payment_terms);
+    const paymentLines = paymentTermsText.split('\n').filter(Boolean);
+    paymentLines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      const formattedLine = /^\d+\./.test(trimmedLine) ? trimmedLine : `${index + 1}. ${trimmedLine}`;
+      
+      // Split long lines but ensure proper indentation for continuation
+      const indentWidth = 15; // Space for "1. " numbering
+      const maxWidth = pageWidth - (margin * 2) - indentWidth;
+      
+      // Extract the number prefix (e.g., "1. " or "10. ")
+      const numberMatch = formattedLine.match(/^(\d+\.\s+)/);
+      const numberPrefix = numberMatch ? numberMatch[1] : '';
+      const contentAfterNumber = formattedLine.substring(numberPrefix.length);
+      
+      // First line with number
+      if (totalsY + 4 > pageHeight - 40) {
+        doc.addPage();
+        totalsY = margin + 10;
+        totalsY = drawProposalHeader(
+          doc,
+          proposal,
+          companySettings,
+          pageWidth,
+          margin,
+          fontSize,
+          fontSizeTitle,
+          fontSizeHeading
+        ) + 10;
+      }
+      doc.setFont('helvetica', 'normal'); // Ensure normal font
+      doc.text(numberPrefix, margin, totalsY);
+      const numberWidth = doc.getTextWidth(numberPrefix);
+      
+      // Continuation lines with indentation
+      if (contentAfterNumber.trim()) {
+        const continuationLines = doc.splitTextToSize(contentAfterNumber.trim(), maxWidth);
+        continuationLines.forEach((contLine: string, lineIndex: number) => {
+          if (totalsY + 4 > pageHeight - 40) {
+            doc.addPage();
+            totalsY = margin + 10;
+            totalsY = drawProposalHeader(
+              doc,
+              proposal,
+              companySettings,
+              pageWidth,
+              margin,
+              fontSize,
+              fontSizeTitle,
+              fontSizeHeading
+            ) + 10;
+          }
+          doc.setFont('helvetica', 'normal'); // Ensure normal font for continuation
+          // First continuation line starts right after number, subsequent lines are indented
+          const xPos = lineIndex === 0 ? margin + numberWidth : margin + indentWidth;
+          doc.text(contLine, xPos, totalsY);
+          totalsY += 4;
+        });
+      } else {
+        // If no content after number, just move to next line
+        totalsY += 4;
+      }
+    });
+    
+    // Show advance payment amount if token_amount exists (for both "token" and custom payment terms)
+    if (proposal.token_amount && proposal.token_amount > 0) {
+      totalsY += 2;
+      doc.setFont('helvetica', 'bold');
+      const labelText = proposal.payment_terms && proposal.payment_terms.toLowerCase().includes('token') 
+        ? `Token Amount: ${formatNumberForPDF(proposal.token_amount, proposal.currency)}`
+        : `Advance Payment: ${formatNumberForPDF(proposal.token_amount, proposal.currency)}`;
+      doc.text(labelText, margin, totalsY);
+      totalsY += 5;
+      doc.setFont('helvetica', 'normal');
+    }
   }
 
-  // Terms and Notes (only if there's enough space, otherwise skip to avoid unnecessary page break)
-  let termsY = signatureY + 10;
-  if (termsY > pageHeight - 30) {
-    // Not enough space, skip terms/notes to avoid unnecessary page break
-    termsY = pageHeight;
+  // Work Completion Period
+  if (proposal.work_completion_period) {
+    // Check if we need a new page before adding this section
+    if (totalsY + 15 > pageHeight - 40) {
+      doc.addPage();
+      totalsY = margin + 10;
+      totalsY = drawProposalHeader(
+        doc,
+        proposal,
+        companySettings,
+        pageWidth,
+        margin,
+        fontSize,
+        fontSizeTitle,
+        fontSizeHeading
+      ) + 10;
+    }
+    
+    totalsY += 5;
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 103, 103); // #006767
+    doc.text('Work Completion Period:', margin, totalsY);
+    totalsY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    const completionLines = doc.splitTextToSize(proposal.work_completion_period, pageWidth - (margin * 2));
+    completionLines.forEach((line: string) => {
+      if (totalsY + 4 > pageHeight - 40) {
+        doc.addPage();
+        totalsY = margin + 10;
+        totalsY = drawProposalHeader(
+          doc,
+          proposal,
+          companySettings,
+          pageWidth,
+          margin,
+          fontSize,
+          fontSizeTitle,
+          fontSizeHeading
+        ) + 10;
+      }
+      doc.text(line, margin, totalsY);
+      totalsY += 4;
+    });
+  }
+
+  // Warranty Details Section
+  if (proposal.warranty_details) {
+    // Check if we need a new page before adding this section
+    if (totalsY + 20 > pageHeight - 40) {
+      doc.addPage();
+      totalsY = margin + 10;
+      totalsY = drawProposalHeader(
+        doc,
+        proposal,
+        companySettings,
+        pageWidth,
+        margin,
+        fontSize,
+        fontSizeTitle,
+        fontSizeHeading
+      ) + 10;
+    }
+    
+    totalsY += 8;
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 103, 103); // #006767
+    doc.text('Warranty:', margin, totalsY);
+    totalsY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    
+    // Format warranty details (handle HTML from TinyMCE - no automatic numbering)
+    const warrantyText = htmlToPlainText(proposal.warranty_details);
+    const warrantyLines = warrantyText.split('\n').filter(Boolean);
+    warrantyLines.forEach((line) => {
+      const trimmedLine = line.trim();
+      
+      // Split long lines with proper width
+      const maxWidth = pageWidth - (margin * 2);
+      const textLines = doc.splitTextToSize(trimmedLine, maxWidth);
+      
+      textLines.forEach((textLine: string) => {
+        if (totalsY + 4 > pageHeight - 40) {
+          doc.addPage();
+          totalsY = margin + 10;
+          totalsY = drawProposalHeader(
+            doc,
+            proposal,
+            companySettings,
+            pageWidth,
+            margin,
+            fontSize,
+            fontSizeTitle,
+            fontSizeHeading
+          ) + 10;
+        }
+        doc.setFont('helvetica', 'normal'); // Ensure normal font
+        doc.text(textLine, margin, totalsY);
+        totalsY += 4;
+      });
+    });
+  }
+
+  // Notes Section
+  if (proposal.notes) {
+    // Check if we need a new page before adding this section
+    if (totalsY + 20 > pageHeight - 40) {
+      doc.addPage();
+      totalsY = margin + 10;
+      totalsY = drawProposalHeader(
+        doc,
+        proposal,
+        companySettings,
+        pageWidth,
+        margin,
+        fontSize,
+        fontSizeTitle,
+        fontSizeHeading
+      ) + 10;
+    }
+    
+    totalsY += 8;
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 103, 103); // #006767
+    doc.text('NOTE:', margin, totalsY);
+    totalsY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    
+    // Format notes (handle HTML from TinyMCE - no automatic numbering)
+    const notesText = htmlToPlainText(proposal.notes);
+    const notesLines = notesText.split('\n').filter(Boolean);
+    notesLines.forEach((line) => {
+      const trimmedLine = line.trim();
+      
+      // Split long lines with proper width
+      const maxWidth = pageWidth - (margin * 2);
+      const textLines = doc.splitTextToSize(trimmedLine, maxWidth);
+      
+      textLines.forEach((textLine: string) => {
+        if (totalsY + 4 > pageHeight - 40) {
+          doc.addPage();
+          totalsY = margin + 10;
+          totalsY = drawProposalHeader(
+            doc,
+            proposal,
+            companySettings,
+            pageWidth,
+            margin,
+            fontSize,
+            fontSizeTitle,
+            fontSizeHeading
+          ) + 10;
+        }
+        doc.setFont('helvetica', 'normal'); // Ensure normal font
+        doc.text(textLine, margin, totalsY);
+        totalsY += 4;
+      });
+    });
+  }
+
+  // Terms & Conditions Section
+  if (proposal.terms) {
+    // Check if we need a new page before adding this section
+    if (totalsY + 20 > pageHeight - 40) {
+      doc.addPage();
+      totalsY = margin + 10;
+      totalsY = drawProposalHeader(
+        doc,
+        proposal,
+        companySettings,
+        pageWidth,
+        margin,
+        fontSize,
+        fontSizeTitle,
+        fontSizeHeading
+      ) + 10;
+    }
+    
+    totalsY += 8;
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 103, 103); // #006767
+    doc.text('Terms & Conditions:', margin, totalsY);
+    totalsY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    // Convert HTML to plain text for PDF
+    const termsPlainText = htmlToPlainText(proposal.terms);
+    // Format terms (handle HTML from TinyMCE - no automatic numbering)
+    const termsLines = termsPlainText.split('\n').filter(Boolean);
+    termsLines.forEach((line) => {
+      const trimmedLine = line.trim();
+      
+      // Split long lines with proper width
+      const maxWidth = pageWidth - (margin * 2);
+      const textLines = doc.splitTextToSize(trimmedLine, maxWidth);
+      
+      textLines.forEach((textLine: string) => {
+        if (totalsY + 4 > pageHeight - 40) {
+          doc.addPage();
+          totalsY = margin + 10;
+          totalsY = drawProposalHeader(
+            doc,
+            proposal,
+            companySettings,
+            pageWidth,
+            margin,
+            fontSize,
+            fontSizeTitle,
+            fontSizeHeading
+          ) + 10;
+        }
+        doc.setFont('helvetica', 'normal'); // Ensure normal font
+        doc.text(textLine, margin, totalsY);
+        totalsY += 4;
+      });
+    });
+  }
+
+  // Authorized Signature - Bottom Right with note about digital proposals
+  totalsY += 15; // More space before signature
+  if (totalsY < pageHeight - 40) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(fontSize - 1);
+    doc.setTextColor(100, 100, 100); // Gray color for note
+    doc.text('* Digital proposals may not require physical signature', margin, totalsY);
+    totalsY += 8;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(fontSize);
+    doc.setTextColor(0, 0, 0); // Black for signature label
+    doc.text('Authorized Signature', pageWidth - margin, totalsY, { align: 'right' });
+    totalsY += 20; // Space for signature line
+  } else {
+    // If not enough space, add to next page
+    doc.addPage();
+    totalsY = margin + 10;
+    totalsY = drawProposalHeader(
+      doc,
+      proposal,
+      companySettings,
+      pageWidth,
+      margin,
+      fontSize,
+      fontSizeTitle,
+      fontSizeHeading
+    ) + 10;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(fontSize - 1);
+    doc.setTextColor(100, 100, 100);
+    doc.text('* Digital proposals may not require physical signature', margin, totalsY);
+    totalsY += 8;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(fontSize);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Authorized Signature', pageWidth - margin, totalsY, { align: 'right' });
+  }
+
+  // Get total pages after all content
+  // Note: jsPDF internal.pages is 1-indexed and includes the document object itself
+  const finalTotalPages = (doc as any).internal.pages.length - 1;
+  
+  // Update page numbers on all pages with correct total
+  // We need to add page numbers to any pages that were added after the items table
+  for (let pageNum = totalPages + 1; pageNum <= finalTotalPages; pageNum++) {
+    doc.setPage(pageNum);
+    addPageNumber(pageNum, finalTotalPages);
   }
   
-  if (proposal.terms && termsY < pageHeight - 30) {
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Terms & Conditions:', margin, termsY);
-    termsY += 4;
-    doc.setFont('helvetica', 'normal');
-    const termsLines = doc.splitTextToSize(proposal.terms, pageWidth - (margin * 2));
-    // Only show terms if they fit on the page
-    const termsHeight = termsLines.length * 4;
-    if (termsY + termsHeight < pageHeight - 20) {
-      doc.text(termsLines, margin, termsY);
-      termsY += termsHeight;
-    }
-  }
-
-  if (proposal.notes && termsY < pageHeight - 30) {
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Notes:', margin, termsY);
-    termsY += 4;
-    doc.setFont('helvetica', 'normal');
-    const notesLines = doc.splitTextToSize(proposal.notes, pageWidth - (margin * 2));
-    // Only show notes if they fit on the page
-    const notesHeight = notesLines.length * 4;
-    if (termsY + notesHeight < pageHeight - 20) {
-      doc.text(notesLines, margin, termsY);
-    }
-  }
-
-  // Add footer text and page number on last page (footer rendered only here)
-  addPageNumber(totalPages, totalPages);
+  // Ensure last page has correct page number
+  doc.setPage(finalTotalPages);
+  addPageNumber(finalTotalPages, finalTotalPages);
 
   return doc;
 }

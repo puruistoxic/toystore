@@ -5,13 +5,17 @@ import { useAlert } from '../../contexts/AlertContext';
 import AdminLayout from './AdminLayout';
 import { invoicingApi, companySettingsApi } from '../../utils/api';
 import { ArrowLeft, Plus, Trash2, Download, Mail } from 'lucide-react';
-import { InvoiceItem, Invoice } from '../../types/invoicing';
+import { InvoiceItem, Invoice, Proposal } from '../../types/invoicing';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import ProductSearch from './ProductSearch';
 import QuickAddProductModal from './QuickAddProductModal';
 import QuickAddClientModal from './QuickAddClientModal';
 import PaymentReminderModal from './PaymentReminderModal';
 import PaymentManagement from './PaymentManagement';
+import EntityHistory from './EntityHistory';
+import RichTextEditor from './RichTextEditor';
+import TemplateSelector from './TemplateSelector';
+import { getCurrentLocalDate, getFutureLocalDate, localDateToUTC, formatDateForInput } from '../../utils/dateUtils';
 
 interface InvoiceFormProps {
   mode: 'new' | 'edit';
@@ -33,11 +37,13 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
     tax_rate: 18,
     discount: 0,
     currency: 'INR',
-    issue_date: new Date().toISOString().split('T')[0],
-    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    issue_date: getCurrentLocalDate(),
+    due_date: getFutureLocalDate(30),
     status: 'draft',
     invoice_type: 'confirmed' as 'confirmed' | 'sharing',
     payment_terms: '',
+    warranty_details: '',
+    work_completion_period: '',
     notes: '',
     terms: ''
   });
@@ -75,7 +81,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   });
 
   // Fetch proposal data if proposal_id is in URL (for new mode)
-  const { data: proposal } = useQuery({
+  const { data: proposal } = useQuery<Proposal | null>({
     queryKey: ['proposal', proposalId],
     queryFn: async () => {
       if (!proposalId) return null;
@@ -97,11 +103,13 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
         tax_rate: invoice.tax_rate || 18,
         discount: invoice.discount || 0,
         currency: invoice.currency || 'INR',
-        issue_date: invoice.issue_date ? invoice.issue_date.split('T')[0] : new Date().toISOString().split('T')[0],
-        due_date: invoice.due_date ? invoice.due_date.split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        issue_date: invoice.issue_date ? formatDateForInput(invoice.issue_date) : getCurrentLocalDate(),
+        due_date: invoice.due_date ? formatDateForInput(invoice.due_date) : getFutureLocalDate(30),
         status: invoice.status || 'draft',
         invoice_type: invoice.invoice_type || 'confirmed',
         payment_terms: invoice.payment_terms || '',
+        warranty_details: invoice.warranty_details || '',
+        work_completion_period: invoice.work_completion_period || '',
         notes: invoice.notes || '',
         terms: invoice.terms || ''
       });
@@ -111,6 +119,19 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   // Pre-fill form data from proposal when proposal is loaded (for new mode)
   useEffect(() => {
     if (mode === 'new' && proposal && proposalId) {
+      // Check if proposal has already been converted to an invoice
+      if (proposal.has_invoice === 1) {
+        setTimeout(() => {
+          showAlert({
+            type: 'error',
+            title: 'Proposal Already Converted',
+            message: 'This proposal has already been converted to an invoice. Please delete the existing invoice first if you want to convert again.'
+          });
+          navigate('/admin/proposals');
+        }, 0);
+        return;
+      }
+      
       setFormData({
         client_id: proposal.client_id || '',
         proposal_id: proposal.id,
@@ -122,21 +143,38 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
           price: item.price || 0,
           hsn_code: item.hsn_code || '',
           total: (item.quantity || 0) * (item.price || 0),
-          product_id: item.product_id
+          product_id: item.product_id,
+          price_includes_gst: item.price_includes_gst
         })),
         tax_rate: proposal.tax_rate || 18,
         discount: proposal.discount || 0,
         currency: proposal.currency || 'INR',
-        issue_date: new Date().toISOString().split('T')[0],
-        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        issue_date: getCurrentLocalDate(),
+        due_date: getFutureLocalDate(30),
         status: 'draft',
-        invoice_type: 'confirmed',
-        payment_terms: '',
+        invoice_type: proposal.proposal_type || 'confirmed',
+        payment_terms: proposal.payment_terms || '',
         notes: proposal.notes || '',
-        terms: proposal.terms || ''
+        terms: proposal.terms || '',
+        warranty_details: proposal.warranty_details || '',
+        work_completion_period: proposal.work_completion_period || ''
       });
+      
+      // Show info about advance payment if exists (only once)
+      const tokenAmount = Number(proposal.token_amount) || 0;
+      if (tokenAmount > 0) {
+        // Use setTimeout to avoid calling showAlert during render
+        setTimeout(() => {
+          showAlert({
+            type: 'info',
+            title: 'Advance Payment Detected',
+            message: `This proposal has an advance payment of ₹${tokenAmount.toFixed(2)}. This will be automatically applied to the invoice when created.`
+          });
+        }, 0);
+      }
     }
-  }, [proposal, proposalId, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposal?.id, proposalId, mode]); // Only depend on proposal.id, not the entire proposal object
 
   const handleDownloadPDF = async () => {
     if (!invoice) return;
@@ -351,6 +389,12 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
   };
 
   const { subtotal, taxAmount, total } = calculateTotals();
+  
+  // Get advance payment amount - from proposal when creating new, or from invoice when editing
+  const advancePaymentAmount = mode === 'new' && proposal 
+    ? Number(proposal.token_amount) || 0 
+    : (mode === 'edit' && invoice ? Number(invoice.paid_amount) || 0 : 0);
+  
   const isLoading = mode === 'edit' && isLoadingInvoice;
   const isSubmitting = mode === 'new' ? createMutation.isPending : updateMutation.isPending;
   const pageTitle = mode === 'new' ? 'New Invoice' : 'Edit Invoice';
@@ -372,7 +416,8 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
 
   return (
     <AdminLayout title={pageTitle}>
-      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-0">
+        <div className="space-y-4 sm:space-y-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <button onClick={() => navigate('/admin/invoices')} className="text-gray-600 hover:text-gray-900 touch-manipulation flex-shrink-0">
@@ -429,8 +474,12 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
             </div>
           </div>
         )}
+        </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Main Form Content */}
+          <div className="flex-1 min-w-0 space-y-4 sm:space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -724,6 +773,18 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
                     <span className="text-gray-900">Total:</span>
                     <span className="text-teal-600">₹{total.toFixed(2)}</span>
                   </div>
+                  {advancePaymentAmount > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm pt-2 border-t border-gray-300">
+                        <span className="text-gray-600">Advance Payment:</span>
+                        <span className="font-medium text-gray-900">₹{advancePaymentAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-bold">
+                        <span className="text-gray-900">Balance Due:</span>
+                        <span className="text-teal-600">₹{(total - advancePaymentAmount).toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
                   {formData.invoice_type === 'sharing' && (
                     <div className="text-xs text-gray-500 mt-2">
                       * Sharing invoice (without GST)
@@ -742,8 +803,25 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
                 type="text"
                 value={formData.payment_terms}
                 onChange={(e) => setFormData({ ...formData, payment_terms: e.target.value })}
-                placeholder="e.g., Net 30"
+                placeholder="e.g., Net 30, 50% advance, 50% on delivery"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Work Completion Period</label>
+                <TemplateSelector
+                  category="work_completion"
+                  onSelect={(content) => setFormData({ ...formData, work_completion_period: content.trim() })}
+                  currentValue={formData.work_completion_period}
+                />
+              </div>
+              <input
+                type="text"
+                value={formData.work_completion_period}
+                onChange={(e) => setFormData({ ...formData, work_completion_period: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm touch-manipulation"
+                placeholder="e.g., 15-30 working days after advance payment"
               />
             </div>
             {mode === 'edit' && (
@@ -771,6 +849,63 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
             )}
           </div>
 
+          {/* Warranty Details */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">Warranty Details</label>
+              <TemplateSelector
+                category="warranty"
+                onSelect={(content) => setFormData({ ...formData, warranty_details: content })}
+                currentValue={formData.warranty_details}
+              />
+            </div>
+            <RichTextEditor
+              value={formData.warranty_details || ''}
+              onChange={(content) => setFormData({ ...formData, warranty_details: content })}
+              id="invoice-warranty-details-editor"
+              height={200}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Use templates for standard warranty terms. You can customize the content as needed.
+            </p>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">Notes</label>
+              <TemplateSelector
+                category="notes"
+                onSelect={(content) => setFormData({ ...formData, notes: content })}
+                currentValue={formData.notes}
+              />
+            </div>
+            <RichTextEditor
+              value={formData.notes || ''}
+              onChange={(content) => setFormData({ ...formData, notes: content })}
+              id="invoice-notes-editor"
+              height={180}
+            />
+          </div>
+
+          {/* Terms & Conditions */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">Terms & Conditions</label>
+              <TemplateSelector
+                category="terms"
+                onSelect={(content) => setFormData({ ...formData, terms: content })}
+                currentValue={formData.terms}
+              />
+            </div>
+            <RichTextEditor
+              value={formData.terms || ''}
+              onChange={(content) => setFormData({ ...formData, terms: content })}
+              id="invoice-terms-editor"
+              height={180}
+            />
+          </div>
+
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4 border-t border-gray-200">
             <button
               type="button"
@@ -787,19 +922,33 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
               {isSubmitting ? (mode === 'new' ? 'Creating...' : 'Updating...') : (mode === 'new' ? 'Create Invoice' : 'Update Invoice')}
             </button>
           </div>
-        </form>
+            </form>
 
-        {/* Payment Management Section - Only for edit mode (outside form to avoid nested forms) */}
-        {mode === 'edit' && invoice && (
-          <div className="mt-6">
-            <PaymentManagement
-              invoiceId={invoice.id}
-              invoiceTotal={total > 0 ? total : (invoice.total || 0)}
-              paidAmount={invoice.paid_amount || 0}
-              currency={formData.currency}
-            />
+            {/* Payment Management Section - Only for edit mode (outside form to avoid nested forms) */}
+            {mode === 'edit' && invoice && (
+              <div className="mt-6">
+                <PaymentManagement
+                  invoiceId={invoice.id}
+                  invoiceTotal={total > 0 ? total : (invoice.total || 0)}
+                  paidAmount={invoice.paid_amount || 0}
+                  currency={formData.currency}
+                />
+              </div>
+            )}
           </div>
-        )}
+
+          {/* History Sidebar - Only visible on wide screens (lg and above, 1024px+) */}
+          {mode === 'edit' && invoice?.id && (
+            <div className="hidden lg:block w-80 flex-shrink-0">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-[140px]">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Change History</h3>
+                <div className="max-h-[calc(100vh-200px)] overflow-y-auto -mx-1 px-1">
+                  <EntityHistory entityType="invoice" entityId={invoice.id} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <QuickAddProductModal
@@ -830,6 +979,7 @@ export default function InvoiceForm({ mode, invoiceId }: InvoiceFormProps) {
           clientEmail={invoice.client_email}
         />
       )}
+
     </AdminLayout>
   );
 }

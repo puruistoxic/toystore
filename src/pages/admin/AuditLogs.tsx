@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/admin/AdminLayout';
 import api from '../../utils/api';
 import { FileText, Filter, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatDate } from '../../utils/dateUtils';
 
 interface AuditLog {
   id: number;
@@ -64,17 +65,6 @@ export default function AdminAuditLogs() {
       default:
         return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   return (
