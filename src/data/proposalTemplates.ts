@@ -153,3 +153,4 @@ export function getTemplatesByCategory(category: ProposalTemplate['category']): 
   return proposalTemplates.filter(t => t.category === category);
 }
 
+

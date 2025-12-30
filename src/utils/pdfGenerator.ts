@@ -675,17 +675,22 @@ function drawProposalHeader(
   margin: number,
   fontSize: number,
   fontSizeTitle: number,
-  fontSizeHeading: number
+  fontSizeHeading: number,
+  includeTitle: boolean = true,
+  includeProposalTitle: boolean = true
 ): number {
   let yPos = margin + 5;
 
-  // PROPOSAL Title - Centered at top
-  doc.setFontSize(fontSizeTitle);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 103, 103); // #006767
-  doc.text('PROPOSAL', pageWidth / 2, yPos, { align: 'center' });
-  
-  yPos = margin + 15;
+  // PROPOSAL Title - Centered at top (only on first page)
+  if (includeTitle) {
+    doc.setFontSize(fontSizeTitle);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 103, 103); // #006767
+    doc.text('PROPOSAL', pageWidth / 2, yPos, { align: 'center' });
+    yPos = margin + 15;
+  } else {
+    yPos = margin + 5;
+  }
   const leftX = margin;
   
   // Left side - TO (Client Information)
@@ -817,8 +822,8 @@ function drawProposalHeader(
   // Calculate where table should start (after title and description if they exist)
   let tableStartY = Math.max(toYPos, fromYPos) + 8;
   
-  // Title (if exists)
-  if (proposal.title) {
+  // Title (if exists) - only on first page
+  if (includeProposalTitle && proposal.title) {
     doc.setFontSize(fontSizeHeading);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 103, 103); // #006767
@@ -827,8 +832,8 @@ function drawProposalHeader(
     doc.setTextColor(0, 0, 0);
   }
 
-  // Description (if exists)
-  if (proposal.description) {
+  // Description (if exists) - only on first page
+  if (includeProposalTitle && proposal.description) {
     doc.setFont('helvetica', 'normal');
     const descLines = doc.splitTextToSize(proposal.description, pageWidth - (margin * 2));
     doc.text(descLines, leftX, tableStartY);
@@ -934,11 +939,11 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
 
   // Process items in chunks
   while (itemIndex < items.length) {
-    // If not first page, add new page and repeat full header
+    // If not first page, add new page and repeat full header (without title)
     if (currentPage > 1) {
       doc.addPage();
       
-      // Repeat complete header on new page
+      // Repeat complete header on new page (without title)
       lastTableFinalY = drawProposalHeader(
         doc,
         proposal,
@@ -947,7 +952,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       );
     }
 
@@ -1007,10 +1014,8 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
     lastTableFinalY = (doc as any).lastAutoTable.finalY + 10;
     itemIndex += itemsPerPage;
     
-    // Add page number on intermediate pages
-    if (!isLastPage) {
-      addPageNumber(currentPage, totalPages);
-    }
+    // Note: Page numbers will be added to all pages at the end
+    // after we know the final total page count
     
     currentPage++;
   }
@@ -1093,7 +1098,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
       margin,
       fontSize,
       fontSizeTitle,
-      fontSizeHeading
+      fontSizeHeading,
+      false, // Don't include title on subsequent pages
+      false // Don't include proposal title on subsequent pages
     ) + 10;
   }
   
@@ -1119,7 +1126,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       ) + 10;
     }
     doc.text(line, margin, totalsY);
@@ -1141,7 +1150,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       ) + 10;
     }
     
@@ -1195,7 +1206,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       ) + 10;
     }
     
@@ -1236,7 +1249,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
           margin,
           fontSize,
           fontSizeTitle,
-          fontSizeHeading
+          fontSizeHeading,
+          false, // Don't include title on subsequent pages
+          false // Don't include proposal title on subsequent pages
         ) + 10;
       }
       doc.setFont('helvetica', 'normal'); // Ensure normal font
@@ -1258,7 +1273,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
               margin,
               fontSize,
               fontSizeTitle,
-              fontSizeHeading
+              fontSizeHeading,
+              false, // Don't include title on subsequent pages
+              false // Don't include proposal title on subsequent pages
             ) + 10;
           }
           doc.setFont('helvetica', 'normal'); // Ensure normal font for continuation
@@ -1300,7 +1317,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       ) + 10;
     }
     
@@ -1325,7 +1344,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
           margin,
           fontSize,
           fontSizeTitle,
-          fontSizeHeading
+          fontSizeHeading,
+          false, // Don't include title on subsequent pages
+          false // Don't include proposal title on subsequent pages
         ) + 10;
       }
       doc.text(line, margin, totalsY);
@@ -1347,7 +1368,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       ) + 10;
     }
     
@@ -1382,7 +1405,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
             margin,
             fontSize,
             fontSizeTitle,
-            fontSizeHeading
+            fontSizeHeading,
+            false, // Don't include title on subsequent pages
+            false // Don't include proposal title on subsequent pages
           ) + 10;
         }
         doc.setFont('helvetica', 'normal'); // Ensure normal font
@@ -1406,7 +1431,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       ) + 10;
     }
     
@@ -1441,7 +1468,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
             margin,
             fontSize,
             fontSizeTitle,
-            fontSizeHeading
+            fontSizeHeading,
+            false, // Don't include title on subsequent pages
+            false // Don't include proposal title on subsequent pages
           ) + 10;
         }
         doc.setFont('helvetica', 'normal'); // Ensure normal font
@@ -1465,7 +1494,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
         margin,
         fontSize,
         fontSizeTitle,
-        fontSizeHeading
+        fontSizeHeading,
+        false, // Don't include title on subsequent pages
+        false // Don't include proposal title on subsequent pages
       ) + 10;
     }
     
@@ -1500,7 +1531,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
             margin,
             fontSize,
             fontSizeTitle,
-            fontSizeHeading
+            fontSizeHeading,
+            false, // Don't include title on subsequent pages
+            false // Don't include proposal title on subsequent pages
           ) + 10;
         }
         doc.setFont('helvetica', 'normal'); // Ensure normal font
@@ -1536,7 +1569,9 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
       margin,
       fontSize,
       fontSizeTitle,
-      fontSizeHeading
+      fontSizeHeading,
+      false, // Don't include title on subsequent pages
+      false // Don't include proposal title on subsequent pages
     ) + 10;
     
     doc.setFont('helvetica', 'normal');
@@ -1555,16 +1590,11 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   // Note: jsPDF internal.pages is 1-indexed and includes the document object itself
   const finalTotalPages = (doc as any).internal.pages.length - 1;
   
-  // Update page numbers on all pages with correct total
-  // We need to add page numbers to any pages that were added after the items table
-  for (let pageNum = totalPages + 1; pageNum <= finalTotalPages; pageNum++) {
+  // Add page numbers to ALL pages (including first page)
+  for (let pageNum = 1; pageNum <= finalTotalPages; pageNum++) {
     doc.setPage(pageNum);
     addPageNumber(pageNum, finalTotalPages);
   }
-  
-  // Ensure last page has correct page number
-  doc.setPage(finalTotalPages);
-  addPageNumber(finalTotalPages, finalTotalPages);
 
   return doc;
 }
