@@ -752,11 +752,14 @@ router.get('/history/:entityType/:entityId', authenticateToken, async (req, res)
 // Generate invoice number
 // Confirmed invoices: WGSS/S/25-26/0001
 // Sharing invoices (kaccha bills): WGSS/T/25-26/0001
+// Note: Deleted invoices are included to prevent reusing invoice numbers
 async function generateInvoiceNumber(pool, invoiceType = 'confirmed') {
   const financialYear = getFinancialYear();
   const typeCode = invoiceType === 'sharing' ? 'T' : 'S';
   const prefix = `WGSS/${typeCode}/${financialYear}/`;
   
+  // Include all invoices (deleted or not) to ensure numbers are never reused
+  // If invoice 3 is deleted, the next invoice should be 4, not 3 again
   const [rows] = await pool.execute(
     'SELECT invoice_number FROM invoices WHERE invoice_number LIKE ? AND invoice_type = ? ORDER BY invoice_number DESC LIMIT 1',
     [`${prefix}%`, invoiceType]
@@ -871,7 +874,23 @@ router.post('/invoices', authenticateToken, async (req, res) => {
     const pool = getPool();
     const invoiceId = req.body.id || uuidv4();
     const invoiceType = req.body.invoice_type || 'confirmed';
-    const invoiceNumber = req.body.invoice_number || await generateInvoiceNumber(pool, invoiceType);
+    
+    // Retry mechanism for handling race conditions in invoice number generation
+    let invoiceNumber = req.body.invoice_number;
+    let maxRetries = 5;
+    let retryCount = 0;
+    
+    while (!invoiceNumber && retryCount < maxRetries) {
+      invoiceNumber = await generateInvoiceNumber(pool, invoiceType);
+      retryCount++;
+    }
+    
+    if (!invoiceNumber) {
+      return res.status(500).json({ 
+        error: 'Failed to generate invoice number', 
+        message: 'Unable to generate a unique invoice number after multiple attempts. Please try again.' 
+      });
+    }
 
     // Calculate totals with GST-inclusive price support
     const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
@@ -958,17 +977,43 @@ router.post('/invoices', authenticateToken, async (req, res) => {
     data.paid_amount = tokenAmount;
     data.created_by = req.user.userId || req.user.id;
 
-    await pool.execute(
-      `INSERT INTO invoices (id, invoice_number, proposal_id, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, issue_date, due_date, status, invoice_type, payment_terms, warranty_details, work_completion_period, notes, terms, paid_amount, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        data.id, data.invoice_number, data.proposal_id, data.client_id, data.title, data.description,
-        data.items, data.subtotal, data.tax_rate || 0, data.tax_amount, data.discount || 0,
-        data.total, data.currency || 'INR', data.issue_date, data.due_date, data.status || 'draft',
-        data.invoice_type || 'confirmed', data.payment_terms || null, data.warranty_details || null, data.work_completion_period || null,
-        data.notes || null, data.terms || null, data.paid_amount || 0, data.created_by
-      ]
-    );
+    // Retry mechanism for handling duplicate invoice number errors (race conditions)
+    let insertSuccess = false;
+    retryCount = 0;
+    while (!insertSuccess && retryCount < maxRetries) {
+      try {
+        await pool.execute(
+          `INSERT INTO invoices (id, invoice_number, proposal_id, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, issue_date, due_date, status, invoice_type, payment_terms, warranty_details, work_completion_period, notes, terms, paid_amount, created_by)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            data.id, data.invoice_number, data.proposal_id, data.client_id, data.title, data.description,
+            data.items, data.subtotal, data.tax_rate || 0, data.tax_amount, data.discount || 0,
+            data.total, data.currency || 'INR', data.issue_date, data.due_date, data.status || 'draft',
+            data.invoice_type || 'confirmed', data.payment_terms || null, data.warranty_details || null, data.work_completion_period || null,
+            data.notes || null, data.terms || null, data.paid_amount || 0, data.created_by
+          ]
+        );
+        insertSuccess = true;
+      } catch (insertError) {
+        // Check if it's a duplicate key error for invoice_number
+        if (insertError.code === 'ER_DUP_ENTRY' && insertError.message && insertError.message.includes('invoice_number')) {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            // Regenerate invoice number and retry
+            console.log(`[Invoicing API] Duplicate invoice number detected: ${data.invoice_number}. Regenerating... (attempt ${retryCount + 1}/${maxRetries})`);
+            data.invoice_number = await generateInvoiceNumber(pool, invoiceType);
+            invoiceNumber = data.invoice_number;
+            // Small delay to reduce race condition probability
+            await new Promise(resolve => setTimeout(resolve, 100 * retryCount));
+          } else {
+            throw new Error('Failed to create invoice: Unable to generate a unique invoice number after multiple attempts due to concurrent requests.');
+          }
+        } else {
+          // Not a duplicate key error, rethrow
+          throw insertError;
+        }
+      }
+    }
 
     // If advance payment exists, create a payment entry
     if (tokenAmount > 0) {
