@@ -749,34 +749,15 @@ router.get('/history/:entityType/:entityId', authenticateToken, async (req, res)
 
 // ==================== INVOICES ====================
 
-// Generate invoice number
+// Generate invoice number from sequence number
 // Confirmed invoices: WGSS/S/25-26/0001
 // Sharing invoices (kaccha bills): WGSS/T/25-26/0001
-// Note: Deleted invoices are included to prevent reusing invoice numbers
-async function generateInvoiceNumber(pool, invoiceType = 'confirmed') {
+// Uses the auto-increment sequence_number from the database
+function generateInvoiceNumberFromSequence(sequenceNumber, invoiceType = 'confirmed') {
   const financialYear = getFinancialYear();
   const typeCode = invoiceType === 'sharing' ? 'T' : 'S';
   const prefix = `WGSS/${typeCode}/${financialYear}/`;
-  
-  // Include all invoices (deleted or not) to ensure numbers are never reused
-  // If invoice 3 is deleted, the next invoice should be 4, not 3 again
-  const [rows] = await pool.execute(
-    'SELECT invoice_number FROM invoices WHERE invoice_number LIKE ? AND invoice_type = ? ORDER BY invoice_number DESC LIMIT 1',
-    [`${prefix}%`, invoiceType]
-  );
-
-  let sequence = 1;
-  if (rows.length > 0) {
-    const lastNumber = rows[0].invoice_number;
-    // Extract sequence from format WGSS/S/YY-YY/#### or WGSS/T/YY-YY/####
-    const parts = lastNumber.split('/');
-    if (parts.length >= 4) {
-      const lastSequence = parseInt(parts[3].trim()) || 0;
-      sequence = lastSequence + 1;
-    }
-  }
-
-  return `${prefix}${sequence.toString().padStart(4, '0')}`;
+  return `${prefix}${sequenceNumber.toString().padStart(4, '0')}`;
 }
 
 router.get('/invoices', authenticateToken, async (req, res) => {
@@ -874,23 +855,6 @@ router.post('/invoices', authenticateToken, async (req, res) => {
     const pool = getPool();
     const invoiceId = req.body.id || uuidv4();
     const invoiceType = req.body.invoice_type || 'confirmed';
-    
-    // Retry mechanism for handling race conditions in invoice number generation
-    let invoiceNumber = req.body.invoice_number;
-    let maxRetries = 5;
-    let retryCount = 0;
-    
-    while (!invoiceNumber && retryCount < maxRetries) {
-      invoiceNumber = await generateInvoiceNumber(pool, invoiceType);
-      retryCount++;
-    }
-    
-    if (!invoiceNumber) {
-      return res.status(500).json({ 
-        error: 'Failed to generate invoice number', 
-        message: 'Unable to generate a unique invoice number after multiple attempts. Please try again.' 
-      });
-    }
 
     // Calculate totals with GST-inclusive price support
     const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
@@ -906,7 +870,6 @@ router.post('/invoices', authenticateToken, async (req, res) => {
     ]);
 
     data.id = invoiceId;
-    data.invoice_number = invoiceNumber;
     data.invoice_type = invoiceType;
     data.subtotal = subtotal;
     // For sharing invoices, don't calculate tax
@@ -977,43 +940,45 @@ router.post('/invoices', authenticateToken, async (req, res) => {
     data.paid_amount = tokenAmount;
     data.created_by = req.user.userId || req.user.id;
 
-    // Retry mechanism for handling duplicate invoice number errors (race conditions)
-    let insertSuccess = false;
-    retryCount = 0;
-    while (!insertSuccess && retryCount < maxRetries) {
-      try {
-        await pool.execute(
-          `INSERT INTO invoices (id, invoice_number, proposal_id, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, issue_date, due_date, status, invoice_type, payment_terms, warranty_details, work_completion_period, notes, terms, paid_amount, created_by)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            data.id, data.invoice_number, data.proposal_id, data.client_id, data.title, data.description,
-            data.items, data.subtotal, data.tax_rate || 0, data.tax_amount, data.discount || 0,
-            data.total, data.currency || 'INR', data.issue_date, data.due_date, data.status || 'draft',
-            data.invoice_type || 'confirmed', data.payment_terms || null, data.warranty_details || null, data.work_completion_period || null,
-            data.notes || null, data.terms || null, data.paid_amount || 0, data.created_by
-          ]
-        );
-        insertSuccess = true;
-      } catch (insertError) {
-        // Check if it's a duplicate key error for invoice_number
-        if (insertError.code === 'ER_DUP_ENTRY' && insertError.message && insertError.message.includes('invoice_number')) {
-          retryCount++;
-          if (retryCount < maxRetries) {
-            // Regenerate invoice number and retry
-            console.log(`[Invoicing API] Duplicate invoice number detected: ${data.invoice_number}. Regenerating... (attempt ${retryCount + 1}/${maxRetries})`);
-            data.invoice_number = await generateInvoiceNumber(pool, invoiceType);
-            invoiceNumber = data.invoice_number;
-            // Small delay to reduce race condition probability
-            await new Promise(resolve => setTimeout(resolve, 100 * retryCount));
-          } else {
-            throw new Error('Failed to create invoice: Unable to generate a unique invoice number after multiple attempts due to concurrent requests.');
-          }
-        } else {
-          // Not a duplicate key error, rethrow
-          throw insertError;
-        }
-      }
+    // Simple approach: Insert invoice first (sequence_number auto-generated by database)
+    // Then generate invoice_number from sequence_number and update it
+    // Use a temporary invoice_number for the initial insert
+    const tempInvoiceNumber = `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    await pool.execute(
+      `INSERT INTO invoices (id, invoice_number, proposal_id, client_id, title, description, items, subtotal, tax_rate, tax_amount, discount, total, currency, issue_date, due_date, status, invoice_type, payment_terms, warranty_details, work_completion_period, notes, terms, paid_amount, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.id, tempInvoiceNumber, data.proposal_id, data.client_id, data.title, data.description,
+        data.items, data.subtotal, data.tax_rate || 0, data.tax_amount, data.discount || 0,
+        data.total, data.currency || 'INR', data.issue_date, data.due_date, data.status || 'draft',
+        data.invoice_type || 'confirmed', data.payment_terms || null, data.warranty_details || null, data.work_completion_period || null,
+        data.notes || null, data.terms || null, data.paid_amount || 0, data.created_by
+      ]
+    );
+
+    // Get the auto-generated sequence_number
+    const [insertedInvoiceRows] = await pool.execute(
+      'SELECT sequence_number FROM invoices WHERE id = ?',
+      [invoiceId]
+    );
+    
+    if (!insertedInvoiceRows || insertedInvoiceRows.length === 0 || !insertedInvoiceRows[0].sequence_number) {
+      throw new Error('Failed to retrieve sequence number after invoice creation');
     }
+    
+    const sequenceNumber = insertedInvoiceRows[0].sequence_number;
+    
+    // Generate invoice_number from sequence_number
+    const invoiceNumber = generateInvoiceNumberFromSequence(sequenceNumber, invoiceType);
+    
+    // Update invoice with the correct invoice_number
+    await pool.execute(
+      'UPDATE invoices SET invoice_number = ? WHERE id = ?',
+      [invoiceNumber, invoiceId]
+    );
+    
+    data.invoice_number = invoiceNumber;
 
     // If advance payment exists, create a payment entry
     if (tokenAmount > 0) {

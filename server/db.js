@@ -605,6 +605,7 @@ async function initializeTables() {
     // Create invoices table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS invoices (
+        sequence_number INT AUTO_INCREMENT UNIQUE,
         id VARCHAR(50) PRIMARY KEY,
         invoice_number VARCHAR(50) NOT NULL UNIQUE,
         proposal_id VARCHAR(50),
@@ -635,6 +636,7 @@ async function initializeTables() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_client (client_id),
         INDEX idx_invoice_number (invoice_number),
+        INDEX idx_sequence_number (sequence_number),
         INDEX idx_status (status),
         INDEX idx_due_date (due_date),
         INDEX idx_created_at (created_at),
@@ -643,6 +645,25 @@ async function initializeTables() {
         FOREIGN KEY (proposal_id) REFERENCES proposals(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+    
+    // Add sequence_number column if it doesn't exist (for existing databases)
+    // Note: For existing databases with data, run server/scripts/add-invoice-sequence-number.js
+    // This check is just for new installations
+    try {
+      const [columns] = await connection.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'invoices' 
+        AND COLUMN_NAME = 'sequence_number'
+      `);
+      
+      if (columns.length === 0) {
+        console.log('[Database] sequence_number column not found. For existing databases, please run: node server/scripts/add-invoice-sequence-number.js');
+      }
+    } catch (error) {
+      console.warn('[Database] Could not check for sequence_number column:', error.message);
+    }
 
     // Add proposal_type, payment_terms, and token_amount columns to proposals table (for existing databases)
     try {
