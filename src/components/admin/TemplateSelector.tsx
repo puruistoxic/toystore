@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
 
@@ -63,59 +63,91 @@ export default function TemplateSelector({ category, onSelect, currentValue, dis
     return null;
   }
 
+  const getCategoryLabel = (cat: string) => {
+    const labels: Record<string, string> = {
+      warranty: 'Warranty',
+      payment: 'Payment Terms',
+      notes: 'Notes',
+      terms: 'Terms & Conditions',
+      work_completion: 'Work Completion'
+    };
+    return labels[cat] || cat.replace('_', ' ');
+  };
+
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(true)}
         disabled={disabled}
         className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <FileText className="w-3 h-3 mr-1" />
         Templates
-        {isOpen ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
       </button>
 
       {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute z-20 mt-1 w-80 bg-white border border-gray-300 rounded-lg shadow-lg max-h-96 overflow-auto">
-            <div className="p-2 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-700 uppercase">
-                  {category.replace('_', ' ')} Templates
-                </span>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 py-4">
+            {/* Background overlay */}
+            <div
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => setIsOpen(false)}
+            ></div>
+
+            {/* Modal panel */}
+            <div className="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full max-w-lg">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {getCategoryLabel(category)} Templates
+                  </h3>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-gray-400 hover:text-gray-500 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="max-h-[60vh] overflow-y-auto">
+                  {templates.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-8">
+                      No templates available for this category.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {templates.map((template) => (
+                        <button
+                          key={template.id}
+                          type="button"
+                          onClick={() => handleSelect(template)}
+                          className="w-full text-left p-3 rounded-lg hover:bg-teal-50 border border-gray-200 hover:border-teal-300 transition-colors"
+                        >
+                          <div className="text-sm font-medium text-gray-900 mb-1">{template.name}</div>
+                          <div className="text-xs text-gray-500 line-clamp-2">
+                            {template.content.replace(/<[^>]*>/g, '').split('\n')[0]}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
-                  type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                  className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
                 >
-                  <X className="w-3 h-3" />
+                  Close
                 </button>
               </div>
             </div>
-            <div className="p-2">
-              {templates.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  onClick={() => handleSelect(template)}
-                  className="w-full text-left p-2 mb-1 rounded hover:bg-teal-50 border border-transparent hover:border-teal-200 transition-colors"
-                >
-                  <div className="text-sm font-medium text-gray-900">{template.name}</div>
-                  <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                    {template.content.split('\n')[0]}
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
 }
 

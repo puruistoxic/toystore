@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { invoicingApi, companySettingsApi } from '../../utils/api';
 import { Proposal } from '../../types/invoicing';
-import { Plus, Search, Edit, Trash2, FileText, Calendar, Download, Receipt } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FileText, Calendar, Download, Receipt, X } from 'lucide-react';
 import { generateProposalPDF } from '../../utils/pdfGenerator';
 import { useAlert } from '../../contexts/AlertContext';
 import { formatDateOnly } from '../../utils/dateUtils';
@@ -15,6 +15,11 @@ export default function AdminProposals() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusChangeModal, setStatusChangeModal] = useState<{ isOpen: boolean; proposal: Proposal | null; newStatus: string }>({
+    isOpen: false,
+    proposal: null,
+    newStatus: ''
+  });
 
   const handleConvertToInvoice = (proposal: Proposal) => {
     navigate(`/admin/invoices/new?proposal_id=${proposal.id}`);
@@ -80,6 +85,79 @@ export default function AdminProposals() {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
     }
   });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      // Fetch the full proposal data first to ensure we have all required fields
+      const proposalResponse = await invoicingApi.getProposal(id);
+      const proposal = proposalResponse.data;
+      
+      if (!proposal) throw new Error('Proposal not found');
+      
+      // Update only the status field while keeping all other fields
+      return invoicingApi.updateProposal(id, {
+        ...proposal,
+        status
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      setStatusChangeModal({ isOpen: false, proposal: null, newStatus: '' });
+      showAlert({
+        type: 'success',
+        title: 'Status Updated',
+        message: 'Proposal status has been updated successfully'
+      });
+    },
+    onError: (error: any) => {
+      showAlert({
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to update proposal status'
+      });
+    }
+  });
+
+  const handleStatusChangeClick = (proposal: Proposal) => {
+    // Don't allow status change if proposal is accepted and has invoice
+    if (proposal.status === 'accepted' && proposal.has_invoice === 1) {
+      showAlert({
+        type: 'warning',
+        title: 'Cannot Change Status',
+        message: 'This proposal has been converted to an invoice and its status cannot be changed. Delete the invoice first if you need to modify the proposal.'
+      });
+      return;
+    }
+    
+    setStatusChangeModal({
+      isOpen: true,
+      proposal,
+      newStatus: proposal.status
+    });
+  };
+
+  const handleStatusChangeConfirm = async () => {
+    if (!statusChangeModal.proposal) return;
+    
+    if (statusChangeModal.newStatus === statusChangeModal.proposal.status) {
+      setStatusChangeModal({ isOpen: false, proposal: null, newStatus: '' });
+      return;
+    }
+
+    const confirmed = await showConfirm({
+      title: 'Change Proposal Status',
+      message: `Are you sure you want to change the status of proposal ${statusChangeModal.proposal.proposal_number} from "${statusChangeModal.proposal.status.charAt(0).toUpperCase() + statusChangeModal.proposal.status.slice(1)}" to "${statusChangeModal.newStatus.charAt(0).toUpperCase() + statusChangeModal.newStatus.slice(1)}"?`,
+      confirmText: 'Change Status',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
+      updateStatusMutation.mutate({
+        id: statusChangeModal.proposal.id,
+        status: statusChangeModal.newStatus
+      });
+    }
+  };
 
   const handleDelete = async (proposal: Proposal) => {
     // Check if proposal is accepted and has an invoice
@@ -258,9 +336,16 @@ export default function AdminProposals() {
                           )}
                         </td>
                         <td className="px-4 xl:px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(proposal.status)}`}>
+                          <button
+                            onClick={() => handleStatusChangeClick(proposal)}
+                            disabled={proposal.status === 'accepted' && proposal.has_invoice === 1}
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${getStatusColor(proposal.status)}`}
+                            title={proposal.status === 'accepted' && proposal.has_invoice === 1 
+                              ? 'Status cannot be changed - proposal has been converted to invoice'
+                              : 'Click to change status'}
+                          >
                             {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
-                          </span>
+                          </button>
                         </td>
                         <td className="px-4 xl:px-6 py-4 text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-1 xl:space-x-2">
@@ -337,9 +422,16 @@ export default function AdminProposals() {
                       <div className="text-sm sm:text-base font-semibold text-gray-900 truncate">{proposal.proposal_number}</div>
                       <div className="text-xs sm:text-sm text-gray-500 truncate mt-0.5">{proposal.title}</div>
                     </div>
-                    <span className={`px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${getStatusColor(proposal.status)}`}>
+                    <button
+                      onClick={() => handleStatusChangeClick(proposal)}
+                      disabled={proposal.status === 'accepted' && proposal.has_invoice === 1}
+                      className={`px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${getStatusColor(proposal.status)}`}
+                      title={proposal.status === 'accepted' && proposal.has_invoice === 1 
+                        ? 'Status cannot be changed - proposal has been converted to invoice'
+                        : 'Tap to change status'}
+                    >
                       {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
-                    </span>
+                    </button>
                   </div>
                   
                   <div className="space-y-2.5 sm:space-y-3 mb-3 sm:mb-4">
@@ -439,6 +531,119 @@ export default function AdminProposals() {
           </>
         )}
       </div>
+
+      {/* Status Change Modal */}
+      {statusChangeModal.isOpen && statusChangeModal.proposal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            {/* Background overlay */}
+            <div 
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => setStatusChangeModal({ isOpen: false, proposal: null, newStatus: '' })}
+            ></div>
+
+            {/* Modal panel */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Change Proposal Status</h3>
+                  <button
+                    onClick={() => setStatusChangeModal({ isOpen: false, proposal: null, newStatus: '' })}
+                    className="text-gray-400 hover:text-gray-500 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                {/* Proposal Details */}
+                <div className="mb-6 space-y-3">
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Proposal Number</p>
+                      <p className="text-sm font-semibold text-gray-900">{statusChangeModal.proposal.proposal_number}</p>
+                    </div>
+                    
+                    {statusChangeModal.proposal.title && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Title</p>
+                        <p className="text-sm text-gray-900">{statusChangeModal.proposal.title}</p>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Client</p>
+                      <p className="text-sm text-gray-900">{statusChangeModal.proposal.client_name || 'N/A'}</p>
+                      {statusChangeModal.proposal.client_company && (
+                        <p className="text-xs text-gray-600 mt-0.5">{statusChangeModal.proposal.client_company}</p>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Amount</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(statusChangeModal.proposal.total, statusChangeModal.proposal.currency)}
+                        </p>
+                      </div>
+                      
+                      {statusChangeModal.proposal.valid_until && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Valid Until</p>
+                          <div className="flex items-center text-sm text-gray-900">
+                            <Calendar className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                            <span>{formatDateOnly(statusChangeModal.proposal.valid_until)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="pt-2 border-t border-gray-200">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Current Status</p>
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(statusChangeModal.proposal.status)}`}>
+                        {statusChangeModal.proposal.status.charAt(0).toUpperCase() + statusChangeModal.proposal.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    New Status
+                  </label>
+                  <select
+                    value={statusChangeModal.newStatus}
+                    onChange={(e) => setStatusChangeModal({ ...statusChangeModal, newStatus: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="sent">Sent</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="expired">Expired</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  onClick={handleStatusChangeConfirm}
+                  disabled={updateStatusMutation.isPending || statusChangeModal.newStatus === statusChangeModal.proposal.status}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {updateStatusMutation.isPending ? 'Updating...' : 'Confirm Change'}
+                </button>
+                <button
+                  onClick={() => setStatusChangeModal({ isOpen: false, proposal: null, newStatus: '' })}
+                  disabled={updateStatusMutation.isPending}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
