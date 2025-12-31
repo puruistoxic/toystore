@@ -1031,7 +1031,8 @@ router.put('/invoices/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Invoice not found' });
     }
     const oldData = formatDataFromDB(oldRows[0], ['items']);
-    const invoiceType = req.body.invoice_type || oldData.invoice_type || 'confirmed';
+    const oldInvoiceType = oldData.invoice_type || 'confirmed';
+    const invoiceType = req.body.invoice_type || oldInvoiceType || 'confirmed';
 
     // Calculate totals with GST-inclusive price support
     const { calculateInvoiceTotals } = require('../utils/calculateInvoiceTotals');
@@ -1051,22 +1052,33 @@ router.put('/invoices/:id', authenticateToken, async (req, res) => {
     data.tax_amount = taxAmount;
     data.total = total;
 
+    // Check if invoice_type has changed - if so, regenerate invoice_number
+    let newInvoiceNumber = oldData.invoice_number;
+    if (invoiceType !== oldInvoiceType && oldRows[0].sequence_number) {
+      // Invoice type changed, regenerate invoice number with new type code
+      newInvoiceNumber = generateInvoiceNumberFromSequence(oldRows[0].sequence_number, invoiceType);
+    }
+
     await pool.execute(
       `UPDATE invoices SET proposal_id = ?, client_id = ?, title = ?, description = ?, items = ?, subtotal = ?,
        tax_rate = ?, tax_amount = ?, discount = ?, total = ?, currency = ?, issue_date = ?, due_date = ?,
-       status = ?, invoice_type = ?, payment_terms = ?, notes = ?, terms = ?
+       status = ?, invoice_type = ?, invoice_number = ?, payment_terms = ?, notes = ?, terms = ?
        WHERE id = ?`,
       [
         data.proposal_id, data.client_id, data.title, data.description, data.items, data.subtotal,
         data.tax_rate || 0, data.tax_amount, data.discount || 0, data.total,
         data.currency || 'INR', data.issue_date, data.due_date, data.status,
-        data.invoice_type || 'confirmed', data.payment_terms, data.notes, data.terms, invoiceId
+        data.invoice_type || 'confirmed', newInvoiceNumber, data.payment_terms, data.notes, data.terms, invoiceId
       ]
     );
 
     await addAuditLog(req, 'UPDATE', 'invoice', invoiceId, data.title, oldData, data);
 
-    res.json({ success: true, message: 'Invoice updated successfully' });
+    res.json({ 
+      success: true, 
+      message: 'Invoice updated successfully',
+      invoice_number: newInvoiceNumber // Return updated invoice number if it changed
+    });
   } catch (error) {
     console.error('[Invoicing API] Update invoice error:', error);
     res.status(500).json({ error: 'Failed to update invoice', message: error.message });
