@@ -28,7 +28,9 @@ export default function CompanySettings() {
     bank_ifsc: '',
     bank_branch: '',
     footer_text: '',
-    terms_and_conditions: ''
+    terms_and_conditions: '',
+    enable_enquiry_popup: true,
+    whatsapp_number: ''
   });
 
   const { data: settings, isLoading } = useQuery({
@@ -63,7 +65,9 @@ export default function CompanySettings() {
         bank_ifsc: settings.bank_ifsc || '',
         bank_branch: settings.bank_branch || '',
         footer_text: settings.footer_text || '',
-        terms_and_conditions: settings.terms_and_conditions || ''
+        terms_and_conditions: settings.terms_and_conditions || '',
+        enable_enquiry_popup: settings.enable_enquiry_popup !== undefined ? settings.enable_enquiry_popup : true,
+        whatsapp_number: settings.whatsapp_number || ''
       });
     }
   }, [settings]);
@@ -72,6 +76,8 @@ export default function CompanySettings() {
     mutationFn: (data: any) => companySettingsApi.updateSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-settings'] });
+      // Clear the public cache so frontend picks up the new setting
+      localStorage.removeItem('company_settings_cache');
       alert('Company settings saved successfully!');
     }
   });
@@ -86,7 +92,11 @@ export default function CompanySettings() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value 
+    });
   };
 
   if (isLoading) {
@@ -358,6 +368,51 @@ export default function CompanySettings() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Website Features */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Website Features</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <label htmlFor="enable_enquiry_popup" className="block text-sm font-medium text-gray-900 mb-1">
+                    Enable Enquiry Popup
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Show the enquiry popup modal to visitors on the website
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="enable_enquiry_popup"
+                    name="enable_enquiry_popup"
+                    checked={formData.enable_enquiry_popup}
+                    onChange={handleChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  WhatsApp Number
+                </label>
+                <input
+                  type="text"
+                  name="whatsapp_number"
+                  value={formData.whatsapp_number}
+                  onChange={handleChange}
+                  placeholder="e.g., 8851577973 (without +91 or spaces)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Enter WhatsApp number for product enquiries (without country code or spaces)
+                </p>
               </div>
             </div>
           </div>

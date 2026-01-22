@@ -11,32 +11,33 @@ async function initDatabase() {
   }
 
   // Check if environment variables are loaded
-  // Default DB host is the internal database server IP if MYSQL_HOST is not set
-  // For deployment, try wainso.com as fallback if primary connection fails
+  // Default DB host is 192.168.1.210
+  // For deployment, try purushottam.dev as fallback if primary connection fails
   let dbHost = process.env.MYSQL_HOST || '192.168.1.210';
-  const dbDatabase = process.env.MYSQL_DATABASE || 'wainsodb';
+  const dbDatabase = process.env.MYSQL_DATABASE || 'toystoredb';
   const dbUser = process.env.MYSQL_USER || 'dbuser';
-  const dbPassword = process.env.MYSQL_PASSWORD || '';
+  const dbPassword = process.env.MYSQL_PASSWORD || process.env.MYSQL_PASS || process.env.DB_PASSWORD || '';
   const dbPort = parseInt(process.env.MYSQL_PORT || '3306');
-  const fallbackHost = 'wainso.com';
+  const fallbackHost = process.env.MYSQL_FALLBACK_HOST || 'purushottam.dev';
 
   console.log('[Database] Initializing database connection...');
   console.log(`[Database] Primary host: ${dbHost}:${dbPort}`);
   console.log(`[Database] Fallback host: ${fallbackHost}:${dbPort} (if primary fails)`);
   console.log(`[Database] Database: ${dbDatabase}, User: ${dbUser}`);
+  console.log(`[Database] Using password: ${dbPassword ? 'YES' : 'NO'}`);
 
   if (!dbPassword) {
     console.warn('[Database] WARNING: MYSQL_PASSWORD is not set!');
     console.warn('[Database] Please create a .env file in the server directory with database credentials.');
     console.warn('[Database] See docs/ENV_SETUP.md for instructions.');
+    console.warn('[Database] Connection will attempt without password (may fail if password is required).');
   }
 
   // Try to create connection pool with primary host
-  pool = mysql.createPool({
+  const poolConfig = {
     host: dbHost,
     database: dbDatabase,
     user: dbUser,
-    password: dbPassword,
     port: dbPort,
     waitForConnections: true,
     connectionLimit: 10,
@@ -44,15 +45,24 @@ async function initDatabase() {
     connectTimeout: 10000,
     ssl: false,
     timezone: 'Z' // Use UTC timezone for all database operations
-  });
+  };
+  
+  // Only set password if it's provided (MySQL will use password authentication if password is set)
+  if (dbPassword) {
+    poolConfig.password = dbPassword;
+  }
+  
+  pool = mysql.createPool(poolConfig);
 
   // Test connection with primary host
   try {
-    console.log(`[Database] Testing connection to ${dbHost}...`);
+    console.log(`[Database] 🔌 Attempting connection to PRIMARY host: ${dbHost}:${dbPort}...`);
     const testConnection = await pool.getConnection();
     await testConnection.ping();
+    const connectionInfo = testConnection.config?.host || dbHost;
     testConnection.release();
     console.log(`[Database] ✅ Successfully connected to database at ${dbHost}:${dbPort}/${dbDatabase}`);
+    console.log(`[Database] 📍 Connection established to: ${connectionInfo}`);
   } catch (error) {
     console.warn(`[Database] ⚠️  Connection to ${dbHost} failed: ${error.message}`);
     console.log(`[Database] 🔄 Attempting fallback connection to ${fallbackHost}...`);
@@ -62,23 +72,32 @@ async function initDatabase() {
       if (pool) {
         await pool.end(); // Close the previous pool
       }
-      pool = mysql.createPool({
+      const fallbackPoolConfig = {
         host: fallbackHost,
         database: dbDatabase,
         user: dbUser,
-        password: dbPassword,
         port: dbPort,
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
         connectTimeout: 10000,
         ssl: false
-      });
+      };
       
+      // Only set password if it's provided
+      if (dbPassword) {
+        fallbackPoolConfig.password = dbPassword;
+      }
+      
+      pool = mysql.createPool(fallbackPoolConfig);
+      
+      console.log(`[Database] 🔌 Attempting connection to FALLBACK host: ${fallbackHost}:${dbPort}...`);
       const testConnection = await pool.getConnection();
       await testConnection.ping();
+      const connectionInfo = testConnection.config?.host || fallbackHost;
       testConnection.release();
-      console.log(`[Database] ✅ Successfully connected to database at ${fallbackHost}:${dbPort}/${dbDatabase} (fallback)`);
+      console.log(`[Database] ✅ Successfully connected to database at ${fallbackHost}:${dbPort}/${dbDatabase} (FALLBACK)`);
+      console.log(`[Database] 📍 Connection established to: ${connectionInfo}`);
       dbHost = fallbackHost; // Update for logging
     } catch (fallbackError) {
       console.error(`[Database] ❌ Fallback connection to ${fallbackHost} also failed: ${fallbackError.message}`);
@@ -219,6 +238,15 @@ async function initializeTables() {
         features JSON,
         specifications JSON,
         warranty VARCHAR(255),
+        age_group VARCHAR(100),
+        occasion JSON,
+        gender ENUM('boys', 'girls', 'unisex', 'all'),
+        material_type VARCHAR(100),
+        educational_value BOOLEAN DEFAULT FALSE,
+        minimum_order_quantity INT DEFAULT 1,
+        bulk_discount_percentage DECIMAL(5,2) DEFAULT 0,
+        stock_quantity INT DEFAULT 0,
+        sku VARCHAR(100),
         seo_title VARCHAR(255),
         seo_description TEXT,
         seo_keywords JSON,
@@ -231,6 +259,8 @@ async function initializeTables() {
         INDEX idx_category (category),
         INDEX idx_brand (brand),
         INDEX idx_hsn_code (hsn_code),
+        INDEX idx_age_group (age_group),
+        INDEX idx_gender (gender),
         INDEX idx_products_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
@@ -248,6 +278,47 @@ async function initializeTables() {
         // Expected - column already exists, no action needed
       } else {
         console.warn('[Database] Could not add price_includes_gst column:', error.message);
+      }
+    }
+
+    // Add toy-specific columns if they don't exist (for existing databases)
+    const toyColumns = [
+      { name: 'age_group', type: 'VARCHAR(100)', after: 'warranty' },
+      { name: 'occasion', type: 'JSON', after: 'age_group' },
+      { name: 'gender', type: "ENUM('boys', 'girls', 'unisex', 'all')", after: 'occasion' },
+      { name: 'material_type', type: 'VARCHAR(100)', after: 'gender' },
+      { name: 'educational_value', type: 'BOOLEAN DEFAULT FALSE', after: 'material_type' },
+      { name: 'minimum_order_quantity', type: 'INT DEFAULT 1', after: 'educational_value' },
+      { name: 'bulk_discount_percentage', type: 'DECIMAL(5,2) DEFAULT 0', after: 'minimum_order_quantity' },
+      { name: 'stock_quantity', type: 'INT DEFAULT 0', after: 'bulk_discount_percentage' },
+      { name: 'sku', type: 'VARCHAR(100)', after: 'stock_quantity' }
+    ];
+
+    for (const col of toyColumns) {
+      try {
+        await connection.execute(`
+          ALTER TABLE products 
+          ADD COLUMN ${col.name} ${col.type}
+          AFTER ${col.after}
+        `);
+        console.log(`[Database] Added ${col.name} column to products table`);
+      } catch (error) {
+        if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+          // Expected - column already exists, no action needed
+        } else {
+          console.warn(`[Database] Could not add ${col.name} column:`, error.message);
+        }
+      }
+    }
+
+    // Remove invalid index on JSON column if it exists (MySQL doesn't support direct indexing on JSON)
+    try {
+      await connection.execute(`DROP INDEX idx_occasion ON products`);
+      console.log('[Database] Removed invalid idx_occasion index from products table');
+    } catch (error) {
+      // Index might not exist, ignore error
+      if (error.code !== 'ER_CANT_DROP_FIELD_OR_KEY' && !error.message.includes("doesn't exist")) {
+        // Only log if it's not a "doesn't exist" error
       }
     }
 
@@ -835,7 +906,7 @@ async function initializeTables() {
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS company_settings (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        company_name VARCHAR(255) NOT NULL DEFAULT 'WAINSO',
+        company_name VARCHAR(255) NOT NULL DEFAULT 'Khandelwal Toy Store',
         logo_url VARCHAR(500),
         address_line1 VARCHAR(255),
         address_line2 VARCHAR(255),
@@ -877,28 +948,87 @@ async function initializeTables() {
       }
     }
 
+    // Add enable_enquiry_popup column if it doesn't exist
+    try {
+      await connection.execute(`
+        ALTER TABLE company_settings 
+        ADD COLUMN enable_enquiry_popup BOOLEAN DEFAULT TRUE
+      `);
+      console.log('[Database] Added enable_enquiry_popup column to company_settings table');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add enable_enquiry_popup column:', error.message);
+      }
+    }
+
+    // Add whatsapp_number column if it doesn't exist
+    try {
+      await connection.execute(`
+        ALTER TABLE company_settings 
+        ADD COLUMN whatsapp_number VARCHAR(20)
+      `);
+      console.log('[Database] Added whatsapp_number column to company_settings table');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // Expected - column already exists, no action needed
+      } else {
+        console.warn('[Database] Could not add whatsapp_number column:', error.message);
+      }
+    }
+
+    // Create enquiries table to log all enquiries
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS enquiries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id VARCHAR(50),
+        product_name VARCHAR(255),
+        product_slug VARCHAR(255),
+        customer_name VARCHAR(255),
+        customer_email VARCHAR(255),
+        customer_phone VARCHAR(20),
+        quantity INT,
+        requested_price DECIMAL(10,2),
+        custom_message TEXT,
+        whatsapp_number VARCHAR(20),
+        enquiry_type ENUM('product', 'general') DEFAULT 'product',
+        status ENUM('new', 'contacted', 'quoted', 'closed') DEFAULT 'new',
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_product_id (product_id),
+        INDEX idx_product_slug (product_slug),
+        INDEX idx_status (status),
+        INDEX idx_created_at (created_at),
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log('[Database] Created enquiries table');
+
     // Insert default company settings if not exists
     const [existingSettings] = await connection.execute('SELECT id FROM company_settings LIMIT 1');
     if (existingSettings.length === 0) {
       await connection.execute(`
         INSERT INTO company_settings (
           company_name, address_line1, address_line2, address_line3, city, state, postal_code, country,
-          phone, phone2, email, website, gstin, footer_text
+          phone, phone2, email, website, gstin, footer_text, enable_enquiry_popup, whatsapp_number
         ) VALUES (
-          'WAINSO',
-          'Room No-9, 1st Floor, Yadav Complex',
-          'Near Block Chawck, Block Chowk',
-          'Ramgarh Cantt',
-          'Ramgarh',
-          'Jharkhand',
-          '829122',
+          'Khandelwal Toy Store',
+          'Shed No-7/8, Sardar Campus',
+          'opp River cant App, Mota Varachha',
+          '',
+          'Surat',
+          'Gujarat',
+          '394101',
           'India',
-          '+91 98998 60975',
-          '+91 82927 17044',
-          'wainsogps@gmail.com',
-          'wainso.com',
-          '20AACFW6441P1ZY',
-          '© 2024 WAINSO. All rights reserved. | Est. 2017 | 8+ Years in Business'
+          '+91 98985 24462',
+          '+91 99258 86973',
+          'info@khandelwaltoystore.com',
+          'khandelwaltoystore.com',
+          '',
+          '© 2024 Khandelwal Toy Store. All rights reserved. | Wholesale Toy Supplier',
+          FALSE
         )
       `);
     }
@@ -1012,7 +1142,7 @@ async function initializeTables() {
       const passwordHash = await bcrypt.hash(defaultPassword, 10);
       await connection.execute(
         'INSERT INTO admin_users (username, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, ?)',
-        ['admin', 'admin@wainso.com', passwordHash, 'Administrator', 'admin']
+        ['admin', 'admin@khandelwaltoystore.com', passwordHash, 'Administrator', 'admin']
       );
       console.log('[Database] Default admin user created: username=admin, password=' + defaultPassword);
     }

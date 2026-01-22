@@ -100,7 +100,7 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
             Send Enquiry for
           </h2>
           <h3 className="text-xl md:text-2xl font-bold text-primary-600 mb-6">
-            WAINSO
+            Khandelwal Toy Store
           </h3>
 
           {isSubmitted ? (
@@ -229,10 +229,10 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
           <div className="relative z-10 h-full flex flex-col justify-between">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                Professional Security Solutions
+                Wholesale Toy Supplier
               </h2>
               <p className="text-primary-100 text-lg mb-6">
-                Trusted by 500+ businesses across India
+                Trusted by retailers and distributors across India
               </p>
 
               <div className="space-y-4 mb-6">
@@ -241,8 +241,8 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                     <Camera className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">CCTV Installation</h3>
-                    <p className="text-sm text-primary-100">HD cameras with remote monitoring</p>
+                    <h3 className="font-semibold">Wide Product Range</h3>
+                    <p className="text-sm text-primary-100">Toys for all ages and occasions</p>
                   </div>
                 </div>
 
@@ -251,8 +251,8 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                     <Navigation className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">GPS Tracking</h3>
-                    <p className="text-sm text-primary-100">Real-time vehicle & asset tracking</p>
+                    <h3 className="font-semibold">Bulk Discounts</h3>
+                    <p className="text-sm text-primary-100">Competitive wholesale pricing</p>
                   </div>
                 </div>
 
@@ -261,8 +261,8 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                     <Settings className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Maintenance Services</h3>
-                    <p className="text-sm text-primary-100">24/7 support & quick response</p>
+                    <h3 className="font-semibold">Pan-India Shipping</h3>
+                    <p className="text-sm text-primary-100">Fast and reliable delivery</p>
                   </div>
                 </div>
               </div>
@@ -271,18 +271,18 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
             <div className="space-y-3">
               <div className="flex items-center text-sm">
                 <Shield className="h-5 w-5 mr-2 text-primary-200" />
-                <span>8+ Years Experience</span>
+                <span>Quality Assured Products</span>
               </div>
               <div className="flex items-center text-sm">
                 <CheckCircle className="h-5 w-5 mr-2 text-primary-200" />
-                <span>4.9/5 Rating (45+ Reviews)</span>
+                <span>Best Wholesale Prices</span>
               </div>
               <Link
-                to="/quote-request"
+                to="/products"
                 onClick={onClose}
                 className="inline-flex items-center justify-center w-full bg-white text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors mt-4"
               >
-                Request Custom Quote
+                Browse Products
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </div>
@@ -296,8 +296,72 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
 // Hook to manage popup visibility
 export const useEnquiryPopup = () => {
   const [showPopup, setShowPopup] = useState(false);
+  const [popupEnabled, setPopupEnabled] = useState(true);
+
+  // Check if popup is enabled in company settings
+  useEffect(() => {
+    const checkPopupEnabled = async () => {
+      try {
+        const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
+        const API_BASE_URL = isDevelopment 
+          ? 'http://localhost:3001/api'
+          : (process.env.REACT_APP_API_URL || '/api');
+        
+        // Fetch popup setting from public API endpoint
+        const response = await fetch(`${API_BASE_URL}/content/company-settings/public`);
+        if (response.ok) {
+          const data = await response.json();
+          setPopupEnabled(data.enable_enquiry_popup !== false);
+          // Cache the setting for 5 minutes
+          localStorage.setItem('company_settings_cache', JSON.stringify({
+            enable_enquiry_popup: data.enable_enquiry_popup,
+            timestamp: Date.now()
+          }));
+        } else {
+          // If API fails, check cache
+          const settingsCache = localStorage.getItem('company_settings_cache');
+          if (settingsCache) {
+            try {
+              const cached = JSON.parse(settingsCache);
+              // Use cache if less than 5 minutes old
+              if (Date.now() - cached.timestamp < 5 * 60 * 1000) {
+                setPopupEnabled(cached.enable_enquiry_popup !== false);
+                return;
+              }
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+          // Default to enabled if can't fetch
+          setPopupEnabled(true);
+        }
+      } catch (error) {
+        // If we can't check, try cache first
+        const settingsCache = localStorage.getItem('company_settings_cache');
+        if (settingsCache) {
+          try {
+            const cached = JSON.parse(settingsCache);
+            setPopupEnabled(cached.enable_enquiry_popup !== false);
+            return;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        // Default to enabled if error
+        console.warn('Could not check popup setting, defaulting to enabled');
+        setPopupEnabled(true);
+      }
+    };
+
+    checkPopupEnabled();
+  }, []);
 
   useEffect(() => {
+    // Don't show if disabled
+    if (!popupEnabled) {
+      return;
+    }
+
     const checkShouldShow = () => {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -325,7 +389,7 @@ export const useEnquiryPopup = () => {
     const timer = setTimeout(checkShouldShow, 1000);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [popupEnabled]);
 
   const handleClose = () => {
     setShowPopup(false);

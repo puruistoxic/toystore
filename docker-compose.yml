@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  wainso-api:
+  toystore-api:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: wainso-api
+    container_name: toystore-api
     restart: always
     environment:
       - NODE_ENV=production
@@ -17,9 +17,9 @@ services:
       - SMTP_USER=emailapikey
       - SMTP_PASSWORD=yA6KbHtb4gihy2xRREVuhJKC+4sx/q0xiiSy4CHhfpYleNiz3KE20BFqINPuJ2CI0YfY5atVb45AI4266IsPfJlmPYUFLJTGTuv4P2uV48xh8ciEYNYkjJWuBrkWGqFPdx8jDioyQvMgWA==
       - MYSQL_HOST=192.168.1.210
-      - MYSQL_DATABASE=wainsodb
+      - MYSQL_DATABASE=toystoredb
       - MYSQL_USER=dbuser
-      - MYSQL_PASSWORD=X9@uP!z1qF#D
+      - MYSQL_PASSWORD='X9@uP!z1qF#D'
       - MYSQL_PORT=3306
     networks:
       - nginx_proxy
@@ -32,9 +32,9 @@ services:
       retries: 3
       start_period: 40s
 
-  wainso-web:
+  toystore-web:
     build: .
-    container_name: wainso-web
+    container_name: toystore-web
     restart: always
     environment:
       - NODE_ENV=production
@@ -46,12 +46,12 @@ services:
       - nginx_proxy
     labels:
       - "nginx.proxy=true"
-      - "nginx.proxy.domain=wainso.com"
-      - "nginx.proxy.redirects=www.wainso.com:https://wainso.com"
+      - "nginx.proxy.domain=toystore.purushottam.dev"
+      - "nginx.proxy.redirects=www.toystore.purushottam.dev:https://toystore.purushottam.dev"
     expose:
       - "80"
     depends_on:
-      - wainso-api
+      - toystore-api
     # Add health check for better reliability
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]

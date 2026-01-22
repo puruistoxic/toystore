@@ -1,21 +1,25 @@
-# WAINSO.com - Professional Security & Tracking Solutions
+# Khandelwal Toy Store - Wholesale Toy Supplier Platform
 
-A modern React-based e-commerce platform for CCTV surveillance, GPS tracking, and maintenance services. Built with TypeScript, Tailwind CSS, and deployed using Docker.
+A modern React-based e-commerce platform for wholesale toy distribution. Built with TypeScript, Tailwind CSS, and deployed using Docker. Designed to help retailers, distributors, and e-commerce platforms source high-quality toys at wholesale prices.
 
 ## 🚀 Features
 
-### Services
-- **CCTV Installation & Setup** - Professional surveillance systems with remote monitoring
-- **GPS Vehicle Tracking** - Real-time tracking with geofencing and fuel monitoring
-- **Equipment Maintenance** - Comprehensive maintenance for all security equipment
-- **Repair & Troubleshooting** - Expert repair services for security and tracking equipment
-- **Security Consultation** - Custom security solution design and implementation
+### Product Categories
+- **Action Figures** - Superheroes, characters, and collectible figures
+- **Art & Crafts** - Creative toys, coloring sets, and craft supplies
+- **Educational & Learning Toys** - STEM toys, puzzles, and learning games
+- **Remote Control Toys** - Cars, drones, helicopters, and more
+- **Board Games** - Family games, strategy games, and card games
+- **Dolls & Doll Houses** - Fashion dolls, baby dolls, and playsets
+- **Baby Toys** - Rattles, teethers, and early development toys
+- **Musical Toys** - Instruments, keyboards, and sound toys
 
-### Products
-- **CCTV Equipment** - HD IP cameras, DVRs, NVRs, and accessories
-- **GPS Trackers** - Vehicle and asset tracking devices
-- **Maintenance Kits** - Professional tools and cleaning solutions
-- **Accessories** - Cables, mounts, and installation accessories
+### Key Features
+- **Age-Based Filtering** - Filter toys by age groups (0-2, 3-5, 6-8, 9-12, 13+)
+- **Occasion-Based Segments** - Birthday, holidays, festivals, educational
+- **Gender Categories** - Boys, Girls, Unisex toys
+- **Bulk Ordering** - Minimum order quantities and bulk discounts
+- **WhatsApp Integration** - Direct lead generation through WhatsApp
 
 ### Technical Features
 - ⚡ **Modern React 19** with TypeScript
@@ -30,7 +34,7 @@ A modern React-based e-commerce platform for CCTV surveillance, GPS tracking, an
 ## 🏗️ Project Structure
 
 ```
-wainsoweb/
+maketoys-web/
 ├── src/
 │   ├── components/          # Reusable React components
 │   │   ├── Header.tsx      # Navigation header

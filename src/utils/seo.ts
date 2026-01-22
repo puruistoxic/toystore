@@ -13,7 +13,7 @@ export const generateSlug = (text: string): string => {
 /**
  * Generate canonical URL
  */
-export const getCanonicalUrl = (path: string, baseUrl: string = 'https://wainso.com'): string => {
+export const getCanonicalUrl = (path: string, baseUrl: string = 'https://khandelwaltoystore.com'): string => {
   return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
@@ -46,7 +46,7 @@ export const generateProductMetaDescription = (
 export const generatePageTitle = (
   pageName: string,
   location?: string,
-  suffix: string = ' | WAINSO'
+  suffix: string = ' | Khandelwal Toy Store'
 ): string => {
   const locationText = location ? ` in ${location}` : '';
   return `${pageName}${locationText}${suffix}`;

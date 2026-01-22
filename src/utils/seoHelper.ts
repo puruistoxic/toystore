@@ -19,9 +19,9 @@ export const generateSEOTitle = (name: string, maxLength: number = 60): string =
     if (lastSpace > 0) {
       title = title.substring(0, lastSpace);
     }
-    title += ' | WAINSO';
+    title += ' | Khandelwal Toy Store';
   } else {
-    title += ' | WAINSO';
+    title += ' | Khandelwal Toy Store';
   }
   
   return title;
@@ -144,7 +144,7 @@ export const generateOGDescription = (shortDescription: string, description: str
 /**
  * Generate canonical URL
  */
-export const generateCanonicalURL = (slug: string, baseUrl: string = 'https://wainso.com'): string => {
+export const generateCanonicalURL = (slug: string, baseUrl: string = 'https://khandelwaltoystore.com'): string => {
   return `${baseUrl}/${slug}`;
 };
 

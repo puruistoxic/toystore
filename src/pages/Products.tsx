@@ -1,24 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Camera,
-  Navigation,
-  Wrench,
-  Search,
-  Star,
-  MessageCircle,
-  Eye,
-  CheckCircle,
-  Settings,
-  Image as ImageIcon
+  Search
 } from 'lucide-react';
 import { contentApi } from '../utils/api';
 import type { Product } from '../types/catalog';
 import SEO from '../components/SEO';
-import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
-import QuoteRequestModal from '../components/QuoteRequestModal';
+import ProductCard from '../components/ProductCard';
 import { hybridSearch } from '../utils/fuzzySearch';
+import { getPlaceholderImage } from '../utils/imagePlaceholder';
 
 // Smart function to determine if an item is a service (not a product)
 function isServiceItem(dbProduct: any): boolean {
@@ -89,32 +79,53 @@ function mapDbProductToFrontend(dbProduct: any): Product {
   const features = dbProduct.features ? (Array.isArray(dbProduct.features) ? dbProduct.features : []) : [];
   const specifications = dbProduct.specifications ? (typeof dbProduct.specifications === 'object' ? dbProduct.specifications : {}) : {};
 
+  // Parse occasion from JSON if it's a string
+  let occasion: string[] = [];
+  if (dbProduct.occasion) {
+    if (typeof dbProduct.occasion === 'string') {
+      try {
+        occasion = JSON.parse(dbProduct.occasion);
+      } catch {
+        occasion = [dbProduct.occasion];
+      }
+    } else if (Array.isArray(dbProduct.occasion)) {
+      occasion = dbProduct.occasion;
+    }
+  }
+
   return {
     id: dbProduct.id,
     name: dbProduct.name,
     slug: dbProduct.slug || dbProduct.id,
-    description: dbProduct.description || dbProduct.short_description || 'Professional IT solution',
+    description: dbProduct.description || dbProduct.short_description || 'High-quality toy product',
     price: dbProduct.price || 0,
     originalPrice: undefined, // No pricing displayed
     images: images,
-    category: dbProduct.category || 'accessories',
-    brand: dbProduct.brand || 'WAINSO',
+    category: dbProduct.category || 'toys',
+    brand: dbProduct.brand || 'Khandelwal Toy Store',
     model: specifications.model || specifications.Model || dbProduct.name,
-    inStock: true, // Default to in stock if not specified
-    stockQuantity: 0, // Not tracked in current schema
+    inStock: dbProduct.stock_quantity ? dbProduct.stock_quantity > 0 : true,
+    stockQuantity: dbProduct.stock_quantity || 0,
     rating: 4.5, // Default rating
     reviews: 0, // Default reviews
     features: features,
     specifications: specifications,
-    warranty: dbProduct.warranty || undefined
+    warranty: dbProduct.warranty || undefined,
+    // Toy-specific fields
+    ageGroup: dbProduct.age_group,
+    occasion: occasion,
+    gender: dbProduct.gender,
+    materialType: dbProduct.material_type,
+    educationalValue: dbProduct.educational_value || false,
+    minimumOrderQuantity: dbProduct.minimum_order_quantity || 1,
+    bulkDiscountPercentage: dbProduct.bulk_discount_percentage || 0,
+    sku: dbProduct.sku
   };
 }
 
 const Products: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Fetch products from database
   const { data: dbProducts = [], isLoading, error } = useQuery({
@@ -135,11 +146,26 @@ const Products: React.FC = () => {
 
   const categories = [
     { id: 'all', name: 'All Products' },
-    { id: 'erp', name: 'ERP & Connectors' },
-    { id: 'software', name: 'Software & Licenses' },
-    { id: 'hardware', name: 'Laptops & Servers' },
-    { id: 'networking', name: 'Networking' },
-    { id: 'security', name: 'Security & CCTV' }
+    { id: 'action-figures', name: 'Action Figures' },
+    { id: 'art-crafts', name: 'Art and Crafts' },
+    { id: 'baby-rattles', name: 'Baby Rattles' },
+    { id: 'bath-toys', name: 'Bath Toys' },
+    { id: 'card-board-games', name: 'Card & Board Games' },
+    { id: 'doll-doll-house', name: 'Doll & Doll House' },
+    { id: 'drone', name: 'Drone' },
+    { id: 'educational-learning', name: 'Educational & Learning Toys' },
+    { id: 'electric-ride-ons', name: 'Electric Ride Ons' },
+    { id: 'manual-ride-ons', name: 'Manual Ride Ons' },
+    { id: 'metal-toys', name: 'Metal Toys' },
+    { id: 'musical-toys', name: 'Musical Toys' },
+    { id: 'musical-instruments', name: 'Musical Instruments' },
+    { id: 'remote-control', name: 'Remote Control Toys' },
+    { id: 'role-play-set', name: 'Role Play Set' },
+    { id: 'soft-toys', name: 'Soft Toys' },
+    { id: 'sports-toys', name: 'Sports Toys' },
+    { id: 'train-set', name: 'Train Set' },
+    { id: 'vehicles-pull-back', name: 'Vehicles & Pull Back' },
+    { id: 'wooden-toys', name: 'Wooden Toys' }
   ];
 
   const filteredProducts = useMemo(() => {
@@ -160,8 +186,8 @@ const Products: React.FC = () => {
   return (
     <>
       <SEO
-        title="IT & ERP Products - Hardware, Networking, Software, Security | WAINSO"
-        description="IT procurement with implementation support: laptops, servers, firewalls, Wi‑Fi, ERP suites, software licenses, CCTV kits, and connectors. Delivered and supported across India."
+        title="Wholesale Toys - Action Figures, Educational Toys, Board Games | Khandelwal Toy Store"
+        description="Khandelwal Toy Store - Wholesale toy supplier. Wide range of toys including action figures, educational toys, board games, remote control toys, and more. Best wholesale prices with bulk discounts."
         path="/products"
       />
       <div className="min-h-screen bg-gray-50">
@@ -173,7 +199,7 @@ const Products: React.FC = () => {
               Our Products
             </h1>
             <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-              Curated IT and security stack: hardware, networking, software, ERP, and CCTV with deployment-ready support.
+              Discover our wide range of high-quality toys for all ages. Best wholesale prices with bulk discounts.
             </p>
           </div>
         </div>
@@ -232,92 +258,14 @@ const Products: React.FC = () => {
         )}
 
         {!isLoading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProducts.map((product: Product) => {
-            return (
-              <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-              {/* Product Image */}
-              <div className="relative h-48 bg-gray-100 overflow-hidden">
-                {product.images && product.images.length > 0 && product.images[0] ? (
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => handleImageError(e, product.name)}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                    <ImageIcon className="h-12 w-12 text-gray-400 mb-2" />
-                    <p className="text-xs text-gray-500 px-2 text-center">{product.name}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-6">
-                {/* Category and Brand Badges */}
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  {product.category && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                      {product.category}
-                    </span>
-                  )}
-                  {product.brand && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {product.brand}
-                    </span>
-                  )}
-                  {product.model && product.model !== product.name && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                      {product.model}
-                    </span>
-                  )}
-                </div>
-
-                {/* Product Name */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {product.name}
-                </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {product.description}
-                </p>
-
-                {/* Features */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Key Features:</h4>
-                  <ul className="space-y-1">
-                    {product.features.slice(0, 3).map((feature: string, index: number) => (
-                      <li key={index} className="flex items-center text-xs text-gray-600">
-                        <CheckCircle className="h-3 w-3 text-green-500 mr-1 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <Link
-                    to={`/products/${product.slug}`}
-                    className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center flex items-center justify-center shadow-sm hover:shadow-md"
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setQuoteModalOpen(true);
-                    }}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700 shadow-md hover:shadow-lg"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    Request Quote
-                  </button>
-                </div>
-              </div>
-              </div>
-            );
-          })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProducts.map((product: Product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                showBestSellerBadge={false}
+              />
+            ))}
           </div>
         )}
 
@@ -335,17 +283,6 @@ const Products: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Quote Request Modal */}
-      <QuoteRequestModal
-        isOpen={quoteModalOpen}
-        onClose={() => {
-          setQuoteModalOpen(false);
-          setSelectedProduct(null);
-        }}
-        product={selectedProduct || undefined}
-        productId={selectedProduct?.id ? selectedProduct.id.toString() : undefined}
-      />
     </div>
     </>
   );

@@ -16,6 +16,16 @@ export interface Product {
   features: string[];
   specifications: Record<string, string>;
   warranty?: string;
+  // Toy-specific fields
+  ageGroup?: string;
+  occasion?: string[];
+  gender?: 'boys' | 'girls' | 'unisex' | 'all';
+  materialType?: string;
+  educationalValue?: boolean;
+  minimumOrderQuantity?: number;
+  bulkDiscountPercentage?: number;
+  sku?: string;
+  priceIncludesGst?: boolean;
 }
 
 export interface Service {

@@ -1,6 +1,7 @@
 // Seed master data (Categories and Brands) for GPS & Security Systems business
 // Run with: node server/scripts/seed-masters.js
 
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { initDatabase, getPool } = require('../db');
 const { v4: uuidv4 } = require('uuid');
 
@@ -12,6 +13,155 @@ function generateSlug(name) {
 }
 
 const categories = [
+  // Toy Categories
+  {
+    name: 'Action Figures',
+    type: 'product',
+    description: 'Action figures and collectible character toys for imaginative play.',
+    short_description: 'Action figures and character toys',
+    icon: 'user'
+  },
+  {
+    name: 'Art and Crafts',
+    type: 'product',
+    description: 'Art supplies, craft kits, and creative toys for artistic expression.',
+    short_description: 'Art supplies and craft kits',
+    icon: 'palette'
+  },
+  {
+    name: 'Baby Rattles',
+    type: 'product',
+    description: 'Baby rattles and early development toys for infants.',
+    short_description: 'Baby rattles and infant toys',
+    icon: 'baby'
+  },
+  {
+    name: 'Bath Toys',
+    type: 'product',
+    description: 'Water-safe bath toys for fun bath time activities.',
+    short_description: 'Bath time toys',
+    icon: 'droplet'
+  },
+  {
+    name: 'Card & Board Games',
+    type: 'product',
+    description: 'Board games, card games, and family entertainment games.',
+    short_description: 'Board and card games',
+    icon: 'grid'
+  },
+  {
+    name: 'Coin Bank',
+    type: 'product',
+    description: 'Piggy banks and coin banks for teaching kids about saving money.',
+    short_description: 'Piggy banks and coin banks',
+    icon: 'piggy-bank'
+  },
+  {
+    name: 'Doll & Doll House',
+    type: 'product',
+    description: 'Dolls, doll houses, and accessories for imaginative play.',
+    short_description: 'Dolls and doll houses',
+    icon: 'home'
+  },
+  {
+    name: 'Drone',
+    type: 'product',
+    description: 'Remote-controlled drones and flying toys.',
+    short_description: 'Drones and flying toys',
+    icon: 'airplane'
+  },
+  {
+    name: 'Educational & Learning Toys',
+    type: 'product',
+    description: 'Educational toys that promote learning and development.',
+    short_description: 'Educational and learning toys',
+    icon: 'book'
+  },
+  {
+    name: 'Electric Ride Ons',
+    type: 'product',
+    description: 'Battery-powered ride-on vehicles for kids.',
+    short_description: 'Electric ride-on vehicles',
+    icon: 'car'
+  },
+  {
+    name: 'Manual Ride Ons',
+    type: 'product',
+    description: 'Manual ride-on toys and vehicles.',
+    short_description: 'Manual ride-on toys',
+    icon: 'bike'
+  },
+  {
+    name: 'Metal Toys',
+    type: 'product',
+    description: 'Metal construction toys and die-cast vehicles.',
+    short_description: 'Metal toys and die-cast',
+    icon: 'box'
+  },
+  {
+    name: 'Musical Toys',
+    type: 'product',
+    description: 'Musical toys and instruments for kids.',
+    short_description: 'Musical toys',
+    icon: 'music'
+  },
+  {
+    name: 'Musical Instruments',
+    type: 'product',
+    description: 'Toy musical instruments for children.',
+    short_description: 'Toy musical instruments',
+    icon: 'headphones'
+  },
+  {
+    name: 'Remote Control Toys',
+    type: 'product',
+    description: 'Remote-controlled cars, helicopters, and other RC toys.',
+    short_description: 'Remote control toys',
+    icon: 'radio'
+  },
+  {
+    name: 'Role Play Set',
+    type: 'product',
+    description: 'Role play sets and pretend play toys.',
+    short_description: 'Role play and pretend play',
+    icon: 'users'
+  },
+  {
+    name: 'Soft Toys',
+    type: 'product',
+    description: 'Soft toys, stuffed animals, and plush toys.',
+    short_description: 'Soft and stuffed toys',
+    icon: 'heart'
+  },
+  {
+    name: 'Sports Toys',
+    type: 'product',
+    description: 'Sports toys and outdoor play equipment.',
+    short_description: 'Sports and outdoor toys',
+    icon: 'activity'
+  },
+  {
+    name: 'Train Set',
+    type: 'product',
+    description: 'Train sets and railway toys.',
+    short_description: 'Train sets and railway toys',
+    icon: 'train'
+  },
+  {
+    name: 'Vehicles & Pull Back',
+    type: 'product',
+    description: 'Pull-back cars, vehicles, and transportation toys.',
+    short_description: 'Pull-back vehicles and cars',
+    icon: 'truck'
+  },
+  {
+    name: 'Wooden Toys',
+    type: 'product',
+    description: 'Wooden toys and educational wooden playthings.',
+    short_description: 'Wooden toys',
+    icon: 'tree'
+  },
+  // Legacy categories (keeping for backward compatibility)
   {
     name: 'CCTV Camera',
     type: 'product',
@@ -155,6 +305,23 @@ const categories = [
 ];
 
 const brands = [
+  {
+    name: 'Khandelwal Toy Store',
+    description: 'Khandelwal Toy Store - Your trusted wholesale toy supplier offering high-quality toys for retailers and distributors.',
+    short_description: 'Wholesale toy supplier',
+    website: 'https://khandelwaltoystore.com',
+    partnership_type: 'partner',
+    partnership_since: '2024'
+  },
+  {
+    name: 'Make Toys',
+    description: 'Make Toys - Quality toy manufacturer offering a wide range of toys for all ages.',
+    short_description: 'Quality toy manufacturer',
+    website: 'https://maketoys.in',
+    partnership_type: 'partner',
+    partnership_since: '2024'
+  },
+  // Legacy brands (keeping for backward compatibility)
   {
     name: 'Hikvision',
     description: 'Hikvision is a leading provider of innovative video surveillance products and solutions. Known for high-quality IP cameras, DVRs, and NVRs.',

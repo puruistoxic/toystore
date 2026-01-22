@@ -387,7 +387,7 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
   // We resolve it once here and only render it through addPageNumber,
   // so the copyright can never appear twice on the same page.
   const invoiceDefaultFooterText =
-    '© 2025 WAINSO. All rights reserved. | Est. 2017 | 8+ Years in Business';
+    '© 2025 Khandelwal Toy Store. All rights reserved. | Wholesale Toy Supplier';
   const invoiceResolvedFooterText =
     (companySettings.footer_text && companySettings.footer_text.trim().length > 0
       ? companySettings.footer_text.trim()
@@ -884,7 +884,7 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   // We resolve it once here and only render it through addPageNumber,
   // so the copyright can never appear twice on the same page.
   const proposalDefaultFooterText =
-    '© 2025 WAINSO. All rights reserved. | Est. 2017 | 8+ Years in Business';
+    '© 2025 Khandelwal Toy Store. All rights reserved. | Wholesale Toy Supplier';
   const proposalResolvedFooterText =
     (companySettings.footer_text && companySettings.footer_text.trim().length > 0
       ? companySettings.footer_text.trim()

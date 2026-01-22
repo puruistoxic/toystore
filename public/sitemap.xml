@@ -6,187 +6,56 @@
   
   <!-- Home Page -->
   <url>
-    <loc>https://wainso.com/</loc>
-    <lastmod>2024-01-15</lastmod>
+    <loc>https://toystore.purushottam.dev/</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   
-  <!-- Services Pages -->
+  <!-- Products Page -->
   <url>
-    <loc>https://wainso.com/services</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://toystore.purushottam.dev/products</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
-  <url>
-    <loc>https://wainso.com/services/cctv-installation-setup</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/services/gps-vehicle-tracking</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/services/equipment-maintenance</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/services/repair-troubleshooting</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/services/security-consultation</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <!-- Products Pages -->
-  <url>
-    <loc>https://wainso.com/products</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/hd-ip-camera-4mp</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/gps-tracker-with-sim</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/dvr-8-channel</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/maintenance-kit-pro</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/wireless-camera-system</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/fleet-gps-tracker</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/cp-plus-bullet-cctv-camera</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/cp-plus-dome-cctv-camera</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/hikvision-2mp-dome-camera</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/godrej-e-swipe-home-locker</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/cp-plus-video-door-phone</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/products/hikvision-4-channel-cctv-kit</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <!-- Note: Product-specific URLs should be generated dynamically from database -->
+  <!-- This is a placeholder sitemap. Update with actual product slugs after deployment -->
   
   <!-- Other Important Pages -->
   <url>
-    <loc>https://wainso.com/about</loc>
-    <lastmod>2024-01-15</lastmod>
+    <loc>https://toystore.purushottam.dev/about</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://wainso.com/contact</loc>
-    <lastmod>2024-01-15</lastmod>
+    <loc>https://toystore.purushottam.dev/contact</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-  </url>
-  
-  <url>
-    <loc>https://wainso.com/quote-request</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   
   <!-- Legal Pages -->
   <url>
-    <loc>https://wainso.com/privacy</loc>
-    <lastmod>2024-01-15</lastmod>
+    <loc>https://toystore.purushottam.dev/privacy</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   
   <url>
-    <loc>https://wainso.com/terms</loc>
-    <lastmod>2024-01-15</lastmod>
+    <loc>https://toystore.purushottam.dev/terms</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   
   <url>
-    <loc>https://wainso.com/refund</loc>
-    <lastmod>2024-01-15</lastmod>
+    <loc>https://toystore.purushottam.dev/refund</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

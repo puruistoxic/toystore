@@ -1920,13 +1920,29 @@ router.get('/audit-logs', authenticateToken, async (req, res) => {
 
 // ==================== COMPANY SETTINGS ====================
 
+// Public endpoint to get popup setting (no auth required)
+router.get('/company-settings/public', async (req, res) => {
+  try {
+    const pool = getPool();
+    const [rows] = await pool.execute('SELECT enable_enquiry_popup FROM company_settings ORDER BY id DESC LIMIT 1');
+    if (rows.length === 0) {
+      return res.json({ enable_enquiry_popup: true });
+    }
+    res.json({ enable_enquiry_popup: rows[0].enable_enquiry_popup !== 0 });
+  } catch (error) {
+    console.error('[Content API] Get public company settings error:', error);
+    // Default to enabled if error
+    res.json({ enable_enquiry_popup: true });
+  }
+});
+
 router.get('/company-settings', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
     const [rows] = await pool.execute('SELECT * FROM company_settings ORDER BY id DESC LIMIT 1');
     if (rows.length === 0) {
       return res.json({
-        company_name: 'WAINSO',
+        company_name: 'Khandelwal Toy Store',
         address_line1: '',
         address_line2: '',
         address_line3: '',
@@ -1945,7 +1961,8 @@ router.get('/company-settings', authenticateToken, async (req, res) => {
         bank_ifsc: '',
         bank_branch: '',
         footer_text: '',
-        terms_and_conditions: ''
+        terms_and_conditions: '',
+        enable_enquiry_popup: true
       });
     }
     res.json(rows[0]);
@@ -1969,44 +1986,10 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
         `INSERT INTO company_settings (
           company_name, logo_url, address_line1, address_line2, address_line3, city, state, postal_code, country,
           phone, phone2, email, website, gstin, pan, bank_name, bank_account_name, bank_account_number, bank_ifsc, bank_branch,
-          footer_text, terms_and_conditions
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          footer_text, terms_and_conditions, enable_enquiry_popup, whatsapp_number
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          data.company_name || 'WAINSO',
-          data.logo_url || null,
-          data.address_line1 || null,
-          data.address_line2 || null,
-          data.address_line3 || null,
-          data.city || null,
-          data.state || null,
-          data.postal_code || null,
-          data.country || 'India',
-          data.phone || null,
-          data.phone2 || null,
-          data.email || null,
-          data.website || null,
-          data.gstin || null,
-          data.pan || null,
-          data.bank_name || null,
-          data.bank_account_name || null,
-          data.bank_account_number || null,
-          data.bank_ifsc || null,
-          data.bank_branch || null,
-          data.footer_text || null,
-          data.terms_and_conditions || null
-        ]
-      );
-    } else {
-      // Update existing settings
-      await pool.execute(
-        `UPDATE company_settings SET
-          company_name = ?, logo_url = ?, address_line1 = ?, address_line2 = ?, address_line3 = ?,
-          city = ?, state = ?, postal_code = ?, country = ?, phone = ?, phone2 = ?, email = ?,
-          website = ?, gstin = ?, pan = ?, bank_name = ?, bank_account_name = ?, bank_account_number = ?, bank_ifsc = ?,
-          bank_branch = ?, footer_text = ?, terms_and_conditions = ?
-        WHERE id = ?`,
-        [
-          data.company_name || 'WAINSO',
+          data.company_name || 'Khandelwal Toy Store',
           data.logo_url || null,
           data.address_line1 || null,
           data.address_line2 || null,
@@ -2028,6 +2011,44 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
           data.bank_branch || null,
           data.footer_text || null,
           data.terms_and_conditions || null,
+          data.enable_enquiry_popup !== undefined ? data.enable_enquiry_popup : true,
+          data.whatsapp_number || null
+        ]
+      );
+    } else {
+      // Update existing settings
+      await pool.execute(
+        `UPDATE company_settings SET
+          company_name = ?, logo_url = ?, address_line1 = ?, address_line2 = ?, address_line3 = ?,
+          city = ?, state = ?, postal_code = ?, country = ?, phone = ?, phone2 = ?, email = ?,
+          website = ?, gstin = ?, pan = ?, bank_name = ?, bank_account_name = ?, bank_account_number = ?, bank_ifsc = ?,
+          bank_branch = ?, footer_text = ?, terms_and_conditions = ?, enable_enquiry_popup = ?, whatsapp_number = ?
+        WHERE id = ?`,
+        [
+          data.company_name || 'Khandelwal Toy Store',
+          data.logo_url || null,
+          data.address_line1 || null,
+          data.address_line2 || null,
+          data.address_line3 || null,
+          data.city || null,
+          data.state || null,
+          data.postal_code || null,
+          data.country || 'India',
+          data.phone || null,
+          data.phone2 || null,
+          data.email || null,
+          data.website || null,
+          data.gstin || null,
+          data.pan || null,
+          data.bank_name || null,
+          data.bank_account_name || null,
+          data.bank_account_number || null,
+          data.bank_ifsc || null,
+          data.bank_branch || null,
+          data.footer_text || null,
+          data.terms_and_conditions || null,
+          data.enable_enquiry_popup !== undefined ? data.enable_enquiry_popup : true,
+          data.whatsapp_number || null,
           existing[0].id
         ]
       );
@@ -2039,6 +2060,102 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('[Content API] Update company settings error:', error);
     res.status(500).json({ error: 'Failed to update company settings', message: error.message });
+  }
+});
+
+// ==================== ENQUIRIES ====================
+// Create enquiry (public endpoint - no auth required)
+router.post('/enquiries', async (req, res) => {
+  try {
+    const pool = getPool();
+    const {
+      product_id,
+      product_name,
+      product_slug,
+      customer_name,
+      customer_email,
+      customer_phone,
+      quantity,
+      requested_price,
+      custom_message,
+      whatsapp_number,
+      enquiry_type = 'product'
+    } = req.body;
+
+    // Validate required fields
+    if (!product_name || !customer_name || !customer_phone || !quantity) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'Product name, customer name, phone, and quantity are required'
+      });
+    }
+
+    // Insert enquiry
+    const [result] = await pool.execute(
+      `INSERT INTO enquiries (
+        product_id, product_name, product_slug, customer_name, customer_email, customer_phone,
+        quantity, requested_price, custom_message, whatsapp_number, enquiry_type, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`,
+      [
+        product_id || null,
+        product_name,
+        product_slug || null,
+        customer_name,
+        customer_email || null,
+        customer_phone,
+        quantity,
+        requested_price || null,
+        custom_message || null,
+        whatsapp_number || null,
+        enquiry_type
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Enquiry logged successfully',
+      enquiry_id: result.insertId
+    });
+  } catch (error) {
+    console.error('[Content API] Create enquiry error:', error);
+    res.status(500).json({
+      error: 'Failed to log enquiry',
+      message: error.message
+    });
+  }
+});
+
+// Get enquiries (admin only)
+router.get('/enquiries', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const { status, product_id, limit = 50, offset = 0 } = req.query;
+
+    let query = 'SELECT * FROM enquiries WHERE 1=1';
+    const params = [];
+
+    if (status) {
+      query += ' AND status = ?';
+      params.push(status);
+    }
+
+    if (product_id) {
+      query += ' AND product_id = ?';
+      params.push(product_id);
+    }
+
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [enquiries] = await pool.execute(query, params);
+
+    res.json({ success: true, data: enquiries });
+  } catch (error) {
+    console.error('[Content API] Get enquiries error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch enquiries',
+      message: error.message
+    });
   }
 });
 

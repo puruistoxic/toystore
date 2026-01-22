@@ -7,9 +7,9 @@ Create a `.env` file in the `server` directory with the following content:
 ```env
 # Database Configuration
 MYSQL_HOST=192.168.1.210
-MYSQL_DATABASE=wainsodb
+MYSQL_DATABASE=toystoredb
 MYSQL_USER=dbuser
-MYSQL_PASSWORD=X9@uP!z1qF#D
+MYSQL_PASSWORD='X9@uP!z1qF#D'
 MYSQL_PORT=3306
 
 # Server Configuration

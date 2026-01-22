@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# WAINSO.com Deployment Script
+# ToyStore (toystore.purushottam.dev) Deployment Script
 # This script handles the complete deployment process
 
 set -e  # Exit on any error
 
 # Configuration
-PROJECT_NAME="wainso-web"
-DOCKER_IMAGE="wainso-web"
-CONTAINER_NAME="wainso-web"
-BACKUP_DIR="/opt/backups/wainso"
-LOG_FILE="/var/log/wainso-deploy.log"
+PROJECT_NAME="toystore-web"
+DOCKER_IMAGE="toystore-web"
+CONTAINER_NAME="toystore-web"
+BACKUP_DIR="/opt/backups/toystore"
+LOG_FILE="/var/log/toystore-deploy.log"
 
 # Colors for output
 RED='\033[0;31m'

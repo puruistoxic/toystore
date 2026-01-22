@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -10,12 +10,12 @@ const Footer: React.FC = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="text-2xl font-bold text-primary-400">
-              WAINSO
+              Khandelwal Toy Store
             </div>
             <p className="text-gray-300 text-sm">
-              Your trusted partner for professional CCTV surveillance, GPS tracking, 
-              and comprehensive maintenance solutions. We provide cutting-edge technology 
-              and reliable service to protect and optimize your business.
+              Your trusted wholesale partner for high-quality toys. We specialize in offering 
+              a wide range of affordable toys that spark imagination and creativity. 
+              Serving retailers, distributors, and e-commerce platforms across India.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
@@ -43,18 +43,8 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Services
-                </Link>
-              </li>
-              <li>
                 <Link to="/products" className="text-gray-300 hover:text-primary-400 transition-colors">
                   Products
-                </Link>
-              </li>
-              <li>
-                <Link to="/locations" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Service Areas
                 </Link>
               </li>
               <li>
@@ -65,11 +55,6 @@ const Footer: React.FC = () => {
               <li>
                 <Link to="/industries" className="text-gray-300 hover:text-primary-400 transition-colors">
                   Industries
-                </Link>
-              </li>
-              <li>
-                <Link to="/case-studies" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Case Studies
                 </Link>
               </li>
               <li>
@@ -85,33 +70,38 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Product Categories */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Our Services</h3>
+            <h3 className="text-lg font-semibold">Product Categories</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/services?category=cctv-installation" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  CCTV Installation
+                <Link to="/products?category=action-figures" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  Action Figures
                 </Link>
               </li>
               <li>
-                <Link to="/services?category=gps-installation" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  GPS Tracking
+                <Link to="/products?category=art-crafts" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  Art & Crafts
                 </Link>
               </li>
               <li>
-                <Link to="/services?category=maintenance" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Maintenance Services
+                <Link to="/products?category=educational-learning" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  Educational Toys
                 </Link>
               </li>
               <li>
-                <Link to="/services?category=repair" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Repair Services
+                <Link to="/products?category=remote-control" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  Remote Control Toys
                 </Link>
               </li>
               <li>
-                <Link to="/services?category=consultation" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Consultation
+                <Link to="/products?category=board-games" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  Board Games
+                </Link>
+              </li>
+              <li>
+                <Link to="/products?category=dolls" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  Dolls & Doll Houses
                 </Link>
               </li>
             </ul>
@@ -121,32 +111,22 @@ const Footer: React.FC = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Contact Info</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex items-start">
-                <MapPin className="h-5 w-5 text-primary-400 mt-0.5 mr-3 flex-shrink-0" />
-                <span className="text-gray-300">
-                  Room No-9, 1st Floor, Yadav Complex,<br />
-                  Near Block Chawck, Block Chowk,<br />
-                  Ramgarh Cantt - 829122, Jharkhand
-                </span>
-              </div>
               <div className="flex items-center">
                 <Phone className="h-5 w-5 text-primary-400 mr-3 flex-shrink-0" />
                 <div className="text-gray-300">
-                  <div>+91 98998 60975</div>
-                  <div className="text-xs">+91 82927 17044</div>
+                  <div>+91 88515 77973</div>
                 </div>
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 text-primary-400 mr-3 flex-shrink-0" />
                 <div className="text-gray-300">
-                  <div>wainsogps@gmail.com</div>
+                  <div>puruistoxic@gmail.com</div>
                 </div>
               </div>
               <div className="flex items-start">
                 <Clock className="h-5 w-5 text-primary-400 mt-0.5 mr-3 flex-shrink-0" />
                 <div className="text-gray-300">
-                  <div>Mon - Sat: 9:00 AM - 6:30 PM</div>
-                  <div>Sun: Closed</div>
+                  <div>All day open: 9:00 AM - 9:00 PM</div>
                 </div>
               </div>
             </div>
@@ -157,8 +137,8 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm">
-              <p>© 2024 WAINSO. All rights reserved.</p>
-              <p className="mt-1 text-xs">GSTIN: 20AACFW6441P1ZY | Est. 2017 | 8+ Years in Business</p>
+              <p>© 2024 Khandelwal Toy Store. All rights reserved.</p>
+              <p className="mt-1 text-xs">Wholesale Toy Supplier | Serving Retailers & Distributors</p>
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, MessageCircle, Heart, Star, CheckCircle, Truck, Shield, RotateCcw, MapPin, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Heart, Star, CheckCircle, Shield, MapPin, Image as ImageIcon } from 'lucide-react';
 import { contentApi } from '../utils/api';
 import type { Product } from '../types/catalog';
 import SEO from '../components/SEO';
 import { generateProductMetaDescription, generatePageTitle } from '../utils/seo';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
 import QuoteRequestModal from '../components/QuoteRequestModal';
+import WhatsAppEnquiryModal from '../components/WhatsAppEnquiryModal';
 
 // Map database product to frontend Product interface
 function mapDbProductToFrontend(dbProduct: any): Product {
@@ -22,30 +23,54 @@ function mapDbProductToFrontend(dbProduct: any): Product {
   const features = dbProduct.features ? (Array.isArray(dbProduct.features) ? dbProduct.features : []) : [];
   const specifications = dbProduct.specifications ? (typeof dbProduct.specifications === 'object' ? dbProduct.specifications : {}) : {};
 
+  // Parse occasion from JSON if it's a string
+  let occasion: string[] = [];
+  if (dbProduct.occasion) {
+    if (typeof dbProduct.occasion === 'string') {
+      try {
+        occasion = JSON.parse(dbProduct.occasion);
+      } catch {
+        occasion = [dbProduct.occasion];
+      }
+    } else if (Array.isArray(dbProduct.occasion)) {
+      occasion = dbProduct.occasion;
+    }
+  }
+
   return {
     id: dbProduct.id,
     name: dbProduct.name,
     slug: dbProduct.slug || dbProduct.id,
-    description: dbProduct.description || dbProduct.short_description || 'Professional IT solution',
+    description: dbProduct.description || dbProduct.short_description || 'High-quality toy product',
     price: dbProduct.price || 0,
     originalPrice: undefined, // No pricing displayed
     images: images,
-    category: dbProduct.category || 'accessories',
-    brand: dbProduct.brand || 'WAINSO',
+    category: dbProduct.category || 'toys',
+    brand: dbProduct.brand || 'Khandelwal Toy Store',
     model: specifications.model || specifications.Model || dbProduct.name,
-    inStock: true, // Default to in stock if not specified
-    stockQuantity: 0, // Not tracked in current schema
+    inStock: dbProduct.stock_quantity ? dbProduct.stock_quantity > 0 : true,
+    stockQuantity: dbProduct.stock_quantity || 0,
     rating: 4.5, // Default rating
     reviews: 0, // Default reviews
     features: features,
     specifications: specifications,
-    warranty: dbProduct.warranty || undefined
+    warranty: dbProduct.warranty || undefined,
+    // Toy-specific fields
+    ageGroup: dbProduct.age_group,
+    occasion: occasion,
+    gender: dbProduct.gender,
+    materialType: dbProduct.material_type,
+    educationalValue: dbProduct.educational_value || false,
+    minimumOrderQuantity: dbProduct.minimum_order_quantity || 1,
+    bulkDiscountPercentage: dbProduct.bulk_discount_percentage || 0,
+    sku: dbProduct.sku
   };
 }
 
 const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
 
   // Fetch product from database by slug
   const { data: dbProduct, isLoading, error } = useQuery({
@@ -63,7 +88,7 @@ const ProductDetail: React.FC = () => {
     return (
       <>
         <SEO
-          title="Loading Product | WAINSO"
+          title="Loading Product | Khandelwal Toy Store"
           description="Loading product details..."
           path="/products/loading"
         />
@@ -81,7 +106,7 @@ const ProductDetail: React.FC = () => {
     return (
       <>
         <SEO
-          title="Product Not Found | WAINSO"
+          title="Product Not Found | Khandelwal Toy Store"
           description="The product you are looking for may have been moved or no longer exists."
           path="/products/not-found"
         />
@@ -203,28 +228,76 @@ const ProductDetail: React.FC = () => {
               </div>
             )}
 
-            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
-              <div className="flex items-center text-sm text-gray-700">
-                <Shield className="h-4 w-4 text-primary-600 mr-2" />
-                Deployment, warranty, and integration assistance included.
+            {/* Toy-Specific Information */}
+            {(product.ageGroup || product.occasion || product.gender || product.materialType || product.educationalValue) && (
+              <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Product Details</h3>
+                {product.ageGroup && (
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24">Age Group:</span>
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">{product.ageGroup}</span>
+                  </div>
+                )}
+                {product.gender && product.gender !== 'all' && (
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24">Gender:</span>
+                    <span className="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs font-medium capitalize">{product.gender}</span>
+                  </div>
+                )}
+                {product.occasion && product.occasion.length > 0 && (
+                  <div className="flex items-start text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24 mt-1">Occasion:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {product.occasion.map((occ, idx) => (
+                        <span key={idx} className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium capitalize">
+                          {occ}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {product.materialType && (
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24">Material:</span>
+                    <span className="text-gray-600">{product.materialType}</span>
+                  </div>
+                )}
+                {product.educationalValue && (
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24">Type:</span>
+                    <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">Educational</span>
+                  </div>
+                )}
+                {product.minimumOrderQuantity && product.minimumOrderQuantity > 1 && (
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24">MOQ:</span>
+                    <span className="text-gray-600">{product.minimumOrderQuantity} units</span>
+                  </div>
+                )}
+                {product.bulkDiscountPercentage && product.bulkDiscountPercentage > 0 && (
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24">Bulk Discount:</span>
+                    <span className="text-green-600 font-medium">{product.bulkDiscountPercentage}% off on bulk orders</span>
+                  </div>
+                )}
+                {product.stockQuantity !== undefined && (
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span className="font-medium text-gray-900 w-24">Stock:</span>
+                    <span className={product.stockQuantity > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                      {product.stockQuantity > 0 ? `${product.stockQuantity} units available` : 'Out of stock'}
+                    </span>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center text-sm text-gray-700">
-                <MapPin className="h-4 w-4 text-primary-600 mr-2" />
-                On-site and remote delivery with pan-India support options.
-              </div>
-              <div className="flex items-center text-sm text-gray-700">
-                <RotateCcw className="h-4 w-4 text-primary-600 mr-2" />
-                Need sizing help? Share your use case and we’ll propose a fit.
-              </div>
-            </div>
+            )}
 
             <div className="flex space-x-4">
               <button
-                onClick={() => setQuoteModalOpen(true)}
-                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+                onClick={() => setWhatsappModalOpen(true)}
+                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center bg-[#25D366] text-white hover:bg-[#20BA5A] shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
-                Request Quote
+                WhatsApp Inquiry
               </button>
               <button className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
                 <Heart className="h-5 w-5" />
@@ -233,7 +306,7 @@ const ProductDetail: React.FC = () => {
 
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
               <div className="text-sm text-blue-900">
-                Looking for deployment + AMC? Add that in your quote request and we’ll bundle implementation, training, and SLAs.
+                <strong>Wholesale Pricing:</strong> Minimum order quantity applies. Bulk discounts available for larger orders. Contact us for custom pricing and delivery options.
               </div>
             </div>
 
@@ -280,41 +353,23 @@ const ProductDetail: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Additional Info */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center">
-            <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Truck className="h-8 w-8 text-primary-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Shipping</h3>
-            <p className="text-gray-600">Free delivery available</p>
-          </div>
-          <div className="text-center">
-            <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="h-8 w-8 text-primary-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Warranty</h3>
-            <p className="text-gray-600">2 years manufacturer warranty</p>
-          </div>
-          <div className="text-center">
-            <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <RotateCcw className="h-8 w-8 text-primary-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Returns</h3>
-            <p className="text-gray-600">30-day return policy</p>
-          </div>
-        </div>
       </div>
 
       {/* Quote Request Modal */}
       {product && (
-        <QuoteRequestModal
-          isOpen={quoteModalOpen}
-          onClose={() => setQuoteModalOpen(false)}
-          product={product}
-          productId={product.id.toString()}
-        />
+        <>
+          <QuoteRequestModal
+            isOpen={quoteModalOpen}
+            onClose={() => setQuoteModalOpen(false)}
+            product={product}
+            productId={product.id.toString()}
+          />
+          <WhatsAppEnquiryModal
+            isOpen={whatsappModalOpen}
+            onClose={() => setWhatsappModalOpen(false)}
+            product={product}
+          />
+        </>
       )}
     </div>
     </>

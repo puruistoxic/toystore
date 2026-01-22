@@ -128,9 +128,9 @@ npm run check-env
 Create `server/.env` file:
 ```env
 MYSQL_HOST=192.168.1.210
-MYSQL_DATABASE=wainsodb
+MYSQL_DATABASE=toystoredb
 MYSQL_USER=dbuser
-MYSQL_PASSWORD=X9@uP!z1qF#D
+MYSQL_PASSWORD='X9@uP!z1qF#D'
 MYSQL_PORT=3306
 ```
 

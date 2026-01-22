@@ -1,20 +1,20 @@
 import { MessageCircle } from 'lucide-react';
 
-const WHATSAPP_NUMBER = '919899860975';
+const WHATSAPP_NUMBER = '919898524462'; // Khandelwal Toy Store WhatsApp number
 
 /**
  * WhatsAppButton - Floating WhatsApp button for quick enquiry
- * Opens WhatsApp with a pre-filled message
+ * Opens WhatsApp with a pre-filled message for toy wholesale inquiries
  */
 const WhatsAppButton: React.FC = () => {
   const handleWhatsAppClick = () => {
-    // Pre-filled message for quick enquiry
-    const message = encodeURIComponent(
-      `Hello WAINSO Team,\n\nI'm interested in your security and tracking solutions. Please provide more information.\n\nThank you!`
-    );
+    // Pre-filled message for toy wholesale enquiry
+    const message = `Hello Khandelwal Toy Store Team,\n\nI'm interested in wholesale toy products.\n\nPlease provide:\n- Wholesale pricing\n- Minimum order quantity\n- Available stock\n- Delivery options\n\nThank you!`;
+    
+    const encodedMessage = encodeURIComponent(message);
     
     // Open WhatsApp Web or App
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 

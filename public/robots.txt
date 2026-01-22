@@ -1,4 +1,4 @@
-# robots.txt for wainso.com
+# robots.txt for toystore.purushottam.dev
 # Allow all search engines to crawl the site
 
 User-agent: *
@@ -12,14 +12,12 @@ Disallow: /static/
 
 # Allow important pages
 Allow: /
-Allow: /services
 Allow: /products
 Allow: /about
 Allow: /contact
-Allow: /quote-request
 
 # Sitemap location
-Sitemap: https://wainso.com/sitemap.xml
+Sitemap: https://toystore.purushottam.dev/sitemap.xml
 
 # Crawl-delay (optional - adjust if needed)
 # Crawl-delay: 1

@@ -34,10 +34,10 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-  title = 'WAINSO - IT, ERP, Security & Networking Solutions',
-  description = 'Full-stack IT partner for ERP, networking, security, and software solutions with nationwide delivery and support.',
+  title = 'Khandelwal Toy Store - Wholesale Toy Supplier',
+  description = 'Khandelwal Toy Store - Wholesale toy supplier in India. High-quality toys for retailers, distributors, and e-commerce platforms. Best wholesale prices with bulk discounts.',
   path = '/',
-  image = 'https://wainso.com/images/og-image.jpg',
+  image = 'https://khandelwaltoystore.com/images/og-image.jpg',
   type = 'website',
   serviceSchema
 }) => {
