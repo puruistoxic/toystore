@@ -123,7 +123,7 @@ sudo chown -R $USER:$USER /opt/khandelwalstore
 # Navigate to directory
 cd /opt
 
-# Clone repository using SSH
+# Clone repository using SSH (make sure SSH key is added to GitHub first)
 git clone git@github.com:puruistoxic/toystore.git khandelwalstore
 
 # Navigate into project

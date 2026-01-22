@@ -110,11 +110,14 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
-# 2. Setup SSH key for GitHub
+# 2. Setup SSH key for GitHub (REQUIRED)
 ssh-keygen -t ed25519 -C "your-email@example.com"
-cat ~/.ssh/id_ed25519.pub  # Add to GitHub
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub  # Add to GitHub → Settings → SSH Keys
+ssh -T git@github.com      # Test connection
 
-# 3. Clone repository
+# 3. Clone repository using SSH
 cd /opt
 git clone git@github.com:puruistoxic/toystore.git khandelwalstore
 cd khandelwalstore

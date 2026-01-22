@@ -83,8 +83,13 @@ maketoys-web/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/puruistoxic/toystore.git
+   # Using SSH (recommended for development)
+   git clone git@github.com:puruistoxic/toystore.git
    cd toystore
+   
+   # Or using HTTPS
+   # git clone https://github.com/puruistoxic/toystore.git
+   # cd toystore
    ```
 
 2. **Install dependencies**

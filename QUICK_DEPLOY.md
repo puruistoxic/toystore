@@ -14,12 +14,21 @@ sudo usermod -aG docker $USER
 sudo apt update
 sudo apt install docker-compose-plugin -y
 
-# 3. Create nginx_proxy network
+# 3. Setup SSH key for GitHub (REQUIRED for cloning)
+ssh-keygen -t ed25519 -C "your-email@example.com"
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub  # Copy this and add to GitHub → Settings → SSH Keys
+
+# Test GitHub connection
+ssh -T git@github.com
+
+# 4. Create nginx_proxy network
 docker network create nginx_proxy
 
-# 4. Clone the repository
+# 5. Clone the repository using SSH
 cd /opt
-sudo git clone <your-repo-url> khandelwalstore
+git clone git@github.com:puruistoxic/toystore.git khandelwalstore
 cd khandelwalstore
 sudo chown -R $USER:$USER .
 ```

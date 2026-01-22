@@ -135,11 +135,13 @@ cd /opt
 
 ### 3.2 Clone Repository
 
+**Important**: Make sure you completed Step 2.3-2.5 (SSH key setup) before this step!
+
 ```bash
 git clone git@github.com:puruistoxic/toystore.git khandelwalstore
 ```
 
-**Expected Result**: Should clone without asking for password
+**Expected Result**: Should clone without asking for password (uses SSH key authentication)
 
 ### 3.3 Navigate to Project
 
