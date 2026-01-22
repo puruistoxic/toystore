@@ -2,6 +2,15 @@
 
 A modern React-based e-commerce platform for wholesale toy distribution. Built with TypeScript, Tailwind CSS, and deployed using Docker. Designed to help retailers, distributors, and e-commerce platforms source high-quality toys at wholesale prices.
 
+## 🌐 Live Website
+
+**Production**: [https://toystore.purushottam.dev](https://toystore.purushottam.dev)
+
+## 📦 Repository
+
+- **GitHub**: https://github.com/puruistoxic/toystore.git
+- **SSH**: `git@github.com:puruistoxic/toystore.git`
+
 ## 🚀 Features
 
 ### Product Categories
@@ -74,8 +83,8 @@ maketoys-web/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/wainsoweb.git
-   cd wainsoweb
+   git clone https://github.com/puruistoxic/toystore.git
+   cd toystore
    ```
 
 2. **Install dependencies**
@@ -91,56 +100,63 @@ maketoys-web/
 4. **Open your browser**
    Navigate to `http://localhost:3000`
 
+For detailed local development guide, see: **[docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md)**
+
 ### Production Deployment
 
-#### Option 1: Using Docker Compose (Recommended)
+For complete deployment instructions, see:
 
-1. **Build and start the application**
-   ```bash
-   docker-compose up -d --build
-   ```
+- **Quick Start (5 min)**: [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
+- **Server Deployment Guide**: [SERVER_DEPLOYMENT_GUIDE.md](SERVER_DEPLOYMENT_GUIDE.md)
+- **Full Docker Guide**: [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
+- **Deployment Checklist**: [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)
 
-2. **Check status**
-   ```bash
-   docker-compose ps
-   ```
+#### Quick Deploy on Ubuntu Server
 
-#### Option 2: Using Deployment Script
+```bash
+# Clone repository
+cd /opt
+git clone git@github.com:puruistoxic/toystore.git khandelwalstore
+cd khandelwalstore
 
-1. **Make script executable**
-   ```bash
-   chmod +x deploy.sh
-   ```
+# Update secrets in docker-compose.yml (IMPORTANT!)
+nano docker-compose.yml
 
-2. **Deploy application**
-   ```bash
-   ./deploy.sh deploy
-   ```
+# Deploy
+chmod +x deploy.sh
+./deploy.sh deploy
 
-3. **Check deployment status**
-   ```bash
-   ./deploy.sh status
-   ```
+# Initialize database
+docker exec -it toystore-api node scripts/init-db.js
+```
 
 ## 🐳 Docker Deployment
 
-### Build Image
+### Using Deployment Script (Recommended)
 ```bash
-docker build -t wainso-web .
-```
+# Deploy
+./deploy.sh deploy
 
-### Run Container
-```bash
-docker run -d --name wainso-web -p 80:80 wainso-web
+# Check status
+./deploy.sh status
+
+# View logs
+./deploy.sh logs
+
+# Rollback
+./deploy.sh rollback
 ```
 
 ### Using Docker Compose
 ```bash
-# Start with SSL (recommended for production)
-docker compose --profile ssl up -d
+# Start containers
+docker-compose up -d --build
 
-# Start without SSL (development)
-docker compose up -d
+# Check status
+docker-compose ps
+
+# Stop containers
+docker-compose down
 ```
 
 ## 🖥️ Server Setup
