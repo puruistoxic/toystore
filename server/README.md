@@ -82,7 +82,10 @@ Verify the code entered by user.
 Status values: `verified`, `invalid`, `expired`, `not_found`
 
 ### GET `/health`
-Health check endpoint.
+Fast liveness check (no database call). Use for Docker healthchecks.
+
+### GET `/health/ready`
+Returns `200` when MySQL is reachable, `503` otherwise. Use for monitoring after deploy.
 
 ## Docker
 

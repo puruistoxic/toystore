@@ -45,14 +45,21 @@ const createTransporter = () => {
   });
 };
 
-// Health check endpoint
-app.get('/health', async (req, res) => {
-  const dbStatus = await testConnection();
-  res.json({ 
-    status: 'ok', 
-    service: 'wainso-email-api',
-    database: dbStatus ? 'connected' : 'disconnected'
+// Liveness for Docker/orchestrators — must respond quickly (no DB wait; DB checks can exceed healthcheck timeout)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'khandelwal-toy-store-api'
   });
+});
+
+// Readiness — verifies MySQL; use for monitoring, not strict Docker health unless DB must be up first
+app.get('/health/ready', async (req, res) => {
+  const dbOk = await testConnection();
+  if (dbOk) {
+    return res.status(200).json({ ready: true, database: 'connected' });
+  }
+  res.status(503).json({ ready: false, database: 'disconnected' });
 });
 
 
@@ -500,7 +507,8 @@ app.post('/api/enquiry', async (req, res) => {
       console.log(`  - GET /api/admin/verify`);
       console.log(`  - POST /api/quote-request`);
       console.log(`  - POST /api/enquiry`);
-      console.log(`  - GET /health`);
+      console.log(`  - GET /health (liveness)`);
+      console.log(`  - GET /health/ready (database)`);
       console.log(`  - All /api/content/* routes`);
       console.log(`  - All /api/upload/* routes`);
     });

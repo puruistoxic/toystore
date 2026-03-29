@@ -36,8 +36,8 @@ services:
       - nginx_proxy
     labels:
       - "nginx.proxy=true"
-      - "nginx.proxy.domain=${PUBLIC_DOMAIN}"
-      - "nginx.proxy.redirects=${NGINX_PROXY_REDIRECTS}"
+      - "nginx.proxy.domain=${PUBLIC_DOMAIN:-toystore.purushottam.dev}"
+      - "nginx.proxy.redirects=${NGINX_PROXY_REDIRECTS:-www.toystore.purushottam.dev:https://toystore.purushottam.dev}"
     expose:
       - "80"
     depends_on:
