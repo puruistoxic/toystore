@@ -1,225 +1,302 @@
 import React from 'react';
-import { FileText, Scale, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FileText, Scale, AlertCircle, CheckCircle, Package, Store } from 'lucide-react';
+import SEO from '../components/SEO';
+
+const STORE_NAME = 'Khandelwal Toy Store';
+const STORE_EMAIL = 'wainsogps@gmail.com';
+const STORE_PHONE_PRIMARY = '+91 98998 60975';
+const STORE_PHONE_SECONDARY = '+91 82927 17044';
 
 const Terms: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="Terms of Service | Khandelwal Toy Store"
+        description="Terms for using the Khandelwal Toy Store website and shopping at our local toy shop — pickup, product information, payments, and policies."
+        path="/terms"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8 md:p-12">
           <div className="flex items-center mb-8">
-            <Scale className="h-8 w-8 text-primary-600 mr-3" />
+            <Scale className="h-8 w-8 text-primary-600 mr-3 shrink-0" />
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Terms of Service</h1>
           </div>
-          
+
           <p className="text-gray-600 mb-8">
-            <strong>Last Updated:</strong> {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+            <strong>Last updated:</strong>{' '}
+            {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
           <div className="prose prose-lg max-w-none">
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
-                <FileText className="h-6 w-6 text-primary-600 mr-2" />
-                1. Acceptance of Terms
+                <FileText className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
+                1. Acceptance of terms
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                By accessing and using the services of WAINSO ("we," "us," or "our"), including our website, products, and services related to CCTV installation, GPS tracking, and maintenance, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our services.
+                By accessing <strong>khandelwaltoystore.com</strong> (or any site we operate), visiting our shop, or buying
+                from <strong>{STORE_NAME}</strong> (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), you agree to these
+                Terms of Service (&quot;Terms&quot;). If you do not agree, please do not use our website or services.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                These Terms constitute a legally binding agreement between you and WAINSO. We reserve the right to modify these Terms at any time, and such modifications will be effective immediately upon posting on our website.
+                We may update these Terms from time to time. The &quot;Last updated&quot; date at the top will change when we
+                do. Continued use of the website or store after changes means you accept the revised Terms, except where
+                applicable law requires otherwise.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Services Description</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Store className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
+                2. What we offer
+              </h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                WAINSO provides professional security and tracking solutions, including:
+                {STORE_NAME} is a <strong>local retail toy shop</strong>. We provide:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>CCTV surveillance system installation, configuration, and maintenance</li>
-                <li>GPS tracking device installation and fleet management solutions</li>
-                <li>Equipment maintenance, repair, and troubleshooting services</li>
-                <li>Consultation and security assessment services</li>
-                <li>Sale of security and tracking equipment</li>
+                <li>
+                  An <strong>online catalogue</strong> to browse toys, games, and related products, check approximate
+                  availability or features, and contact us (e.g. WhatsApp or phone).
+                </li>
+                <li>
+                  <strong>In-store shopping</strong> — select products at our counter, pay, and take your purchase with you.
+                </li>
+                <li>
+                  Friendly advice on age suitability and product types, as a general guide only (see section 6 for
+                  disclaimers).
+                </li>
               </ul>
               <p className="text-gray-700 leading-relaxed">
-                Service specifications, pricing, and availability are subject to change without notice. We reserve the right to refuse service to anyone for any reason at any time.
+                We do <strong>not</strong> guarantee that every item shown on the website is in stock at all times. Website
+                content is for information; <strong>final availability and price are confirmed at the store</strong> unless we
+                agree otherwise in writing.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Quotes and Pricing</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Package className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
+                3. Prices, product information &amp; availability
+              </h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>3.1 Quote Validity:</strong> All quotes provided by WAINSO are valid for the period specified in the quote document, typically 30 days from the date of issue, unless otherwise stated.
+                <strong>3.1 Pricing:</strong> Prices displayed online or quoted by message may change without notice.{' '}
+                <strong>The price you pay is the price confirmed at checkout</strong> in our shop (or as agreed for any
+                special arrangement).
               </p>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>3.2 Pricing:</strong> Prices are subject to change without notice. Final pricing will be confirmed upon order acceptance and may vary based on:
+                <strong>3.2 Taxes:</strong> Applicable GST or other taxes will be charged as required by law and shown on your
+                bill where relevant.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>3.3 Descriptions &amp; images:</strong> We try to keep descriptions, photos, and specifications
+                accurate. Minor packaging or colour variations from suppliers may occur. If exact appearance matters, please
+                confirm with staff before purchase.
+              </p>
+              <p className="text-gray-700 leading-relaxed">
+                <strong>3.4 Errors:</strong> We may correct pricing or listing errors (including on the website) and refuse or
+                cancel an order if an error was obvious or could reasonably have been recognised as a mistake.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Orders &amp; payment</h2>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>4.1 Contract:</strong> A purchase contract is formed when we accept your payment and hand over the
+                goods at our store (or as otherwise expressly agreed). Browsing the website or sending an enquiry does not
+                alone create an obligation to sell a specific item.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>4.2 Refusal of sale:</strong> We may refuse service or limit quantities (e.g. fairness, stock, or
+                suspected fraud) where permitted by law.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>4.3 Payment:</strong> Payment is normally in <strong>Indian Rupees (INR)</strong> at the time of
+                purchase. We may accept cash, UPI, cards, or other methods as displayed or agreed at the counter.
+              </p>
+              <p className="text-gray-700 leading-relaxed">
+                <strong>4.4 Deposits / holds:</strong> If we offer to hold or order-in an item, any deposit, timeline, and
+                cancellation rules will be explained at that time and may be confirmed in writing or on your receipt.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. In-store pickup, inspection &amp; acceptance</h2>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                Most sales are completed when you <strong>collect your toys at our shop</strong>. We encourage you to:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Site-specific requirements and complexity</li>
-                <li>Equipment specifications and customization</li>
-                <li>Installation location and accessibility</li>
-                <li>Market conditions and supplier pricing</li>
+                <li>Inspect packaging, contents (where practical), and obvious condition before you leave.</li>
+                <li>Ask staff about batteries, small parts, age labels, or how a toy works.</li>
+                <li>Keep your bill or receipt.</li>
               </ul>
               <p className="text-gray-700 leading-relaxed">
-                <strong>3.3 Taxes:</strong> All prices are exclusive of applicable taxes, duties, and government charges unless otherwise stated.
+                Except where the law requires otherwise, <strong>goods are considered accepted when you leave the store</strong>{' '}
+                after a fair opportunity to inspect them. Exchanges, replacements, and refunds are then governed by our{' '}
+                <Link to="/refund" className="text-primary-600 hover:underline">
+                  Refund &amp; exchange policy
+                </Link>
+                .
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Orders and Payment</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
+                <CheckCircle className="h-6 w-6 text-green-600 mr-2 shrink-0" />
+                6. Safety, age suitability &amp; manufacturer warranty
+              </h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>4.1 Order Acceptance:</strong> Your order constitutes an offer to purchase services or products. We reserve the right to accept or reject any order at our sole discretion.
+                <strong>6.1 Adult responsibility:</strong> Many toys carry <strong>choking hazards</strong>, small parts, or
+                age recommendations on the packaging. It is the <strong>parent or guardian&apos;s responsibility</strong> to
+                choose toys appropriate for the child and to supervise play. Our staff suggestions are informal guidance only
+                and do not replace reading the label or using your own judgment.
               </p>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>4.2 Payment Terms:</strong>
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Payment terms will be specified in the service agreement or invoice</li>
-                <li>Advance payment may be required for certain services or custom orders</li>
-                <li>Payment must be made in Indian Rupees (INR) unless otherwise agreed</li>
-                <li>Late payments may incur interest charges as specified in the agreement</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>4.3 Payment Methods:</strong> We accept payment through bank transfer, cheque, cash, and other methods as agreed upon.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Installation and Service Delivery</h2>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>5.1 Site Access:</strong> You agree to provide necessary access to installation sites, including permissions, keys, and safe working conditions for our technicians.
+                <strong>6.2 Manufacturer warranty:</strong> Where a brand provides a warranty, terms are set by the
+                manufacturer and any documentation inside the box. We may help explain the process but are not the warrantor
+                unless we say so in writing.
               </p>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>5.2 Installation Timeline:</strong> Estimated installation timelines are provided in good faith but are subject to:
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Site readiness and accessibility</li>
-                <li>Equipment availability and delivery</li>
-                <li>Weather conditions (for outdoor installations)</li>
-                <li>Unforeseen technical challenges</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>5.3 Customer Responsibilities:</strong> You are responsible for:
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Providing accurate site information and requirements</li>
-                <li>Ensuring site safety and compliance with local regulations</li>
-                <li>Obtaining necessary permits and approvals (where applicable)</li>
-                <li>Protecting installed equipment from damage or tampering</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Warranties and Guarantees</h2>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>6.1 Equipment Warranty:</strong> Equipment is covered by manufacturer warranties as specified in product documentation. WAINSO will facilitate warranty claims in accordance with manufacturer terms.
-              </p>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>6.2 Installation Warranty:</strong> We provide a warranty on installation workmanship for the period specified in the service agreement, typically 12 months from installation date.
-              </p>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>6.3 Warranty Limitations:</strong> Warranties do not cover:
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Damage caused by misuse, accidents, or unauthorized modifications</li>
-                <li>Normal wear and tear</li>
-                <li>Damage from natural disasters, power surges, or external factors beyond our control</li>
-                <li>Third-party software or services</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Limitation of Liability</h2>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>7.1 General Limitation:</strong> To the maximum extent permitted by law, WAINSO's total liability for any claims arising from our services shall not exceed the total amount paid by you for the specific service in question.
-              </p>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>7.2 Indirect Damages:</strong> We shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Loss of profits, revenue, or business opportunities</li>
-                <li>Loss of data or information</li>
-                <li>Business interruption</li>
-                <li>Reputational damage</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>7.3 Security Systems:</strong> While we provide professional installation and maintenance, we cannot guarantee that security systems will prevent all security breaches, theft, or unauthorized access. Security systems are tools to assist in protection but are not foolproof.
+                <strong>6.3 No medical claims:</strong> We do not claim that toys treat, cure, or diagnose any condition.
+                &quot;Educational&quot; or similar descriptions are ordinary retail descriptions, not professional advice.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Intellectual Property</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Limitation of liability</h2>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>7.1 General:</strong> To the maximum extent permitted by applicable law, our total liability for any
+                claim relating to products or use of this website shall not exceed the <strong>amount you paid us</strong> for
+                the specific product or transaction giving rise to the claim.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>7.2 Indirect loss:</strong> We are not liable for indirect or consequential loss, including loss of
+                profit, loss of enjoyment, or business interruption, except where such exclusion is not allowed by law.
+              </p>
+              <p className="text-gray-700 leading-relaxed">
+                <strong>7.3 Website:</strong> The website may occasionally be unavailable. We do not guarantee uninterrupted
+                or error-free access. Third-party links (if any) are for convenience; we are not responsible for external
+                sites.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Intellectual property</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                All content on our website, including text, graphics, logos, images, and software, is the property of WAINSO or its licensors and is protected by copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, modify, or create derivative works without our express written permission.
+                Website text, layout, branding (including logos and graphics we own), and our product photography where
+                original to us are protected by copyright and other laws. Toy names, characters, and trademarks belong to their
+                respective owners. You may not copy, scrape, or reuse our site content for commercial purposes without
+                permission, except as allowed for personal, non-commercial browsing or sharing links.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. User Conduct</h2>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                You agree not to:
-              </p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Acceptable use of the website</h2>
+              <p className="text-gray-700 leading-relaxed mb-3">You agree not to:</p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Use our services for any illegal or unauthorized purpose</li>
-                <li>Interfere with or disrupt our services or servers</li>
-                <li>Attempt to gain unauthorized access to any part of our systems</li>
-                <li>Transmit viruses, malware, or harmful code</li>
-                <li>Impersonate any person or entity or misrepresent your affiliation</li>
-                <li>Violate any applicable laws or regulations</li>
+                <li>Use the site for anything unlawful or fraudulent</li>
+                <li>Attempt to hack, overload, or disrupt our systems</li>
+                <li>Scrape or automate bulk collection of catalogue data without consent</li>
+                <li>Upload malware or harmful code</li>
+                <li>Misrepresent who you are or your relationship with us</li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Cancellation and Refunds</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Cancellations, exchanges, and refunds</h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>10.1 Service Cancellation:</strong> You may cancel a service order before installation begins, subject to cancellation fees as specified in the service agreement.
+                <strong>10.1 In-store sales:</strong> {STORE_NAME} primarily sells toys for{' '}
+                <strong>local pickup at our shop</strong>. You are encouraged to inspect products before leaving. Full details
+                on exchanges, replacements, and refunds are in our{' '}
+                <Link to="/refund" className="text-primary-600 hover:underline">
+                  Refund &amp; exchange policy
+                </Link>
+                .
               </p>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>10.2 Refund Policy:</strong> Refunds are governed by our Refund Policy, available on our website. Generally:
+                <strong>10.2 Summary:</strong> Generally:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Refunds for uninstalled equipment may be subject to restocking fees</li>
-                <li>Custom or special-order items may not be eligible for refund</li>
-                <li>Services already rendered are not refundable</li>
+                <li>
+                  We prioritise <strong>replacement or exchange</strong> for genuine defects when you return with the item,
+                  packaging (where relevant), and bill within the stated period.
+                </li>
+                <li>
+                  <strong>Change-of-mind</strong> returns after you have accepted goods at the store are usually not accepted.
+                </li>
+                <li>
+                  <strong>Special orders, clearance, or final-sale</strong> items may be non-returnable as explained at
+                  purchase.
+                </li>
+                <li>
+                  <strong>Cash refunds</strong> are exceptional and follow the Refund &amp; exchange policy.
+                </li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Force Majeure</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Force majeure</h2>
               <p className="text-gray-700 leading-relaxed">
-                We shall not be liable for any failure or delay in performance due to circumstances beyond our reasonable control, including but not limited to natural disasters, war, terrorism, labor disputes, government actions, pandemics, or supplier failures.
+                We are not liable for delay or failure caused by events outside our reasonable control, including natural
+                disasters, strikes, government restrictions, pandemics, transport disruptions, or supplier shortages.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Dispute Resolution</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Dispute resolution</h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>12.1 Governing Law:</strong> These Terms shall be governed by and construed in accordance with the laws of India, without regard to conflict of law principles.
+                <strong>12.1 Governing law:</strong> These Terms are governed by the <strong>laws of India</strong>.
               </p>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>12.2 Jurisdiction:</strong> Any disputes arising from these Terms or our services shall be subject to the exclusive jurisdiction of the courts in India.
+                <strong>12.2 Jurisdiction:</strong> Subject to mandatory consumer protections, courts in India shall have
+                jurisdiction over disputes arising from these Terms or your purchase.
               </p>
               <p className="text-gray-700 leading-relaxed mb-3">
-                <strong>12.3 Mediation:</strong> Before initiating legal proceedings, parties agree to attempt to resolve disputes through good faith negotiation or mediation.
+                <strong>12.3 Good faith:</strong> We encourage you to contact us first so we can try to resolve concerns
+                fairly.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Modifications to Terms</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Modifications to these Terms</h2>
               <p className="text-gray-700 leading-relaxed">
-                We reserve the right to modify these Terms at any time. Material changes will be notified through our website or via email. Your continued use of our services after such modifications constitutes acceptance of the updated Terms.
+                We may change these Terms by posting an updated version on this page. Material changes may also be noted on
+                the website or at the store where practical. Your continued use after the update constitutes acceptance unless
+                the law requires a different process.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Contact Information</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                For questions about these Terms of Service, please contact us:
-              </p>
-              <div className="bg-gray-50 rounded-lg p-6">
-                <p className="text-gray-900 font-semibold mb-2">WAINSO</p>
-                <p className="text-gray-700 mb-1">Email: <a href="mailto:wainsogps@gmail.com" className="text-primary-600 hover:underline">wainsogps@gmail.com</a></p>
-                <p className="text-gray-700 mb-1">Phone: <a href="tel:+919899860975" className="text-primary-600 hover:underline">+91 98998 60975</a></p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
+                <AlertCircle className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
+                14. Contact
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-4">Questions about these Terms:</p>
+              <div className="bg-gray-50 rounded-lg p-6 not-prose">
+                <p className="text-gray-900 font-semibold mb-2">{STORE_NAME}</p>
+                <p className="text-gray-700 mb-1">
+                  Email:{' '}
+                  <a href={`mailto:${STORE_EMAIL}`} className="text-primary-600 hover:underline">
+                    {STORE_EMAIL}
+                  </a>
+                </p>
+                <p className="text-gray-700 mb-1">
+                  Phone:{' '}
+                  <a href="tel:+919899860975" className="text-primary-600 hover:underline">
+                    {STORE_PHONE_PRIMARY}
+                  </a>
+                  {', '}
+                  <a href="tel:+918292717044" className="text-primary-600 hover:underline">
+                    {STORE_PHONE_SECONDARY}
+                  </a>
+                </p>
+                <p className="text-gray-700 mt-3 text-sm">
+                  Store address and hours: see our{' '}
+                  <Link to="/contact" className="text-primary-600 hover:underline">
+                    Contact
+                  </Link>{' '}
+                  page.
+                </p>
               </div>
             </section>
           </div>
@@ -230,4 +307,3 @@ const Terms: React.FC = () => {
 };
 
 export default Terms;
-

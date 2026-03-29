@@ -1,49 +1,108 @@
-import React, { useState } from 'react';
-import { X, MessageCircle, Star, CheckCircle, Package, Truck, Shield } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { X, MessageCircle, Star, CheckCircle, Package, ShoppingCart, Play } from 'lucide-react';
 import type { Product } from '../types/catalog';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
+import { getCanonicalUrl } from '../utils/seo';
+import { useCart } from '../contexts/CartContext';
+import { useAddToListModal } from '../contexts/AddToListModalContext';
+import { parseYoutubeVideoId, youtubeEmbedUrl, youtubeThumbnailUrl } from '../utils/youtube';
 
 interface ProductDetailModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
+  /** Listing preview: shorter copy, no videos/features block, link to full PDP */
+  variant?: 'default' | 'quickLook';
 }
 
 const WHATSAPP_NUMBER = '919898524462';
 
-const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen, onClose }) => {
+const QUICK_DESC_MAX = 420;
+
+const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
+  product,
+  isOpen,
+  onClose,
+  variant = 'default',
+}) => {
   const [quantity, setQuantity] = useState(1);
   const [imageError, setImageError] = useState(false);
+  const [activeImgIdx, setActiveImgIdx] = useState(0);
+  const [openVideoId, setOpenVideoId] = useState<string | null>(null);
+  const { items } = useCart();
+  const { openAddToList } = useAddToListModal();
+
+  const inList = Boolean(
+    product && items.some((l) => l.productId === String(product.id)),
+  );
+
+  useEffect(() => {
+    if (isOpen && product) {
+      setQuantity(1);
+      setImageError(false);
+      setActiveImgIdx(0);
+      setOpenVideoId(null);
+    }
+  }, [isOpen, product?.id]);
 
   if (!isOpen || !product) return null;
 
+  const quickLook = variant === 'quickLook';
+  const descriptionText = product.description?.trim() || '';
+  const descriptionTruncated =
+    quickLook && descriptionText.length > QUICK_DESC_MAX
+      ? `${descriptionText.slice(0, QUICK_DESC_MAX).trim()}…`
+      : descriptionText;
+
   const handleWhatsAppEnquiry = () => {
-    const message = encodeURIComponent(
-      `Hello Khandelwal Toy Store Team,\n\nI'm interested in:\n\nProduct: ${product.name}\nQuantity: ${quantity}\nProduct Link: ${window.location.origin}/products/${product.slug}\n\nPlease provide:\n- Wholesale pricing for ${quantity} units\n- Minimum order quantity\n- Available stock\n- Delivery options\n- Bulk discount (if applicable)\n\nThank you!`
-    );
+    const productPageUrl = getCanonicalUrl(`/products/${product.slug}`);
+    const lines = [
+      'Hello Khandelwal Toy Store,',
+      '',
+      "I'm interested in this product:",
+      '',
+      `Product: ${product.name}`,
+      product.brand ? `Brand: ${product.brand}` : '',
+      `Quantity: ${quantity}`,
+      `Product page: ${productPageUrl}`,
+      '',
+      'Please confirm:',
+      '- In-stock / when I can collect',
+      '- Final price (if different from website)',
+      '- Store timings or delivery options nearby',
+      '',
+      'Thank you!',
+    ].filter(Boolean);
+    const message = encodeURIComponent(lines.join('\n'));
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const incrementQuantity = () => {
-    if (product.minimumOrderQuantity) {
-      setQuantity(prev => prev + product.minimumOrderQuantity!);
-    } else {
-      setQuantity(prev => prev + 1);
-    }
+    setQuantity((prev) => prev + 1);
   };
 
   const decrementQuantity = () => {
-    if (product.minimumOrderQuantity) {
-      setQuantity(prev => Math.max(product.minimumOrderQuantity!, prev - product.minimumOrderQuantity!));
-    } else {
-      setQuantity(prev => Math.max(1, prev - 1));
-    }
+    setQuantity((prev) => Math.max(1, prev - 1));
   };
 
-  const mainImage = product.images && product.images.length > 0 ? product.images[0] : getPlaceholderImage(600, 400, product.name);
+  const imgs =
+    product.images && product.images.length > 0
+      ? product.images
+      : [getPlaceholderImage(600, 400, product.name)];
+  const safeIdx = Math.min(Math.max(0, activeImgIdx), imgs.length - 1);
+  const mainImage = imgs[safeIdx] || getPlaceholderImage(600, 400, product.name);
+
+  const videoEntries = (product.videoUrls || [])
+    .map((url) => {
+      const id = parseYoutubeVideoId(url);
+      return id ? { id, url } : null;
+    })
+    .filter((x): x is { id: string; url: string } => x !== null);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" onClick={onClose}>
+    <>
+      <div className="fixed inset-0 z-50 overflow-y-auto" onClick={onClose}>
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
@@ -55,7 +114,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
         >
           <div className="bg-white">
             <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Product Details</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {quickLook ? 'Quick look' : 'Product Details'}
+              </h3>
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -68,35 +129,71 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Product Image */}
                 <div className="space-y-4">
-                  <div className="aspect-w-16 aspect-h-12 bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="aspect-w-16 aspect-h-12 bg-gray-100 rounded-lg overflow-hidden min-h-[200px]">
                     {!imageError ? (
                       <img
                         src={mainImage}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover min-h-[200px]"
                         onError={(e) => {
                           handleImageError(e, product.name);
                           setImageError(true);
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200 min-h-[200px]">
                         <Package className="h-24 w-24 text-primary-400 opacity-50" />
                       </div>
                     )}
                   </div>
-                  {product.images && product.images.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {product.images.slice(0, 4).map((image, idx) => (
-                        <div key={idx} className="aspect-w-1 aspect-h-1 bg-gray-100 rounded overflow-hidden">
+                  {imgs.length > 1 && (
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                      {imgs.map((image, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setActiveImgIdx(idx);
+                            setImageError(false);
+                          }}
+                          className={`aspect-square bg-gray-100 rounded overflow-hidden ring-2 ring-offset-1 transition-shadow ${
+                            safeIdx === idx ? 'ring-teal-500' : 'ring-transparent hover:ring-gray-300'
+                          }`}
+                        >
                           <img
                             src={image}
                             alt={`${product.name} ${idx + 1}`}
                             className="w-full h-full object-cover"
                             onError={(e) => handleImageError(e, product.name)}
                           />
-                        </div>
+                        </button>
                       ))}
+                    </div>
+                  )}
+                  {!quickLook && videoEntries.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Videos</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {videoEntries.map(({ id }, idx) => (
+                          <button
+                            key={id + idx}
+                            type="button"
+                            onClick={() => setOpenVideoId(id)}
+                            className="relative w-[calc(50%-4px)] sm:w-32 aspect-video rounded-lg overflow-hidden bg-gray-900 group focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          >
+                            <img
+                              src={youtubeThumbnailUrl(id)}
+                              alt=""
+                              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                            />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40">
+                              <span className="rounded-full bg-white/95 p-2 shadow-md">
+                                <Play className="h-5 w-5 text-red-600 fill-current" />
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -135,16 +232,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
                           <span className="ml-2 text-sm text-gray-600">(GST Included)</span>
                         )}
                       </div>
-                      {product.bulkDiscountPercentage && product.bulkDiscountPercentage > 0 && (
-                        <p className="text-sm text-green-600 mt-1">
-                          Get {product.bulkDiscountPercentage}% off on bulk orders!
-                        </p>
-                      )}
                     </div>
                   )}
 
                   {/* Toy-Specific Information */}
-                  {(product.ageGroup || product.occasion || product.gender || product.materialType || product.educationalValue) && (
+                  {!quickLook &&
+                    (product.ageGroup || product.occasion || product.gender || product.materialType || product.educationalValue) && (
                     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
                       <h3 className="text-sm font-semibold text-gray-900 mb-2">Product Details</h3>
                       {product.ageGroup && (
@@ -183,33 +276,55 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
                           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">Educational</span>
                         </div>
                       )}
-                      {product.minimumOrderQuantity && product.minimumOrderQuantity > 1 && (
-                        <div className="flex items-center text-sm">
-                          <span className="font-medium text-gray-700 w-24">MOQ:</span>
-                          <span className="text-gray-600">{product.minimumOrderQuantity} units</span>
-                        </div>
-                      )}
                       {product.stockQuantity !== undefined && (
                         <div className="flex items-center text-sm">
                           <span className="font-medium text-gray-700 w-24">Stock:</span>
                           <span className={product.stockQuantity > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                            {product.stockQuantity > 0 ? `${product.stockQuantity} units available` : 'Out of stock'}
+                            {product.stockQuantity > 0 ? 'In stock' : 'Out of stock'}
                           </span>
                         </div>
                       )}
                     </div>
                   )}
 
+                  {quickLook && (product.ageGroup || product.stockQuantity !== undefined) && (
+                    <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                      {product.ageGroup && (
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                          {product.ageGroup}
+                        </span>
+                      )}
+                      {product.stockQuantity !== undefined && (
+                        <span
+                          className={
+                            product.stockQuantity > 0
+                              ? 'text-green-700 font-medium'
+                              : 'text-red-600 font-medium'
+                          }
+                        >
+                          {product.stockQuantity > 0 ? 'In stock' : 'Out of stock'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   {/* Description */}
-                  {product.description && (
+                  {descriptionText && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-900 mb-2">Description</h3>
-                      <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+                      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                        {descriptionTruncated}
+                      </p>
+                      {quickLook && descriptionText.length > QUICK_DESC_MAX && (
+                        <p className="mt-2 text-xs text-gray-500">
+                          Full write-up, specs, and more on the product page.
+                        </p>
+                      )}
                     </div>
                   )}
 
                   {/* Features */}
-                  {product.features && product.features.length > 0 && (
+                  {!quickLook && product.features && product.features.length > 0 && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-900 mb-2">Key Features</h3>
                       <ul className="space-y-1">
@@ -237,10 +352,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
                         type="number"
                         value={quantity}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 1;
-                          setQuantity(Math.max(product.minimumOrderQuantity || 1, val));
+                          const val = parseInt(e.target.value, 10) || 1;
+                          setQuantity(Math.max(1, val));
                         }}
-                        min={product.minimumOrderQuantity || 1}
+                        min={1}
                         className="w-20 text-center border border-gray-300 rounded-lg py-2 font-semibold"
                       />
                       <button
@@ -249,26 +364,54 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
                       >
                         <span className="text-lg">+</span>
                       </button>
-                      {product.minimumOrderQuantity && product.minimumOrderQuantity > 1 && (
-                        <span className="text-xs text-gray-500">MOQ: {product.minimumOrderQuantity}</span>
-                      )}
                     </div>
                   </div>
 
-                  {/* WhatsApp Enquiry Button */}
-                  <button
-                    onClick={handleWhatsAppEnquiry}
-                    className="w-full bg-[#25D366] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#20BA5A] transition-colors flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
-                  >
-                    <MessageCircle className="h-5 w-5 mr-2" />
-                    Enquire on WhatsApp
-                  </button>
+                  {quickLook && (
+                    <div>
+                      <Link
+                        to={`/products/${product.slug}`}
+                        onClick={onClose}
+                        className="inline-flex items-center gap-1.5 text-primary-600 font-semibold text-sm hover:text-primary-700 hover:underline"
+                      >
+                        Open full product page
+                        <span aria-hidden>→</span>
+                      </Link>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={handleWhatsAppEnquiry}
+                      className="flex-1 bg-[#25D366] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#20BA5A] transition-colors flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+                    >
+                      <MessageCircle className="h-5 w-5 mr-2" />
+                      Enquire on WhatsApp
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openAddToList(product, { initialQuantity: quantity })}
+                      className={`flex-1 px-6 py-3 rounded-lg font-semibold border-2 transition-colors flex items-center justify-center gap-2 ${
+                        inList
+                          ? 'border-green-500 bg-green-50 text-green-800'
+                          : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50'
+                      }`}
+                      aria-label={
+                        inList
+                          ? 'Product is in your order list. Click to add more with selected quantity.'
+                          : 'Add to order list'
+                      }
+                    >
+                      <ShoppingCart className="h-5 w-5 shrink-0" aria-hidden />
+                      {inList ? 'In your list' : 'Add to list'}
+                    </button>
+                  </div>
 
                   {/* Info Box */}
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                     <p className="text-xs text-blue-900">
-                      <strong>Note:</strong> This is an enquiry-only platform. All orders are processed through WhatsApp. 
-                      Our team will provide wholesale pricing, stock availability, and delivery options.
+                      <strong>Note:</strong> We’re a local toy shop — use WhatsApp to double-check stock and price before you visit. We’ll help with pickup, timing, or delivery where available.
                     </p>
                   </div>
                 </div>
@@ -277,7 +420,41 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
           </div>
         </div>
       </div>
-    </div>
+      </div>
+
+      {openVideoId && (
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4"
+        onClick={() => setOpenVideoId(null)}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Video"
+      >
+        <div
+          className="relative w-full max-w-4xl rounded-lg overflow-hidden shadow-2xl bg-black"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => setOpenVideoId(null)}
+            className="absolute top-2 right-2 z-10 rounded-full bg-black/60 text-white p-2 hover:bg-black/80"
+            aria-label="Close video"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <div className="aspect-video w-full">
+            <iframe
+              title="YouTube video"
+              src={youtubeEmbedUrl(openVideoId)}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      </div>
+      )}
+    </>
   );
 };
 

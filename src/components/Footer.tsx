@@ -1,21 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin, ShoppingCart } from 'lucide-react';
+import KhandelwalLogo from './KhandelwalLogo';
+import { productListingPathForCategory } from '../utils/productCategoryFilters';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-brand-ink text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <div className="text-2xl font-bold text-primary-400">
-              Khandelwal Toy Store
+            <div className="max-w-[min(100%,280px)]">
+              <KhandelwalLogo size="sm" variant="onDark" />
             </div>
             <p className="text-gray-300 text-sm">
-              Your trusted wholesale partner for high-quality toys. We specialize in offering 
-              a wide range of affordable toys that spark imagination and creativity. 
-              Serving retailers, distributors, and e-commerce platforms across India.
+              Your neighbourhood toy store for quality playthings and gifts. We help families find
+              age-right toys, party favours, and festival surprises — visit us in person or reach out
+              on WhatsApp for stock and directions.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
@@ -48,6 +50,20 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link
+                  to="/cart"
+                  className="inline-flex items-center gap-2 text-gray-300 hover:text-primary-400 transition-colors"
+                >
+                  <ShoppingCart className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                  My order list
+                </Link>
+              </li>
+              <li>
+                <Link to="/toy-finder" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  Toy Finder
+                </Link>
+              </li>
+              <li>
                 <Link to="/brands" className="text-gray-300 hover:text-primary-400 transition-colors">
                   Our Brands
                 </Link>
@@ -75,32 +91,32 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold">Product Categories</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/products?category=action-figures" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to={productListingPathForCategory('action-figures')} className="text-gray-300 hover:text-primary-400 transition-colors">
                   Action Figures
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=art-crafts" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to={productListingPathForCategory('art-crafts')} className="text-gray-300 hover:text-primary-400 transition-colors">
                   Art & Crafts
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=educational-learning" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to={productListingPathForCategory('educational-learning')} className="text-gray-300 hover:text-primary-400 transition-colors">
                   Educational Toys
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=remote-control" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to={productListingPathForCategory('remote-control')} className="text-gray-300 hover:text-primary-400 transition-colors">
                   Remote Control Toys
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=board-games" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to={productListingPathForCategory('board-games')} className="text-gray-300 hover:text-primary-400 transition-colors">
                   Board Games
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=dolls" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to={productListingPathForCategory('dolls')} className="text-gray-300 hover:text-primary-400 transition-colors">
                   Dolls & Doll Houses
                 </Link>
               </li>
@@ -138,7 +154,7 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm">
               <p>© 2024 Khandelwal Toy Store. All rights reserved.</p>
-              <p className="mt-1 text-xs">Wholesale Toy Supplier | Serving Retailers & Distributors</p>
+              <p className="mt-1 text-xs">Local retail toy shop | Walk-in welcome</p>
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
@@ -148,7 +164,7 @@ const Footer: React.FC = () => {
                 Terms of Service
               </Link>
               <Link to="/refund" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
-                Refund Policy
+                Refund &amp; exchange
               </Link>
             </div>
           </div>

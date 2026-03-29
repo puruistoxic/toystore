@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
@@ -10,6 +10,7 @@ import EnquiryPopup, { useEnquiryPopup } from './components/EnquiryPopup';
 import ScrollToTop from './components/ScrollToTop';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import WhatsAppButton from './components/WhatsAppButton';
+import PageNavigationFX from './components/PageNavigationFX';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 import Home from './pages/Home';
 import Services from './pages/Services';
@@ -17,6 +18,7 @@ import Products from './pages/Products';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import ProductDetail from './pages/ProductDetail';
+import ToyFinderPage from './pages/ToyFinderPage';
 import ServiceDetail from './pages/ServiceDetail';
 import QuoteRequest from './pages/QuoteRequest';
 import Privacy from './pages/Privacy';
@@ -70,48 +72,41 @@ import UserEdit from './pages/admin/UserEdit';
 import CompanySettings from './pages/admin/CompanySettings';
 import NotFound from './pages/NotFound';
 import AdminNotFound from './pages/admin/NotFound';
+import { ProductWhatsAppProvider } from './contexts/ProductWhatsAppContext';
+import { CartProvider } from './contexts/CartContext';
+import { AddToListModalProvider } from './contexts/AddToListModalContext';
+import CartPage from './pages/CartPage';
+import OrderRequestPage from './pages/OrderRequestPage';
 
 const queryClient = new QueryClient();
 
-function AppContent() {
+/**
+ * Single public layout with Outlet — avoids a second nested <Routes> under path="/*",
+ * which can fail to match routes like /cart correctly in React Router v7.
+ */
+function PublicLayout() {
   const { showPopup, handleClose } = useEnquiryPopup();
 
   return (
-    <>
-      <ScrollToTop />
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/services/:slug" element={<ServiceDetail />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/products/:slug" element={<ProductDetail />} />
-            <Route path="/locations" element={<Locations />} />
-            <Route path="/locations/:slug" element={<LocationDetail />} />
-            <Route path="/brands" element={<Brands />} />
-            <Route path="/brands/:slug" element={<BrandDetail />} />
-            <Route path="/industries" element={<Industries />} />
-            <Route path="/industries/:slug" element={<IndustryDetail />} />
-            <Route path="/case-studies" element={<CaseStudies />} />
-            <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/quote-request" element={<QuoteRequest />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/refund" element={<Refund />} />
-            {/* Public 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-      <WhatsAppButton />
-      <ScrollToTopButton />
-      {showPopup && <EnquiryPopup onClose={handleClose} />}
-    </>
+    <CartProvider>
+      <AddToListModalProvider>
+      <ProductWhatsAppProvider>
+        <ScrollToTop />
+        <div className="min-h-screen bg-gray-50">
+          <Header />
+          <PageNavigationFX>
+            <main>
+              <Outlet />
+            </main>
+          </PageNavigationFX>
+          <Footer />
+        </div>
+        <WhatsAppButton />
+        <ScrollToTopButton />
+        {showPopup && <EnquiryPopup onClose={handleClose} />}
+      </ProductWhatsAppProvider>
+      </AddToListModalProvider>
+    </CartProvider>
   );
 }
 
@@ -426,8 +421,34 @@ function App() {
               />
               {/* Admin 404 */}
               <Route path="/admin/*" element={<AdminNotFound />} />
-              {/* Public Routes */}
-              <Route path="/*" element={<AppContent />} />
+
+              {/* Public storefront — pathless layout + relative child paths */}
+              <Route element={<PublicLayout />}>
+                <Route index element={<Home />} />
+                <Route path="cart" element={<CartPage />} />
+                <Route path="order-request/:publicRef" element={<OrderRequestPage />} />
+                <Route path="services/:slug" element={<ServiceDetail />} />
+                <Route path="services" element={<Services />} />
+                <Route path="products/category/:categorySlug" element={<Products />} />
+                <Route path="products/:slug" element={<ProductDetail />} />
+                <Route path="products" element={<Products />} />
+                <Route path="toy-finder" element={<ToyFinderPage />} />
+                <Route path="locations/:slug" element={<LocationDetail />} />
+                <Route path="locations" element={<Locations />} />
+                <Route path="brands/:slug" element={<BrandDetail />} />
+                <Route path="brands" element={<Brands />} />
+                <Route path="industries/:slug" element={<IndustryDetail />} />
+                <Route path="industries" element={<Industries />} />
+                <Route path="case-studies/:slug" element={<CaseStudyDetail />} />
+                <Route path="case-studies" element={<CaseStudies />} />
+                <Route path="about" element={<About />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="quote-request" element={<QuoteRequest />} />
+                <Route path="privacy" element={<Privacy />} />
+                <Route path="terms" element={<Terms />} />
+                <Route path="refund" element={<Refund />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
             </Routes>
             </Router>
           </AuthProvider>

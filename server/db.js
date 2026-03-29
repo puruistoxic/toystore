@@ -270,6 +270,7 @@ async function initializeTables() {
         hsn_code VARCHAR(20),
         image VARCHAR(500),
         images JSON,
+        video_urls JSON,
         features JSON,
         specifications JSON,
         warranty VARCHAR(255),
@@ -286,6 +287,9 @@ async function initializeTables() {
         seo_description TEXT,
         seo_keywords JSON,
         is_active BOOLEAN DEFAULT TRUE,
+        promote_home_banner BOOLEAN DEFAULT FALSE,
+        banner_sort_order INT NOT NULL DEFAULT 0,
+        home_banner_slides JSON,
         is_deleted TINYINT(1) NOT NULL DEFAULT 0,
         deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -296,6 +300,7 @@ async function initializeTables() {
         INDEX idx_hsn_code (hsn_code),
         INDEX idx_age_group (age_group),
         INDEX idx_gender (gender),
+        INDEX idx_products_promote_banner (promote_home_banner),
         INDEX idx_products_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
@@ -344,6 +349,66 @@ async function initializeTables() {
           console.warn(`[Database] Could not add ${col.name} column:`, error.message);
         }
       }
+    }
+
+    const productBannerColumns = [
+      { name: 'promote_home_banner', type: 'BOOLEAN DEFAULT FALSE', after: 'is_active' },
+      { name: 'banner_sort_order', type: 'INT NOT NULL DEFAULT 0', after: 'promote_home_banner' },
+    ];
+    for (const col of productBannerColumns) {
+      try {
+        await connection.execute(`
+          ALTER TABLE products 
+          ADD COLUMN ${col.name} ${col.type}
+          AFTER ${col.after}
+        `);
+        console.log(`[Database] Added ${col.name} column to products table`);
+      } catch (error) {
+        if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        } else {
+          console.warn(`[Database] Could not add ${col.name} column:`, error.message);
+        }
+      }
+    }
+
+    try {
+      await connection.execute(`
+        ALTER TABLE products 
+        ADD COLUMN video_urls JSON NULL
+        AFTER images
+      `);
+      console.log('[Database] Added video_urls column to products table');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+      } else {
+        console.warn('[Database] Could not add video_urls column:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(`
+        ALTER TABLE products 
+        ADD COLUMN home_banner_slides JSON NULL
+        AFTER banner_sort_order
+      `);
+      console.log('[Database] Added home_banner_slides column to products table');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+      } else {
+        console.warn('[Database] Could not add home_banner_slides column:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(`
+        UPDATE products 
+        SET home_banner_slides = '["1","2","3","4"]'
+        WHERE promote_home_banner = 1 
+          AND (home_banner_slides IS NULL OR JSON_LENGTH(home_banner_slides) = 0)
+      `);
+      console.log('[Database] Backfilled home_banner_slides for existing hero-promoted products');
+    } catch (error) {
+      console.warn('[Database] home_banner_slides backfill skipped:', error.message);
     }
 
     // Remove invalid index on JSON column if it exists (MySQL doesn't support direct indexing on JSON)
@@ -1041,6 +1106,40 @@ async function initializeTables() {
     `);
     console.log('[Database] Created enquiries table');
 
+    try {
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS cart_enquiries (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          public_ref VARCHAR(32) NULL UNIQUE,
+          items_json JSON NOT NULL,
+          customer_name VARCHAR(255),
+          customer_email VARCHAR(255),
+          customer_phone VARCHAR(20),
+          custom_message TEXT,
+          whatsapp_number VARCHAR(20),
+          status ENUM('new', 'contacted', 'quoted', 'closed') DEFAULT 'new',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_status (status),
+          INDEX idx_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      console.log('[Database] Ensured cart_enquiries table exists');
+    } catch (error) {
+      console.warn('[Database] cart_enquiries table:', error.message);
+    }
+
+    try {
+      await connection.execute(
+        'ALTER TABLE cart_enquiries ADD COLUMN public_ref VARCHAR(32) NULL UNIQUE',
+      );
+      console.log('[Database] Added cart_enquiries.public_ref');
+    } catch (error) {
+      if (!String(error.message || '').includes('Duplicate column name')) {
+        console.warn('[Database] cart_enquiries.public_ref migration:', error.message);
+      }
+    }
+
     // Insert default company settings if not exists
     const [existingSettings] = await connection.execute('SELECT id FROM company_settings LIMIT 1');
     if (existingSettings.length === 0) {
@@ -1062,7 +1161,7 @@ async function initializeTables() {
           'info@khandelwaltoystore.com',
           'khandelwaltoystore.com',
           '',
-          '© 2024 Khandelwal Toy Store. All rights reserved. | Wholesale Toy Supplier',
+          '© 2024 Khandelwal Toy Store. All rights reserved. | Local toy shop',
           FALSE
         )
       `);

@@ -12,6 +12,7 @@ import { products } from '../data/products';
 import { services } from '../data/services';
 import type { Product, Service } from '../types/catalog';
 import api from '../utils/api';
+import SEO from '../components/SEO';
 
 type QuoteChannel = 'whatsapp' | 'email';
 
@@ -57,9 +58,7 @@ const buildDetailLines = (target: QuoteTarget | undefined, quantity: string) => 
     const { data } = target;
     const lines = [
       `• Brand / Model: ${data.brand} / ${data.model}`,
-      `• Availability: ${
-        data.inStock ? `In stock (${data.stockQuantity} units)` : 'Currently out of stock'
-      }`,
+      `• Availability: ${data.inStock ? 'In stock' : 'Out of stock'}`,
       `• Key Features: ${data.features.slice(0, 4).join(', ')}`
     ];
 
@@ -326,6 +325,13 @@ const QuoteRequest: React.FC = () => {
     : null;
 
   return (
+    <>
+      <SEO
+        title="Request a quote | Khandelwal Toy Store"
+        description="Request a verified quote for toys or services. Send by WhatsApp or email — we will confirm details and respond."
+        path="/quote-request"
+        keywords="quote request, toy wholesale quote, Khandelwal Toy Store, bulk toys inquiry"
+      />
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-10">
@@ -851,6 +857,7 @@ const QuoteRequest: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

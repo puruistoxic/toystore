@@ -1,8 +1,9 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import type { OrderRequestPdfInput } from '../types/orderRequest';
 import { Invoice, Proposal } from '../types/invoicing';
 
-interface CompanySettings {
+export interface CompanySettings {
   company_name?: string;
   logo_url?: string;
   address_line1?: string;
@@ -25,6 +26,7 @@ interface CompanySettings {
   bank_branch?: string;
   footer_text?: string;
   terms_and_conditions?: string;
+  whatsapp_number?: string;
 }
 
 interface InvoiceItemWithHSN {
@@ -387,7 +389,7 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
   // We resolve it once here and only render it through addPageNumber,
   // so the copyright can never appear twice on the same page.
   const invoiceDefaultFooterText =
-    '© 2025 Khandelwal Toy Store. All rights reserved. | Wholesale Toy Supplier';
+    '© 2025 Khandelwal Toy Store. All rights reserved. | Local toy shop';
   const invoiceResolvedFooterText =
     (companySettings.footer_text && companySettings.footer_text.trim().length > 0
       ? companySettings.footer_text.trim()
@@ -884,7 +886,7 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   // We resolve it once here and only render it through addPageNumber,
   // so the copyright can never appear twice on the same page.
   const proposalDefaultFooterText =
-    '© 2025 Khandelwal Toy Store. All rights reserved. | Wholesale Toy Supplier';
+    '© 2025 Khandelwal Toy Store. All rights reserved. | Local toy shop';
   const proposalResolvedFooterText =
     (companySettings.footer_text && companySettings.footer_text.trim().length > 0
       ? companySettings.footer_text.trim()
@@ -1595,6 +1597,181 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
     doc.setPage(pageNum);
     addPageNumber(pageNum, finalTotalPages);
   }
+
+  return doc;
+}
+
+/**
+ * Customer-facing PDF for a website order request (buying list). Not a tax invoice.
+ */
+export async function generateOrderRequestPDF(
+  data: OrderRequestPdfInput,
+  companySettings: CompanySettings,
+): Promise<jsPDF> {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 10;
+  const fontSize = 9;
+  const fontSizeSmall = 8;
+  const tableWidth = pageWidth - margin * 2;
+
+  let y = margin + 2;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 103, 103);
+  doc.text('ORDER REQUEST', pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(fontSizeSmall);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Request for quotation — not a tax invoice', pageWidth / 2, y, { align: 'center' });
+  y += 7;
+
+  const companyName = companySettings.company_name || 'Khandelwal Toy Store';
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(fontSize);
+  doc.text(companyName, margin, y);
+  doc.setFont('helvetica', 'normal');
+  y += 4.5;
+  const addrParts = [
+    companySettings.address_line1,
+    companySettings.address_line2,
+    companySettings.address_line3,
+    [companySettings.city, companySettings.state, companySettings.postal_code].filter(Boolean).join(', '),
+  ].filter((p) => p && String(p).trim());
+  addrParts.forEach((line) => {
+    doc.text(String(line), margin, y);
+    y += 4;
+  });
+  if (companySettings.phone) {
+    doc.text(`Phone: ${companySettings.phone}`, margin, y);
+    y += 4;
+  }
+  if (companySettings.email) {
+    doc.text(`Email: ${companySettings.email}`, margin, y);
+    y += 4;
+  }
+  y += 3;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Reference: ${data.request_ref}`, margin, y);
+  y += 4;
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Date: ${formatDate(data.created_at)}`, margin, y);
+  if (data.status) {
+    doc.text(`Status: ${data.status}`, margin + 75, y);
+  }
+  y += 7;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Your details', margin, y);
+  y += 4;
+  doc.setFont('helvetica', 'normal');
+  const contactBits = [
+    data.customer_name && `Name: ${data.customer_name}`,
+    data.customer_phone && `Phone: ${data.customer_phone}`,
+    data.customer_email && `Email: ${data.customer_email}`,
+  ].filter(Boolean) as string[];
+  if (contactBits.length === 0) {
+    doc.text('(No contact details provided)', margin, y);
+    y += 4;
+  } else {
+    contactBits.forEach((line) => {
+      doc.text(line, margin, y);
+      y += 4;
+    });
+  }
+  y += 3;
+
+  const hasPrices = data.items.some((it) => it.unit_price != null && it.unit_price > 0);
+  let grandTotal = 0;
+  if (hasPrices) {
+    data.items.forEach((it) => {
+      if (it.unit_price != null && !Number.isNaN(it.unit_price)) {
+        grandTotal += it.unit_price * it.quantity;
+      }
+    });
+  }
+
+  const body = data.items.map((it, i) => {
+    const unit =
+      it.unit_price != null && it.unit_price > 0 ? formatNumberOnly(it.unit_price) : '—';
+    const lineTotal =
+      it.unit_price != null && it.unit_price > 0
+        ? formatNumberOnly(it.unit_price * it.quantity)
+        : '—';
+    let desc = it.brand ? `${it.product_name} (${it.brand})` : it.product_name;
+    if (it.line_note?.trim()) {
+      desc += `\nNote: ${it.line_note.trim()}`;
+    }
+    return [String(i + 1), desc, String(it.quantity), unit, lineTotal];
+  });
+
+  autoTable(doc, {
+    startY: y,
+    head: [['#', 'Product', 'Qty', 'Unit (Rs.)', 'Line (Rs.)']],
+    body,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [0, 103, 103],
+      textColor: 255,
+      fontStyle: 'bold',
+      fontSize,
+    },
+    styles: { fontSize, cellPadding: 1.5 },
+    columnStyles: {
+      0: { cellWidth: tableWidth * 0.07, halign: 'center' },
+      1: { cellWidth: tableWidth * 0.48, halign: 'left' },
+      2: { cellWidth: tableWidth * 0.1, halign: 'right' },
+      3: { cellWidth: tableWidth * 0.175, halign: 'right' },
+      4: { cellWidth: tableWidth * 0.175, halign: 'right' },
+    },
+    margin: { left: margin, right: margin },
+  });
+
+  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 5;
+
+  doc.setFontSize(fontSizeSmall);
+  doc.setTextColor(70, 70, 70);
+  if (hasPrices && grandTotal > 0) {
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(fontSize);
+    doc.text(`Indicative total (website prices): Rs. ${formatNumberOnly(grandTotal)}`, margin, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(fontSizeSmall);
+    doc.setTextColor(70, 70, 70);
+  }
+  const disc = doc.splitTextToSize(
+    'Final price, stock, GST, and availability are confirmed by the store on WhatsApp or in person. This document is not a tax invoice.',
+    tableWidth,
+  );
+  doc.text(disc, margin, y);
+  y += disc.length * 3.6 + 4;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(fontSize);
+
+  if (data.custom_message?.trim()) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('Your note', margin, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
+    const noteLines = doc.splitTextToSize(data.custom_message.trim(), tableWidth);
+    doc.text(noteLines, margin, y);
+    y += noteLines.length * 4 + 4;
+  }
+
+  doc.setFontSize(fontSizeSmall);
+  doc.setTextColor(110, 110, 110);
+  const foot = doc.splitTextToSize(
+    `Quote reference ${data.request_ref} when you message or visit us.`,
+    tableWidth,
+  );
+  doc.text(foot, margin, pageHeight - 14);
+  doc.text('Page 1 of 1', pageWidth / 2, pageHeight - 6, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
 
   return doc;
 }

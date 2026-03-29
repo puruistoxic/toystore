@@ -49,8 +49,8 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '09 Future Car - Pull Back Toy Car | Khandelwal Toy Store',
-    seo_description: 'Buy 09 Future Car pull-back toy at wholesale price. Perfect for kids aged 3-8 years. Best quality toys.',
-    seo_keywords: JSON.stringify(['future car', 'pull back car', 'toy car', 'vehicle toy', 'wholesale toys'])
+    seo_description: 'Buy 09 Future Car pull-back toy for kids and families. Perfect for kids aged 3-8 years. Best quality toys.',
+    seo_keywords: JSON.stringify(['future car', 'pull back car', 'toy car', 'vehicle toy', 'toy shop'])
   },
   {
     name: '1:14 Simulated Model Car',
@@ -85,7 +85,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '1:14 Simulated Model Car - Scale Model Toy | Khandelwal Toy Store',
-    seo_description: 'Buy 1:14 simulated model car at wholesale price. Detailed scale model perfect for kids and collectors.',
+    seo_description: 'Buy 1:14 simulated model car for kids and families. Detailed scale model perfect for kids and collectors.',
     seo_keywords: JSON.stringify(['model car', 'scale model', 'simulated car', 'toy car', 'collectible'])
   },
   {
@@ -121,8 +121,8 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '1:16 Racing Sport Mood Car - Racing Toy Car | Khandelwal Toy Store',
-    seo_description: 'Buy 1:16 racing sport car at wholesale price. Perfect for racing enthusiasts and action play.',
-    seo_keywords: JSON.stringify(['racing car', 'sport car', 'toy car', 'racing toy', 'wholesale'])
+    seo_description: 'Buy 1:16 racing sport car for kids and families. Perfect for racing enthusiasts and action play.',
+    seo_keywords: JSON.stringify(['racing car', 'sport car', 'toy car', 'racing toy', 'kids toys'])
   },
   {
     name: '1.18 Spray Transverse Car',
@@ -157,7 +157,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '1.18 Spray Transverse Car - Unique Toy Car | Khandelwal Toy Store',
-    seo_description: 'Buy spray transverse car at wholesale price. Unique design perfect for kids aged 3-8 years.',
+    seo_description: 'Buy spray transverse car for kids and families. Unique design perfect for kids aged 3-8 years.',
     seo_keywords: JSON.stringify(['spray car', 'transverse car', 'toy car', 'unique toy'])
   },
 
@@ -195,7 +195,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '128 PCS Color Set - Art and Craft Supplies | Khandelwal Toy Store',
-    seo_description: 'Buy 128 piece color set at wholesale price. Complete art supplies for creative kids and projects.',
+    seo_description: 'Buy 128 piece color set for kids and families. Complete art supplies for creative kids and projects.',
     seo_keywords: JSON.stringify(['color set', 'art supplies', 'craft set', 'crayons', 'art and craft'])
   },
   {
@@ -231,8 +231,8 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '145 Color Set - Premium Art Supplies | Khandelwal Toy Store',
-    seo_description: 'Buy 145 piece premium color set at wholesale price. Extensive art materials for young artists.',
-    seo_keywords: JSON.stringify(['premium color set', 'art supplies', '145 piece', 'art kit', 'wholesale'])
+    seo_description: 'Buy 145 piece premium color set for kids and families. Extensive art materials for young artists.',
+    seo_keywords: JSON.stringify(['premium color set', 'art supplies', '145 piece', 'art kit', 'kids toys'])
   },
   {
     name: '150 Piece Color (Art) Set',
@@ -267,8 +267,8 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '150 Piece Color Art Set - Complete Art Kit | Khandelwal Toy Store',
-    seo_description: 'Buy 150 piece art set at wholesale price. Complete art supplies perfect for school projects.',
-    seo_keywords: JSON.stringify(['art set', '150 piece', 'art kit', 'school supplies', 'wholesale'])
+    seo_description: 'Buy 150 piece art set for kids and families. Complete art supplies perfect for school projects.',
+    seo_keywords: JSON.stringify(['art set', '150 piece', 'art kit', 'school supplies', 'kids toys'])
   },
 
   // Card & Board Games
@@ -305,7 +305,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '13 in 1 Family Board Magnetic Game - Multi Game Set | Khandelwal Toy Store',
-    seo_description: 'Buy 13-in-1 family board game at wholesale price. Multiple games in one set for family entertainment.',
+    seo_description: 'Buy 13-in-1 family board game for kids and families. Multiple games in one set for family entertainment.',
     seo_keywords: JSON.stringify(['board game', 'magnetic game', 'family game', '13 in 1', 'multi game'])
   },
   {
@@ -341,7 +341,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '2 in 1 Ludo and Snakes & Ladders - Classic Board Game | Khandelwal Toy Store',
-    seo_description: 'Buy 2-in-1 Ludo and Snakes & Ladders at wholesale price. Two classic games in one board.',
+    seo_description: 'Buy 2-in-1 Ludo and Snakes & Ladders for kids and families. Two classic games in one board.',
     seo_keywords: JSON.stringify(['ludo', 'snakes and ladders', 'board game', 'classic game', 'family game'])
   },
 
@@ -379,7 +379,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: '2 In 1 Soft Aqua Blaster Gun - Water Toy | Khandelwal Toy Store',
-    seo_description: 'Buy 2-in-1 soft aqua blaster gun at wholesale price. Safe water toy for outdoor fun.',
+    seo_description: 'Buy 2-in-1 soft aqua blaster gun for kids and families. Safe water toy for outdoor fun.',
     seo_keywords: JSON.stringify(['water gun', 'aqua blaster', 'water toy', 'outdoor toy', 'summer toy'])
   },
 
@@ -417,7 +417,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Educational Building Blocks Set - Learning Toy | Khandelwal Toy Store',
-    seo_description: 'Buy educational building blocks at wholesale price. Develops creativity and motor skills in kids.',
+    seo_description: 'Buy educational building blocks for kids and families. Develops creativity and motor skills in kids.',
     seo_keywords: JSON.stringify(['building blocks', 'educational toy', 'learning toy', 'construction toy'])
   },
 
@@ -455,7 +455,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Cuddly Teddy Bear Large - Soft Toy | Khandelwal Toy Store',
-    seo_description: 'Buy large cuddly teddy bear at wholesale price. Soft and safe companion for kids.',
+    seo_description: 'Buy large cuddly teddy bear for kids and families. Soft and safe companion for kids.',
     seo_keywords: JSON.stringify(['teddy bear', 'soft toy', 'stuffed toy', 'cuddly toy', 'plush toy'])
   },
 
@@ -493,8 +493,8 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Superhero Action Figure Set - Action Toys | Khandelwal Toy Store',
-    seo_description: 'Buy superhero action figure set at wholesale price. Perfect for imaginative play and collection.',
-    seo_keywords: JSON.stringify(['action figure', 'superhero', 'toy figures', 'collectible', 'wholesale'])
+    seo_description: 'Buy superhero action figure set for kids and families. Perfect for imaginative play and collection.',
+    seo_keywords: JSON.stringify(['action figure', 'superhero', 'toy figures', 'collectible', 'kids toys'])
   },
 
   // Doll & Doll House
@@ -531,7 +531,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Fashion Doll with Accessories - Doll Toy | Khandelwal Toy Store',
-    seo_description: 'Buy fashion doll with accessories at wholesale price. Perfect for creative play and role-playing.',
+    seo_description: 'Buy fashion doll with accessories for kids and families. Perfect for creative play and role-playing.',
     seo_keywords: JSON.stringify(['fashion doll', 'doll toy', 'doll accessories', 'role play', 'girls toy'])
   },
   {
@@ -567,7 +567,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Princess Doll House Set - Doll House Toy | Khandelwal Toy Store',
-    seo_description: 'Buy princess doll house set at wholesale price. Beautiful doll house with furniture for imaginative play.',
+    seo_description: 'Buy princess doll house set for kids and families. Beautiful doll house with furniture for imaginative play.',
     seo_keywords: JSON.stringify(['doll house', 'princess doll', 'doll furniture', 'girls toy', 'imaginative play'])
   },
 
@@ -605,7 +605,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Colorful Baby Rattle Set - Infant Toy | Khandelwal Toy Store',
-    seo_description: 'Buy colorful baby rattle set at wholesale price. Safe and engaging toys for infant development.',
+    seo_description: 'Buy colorful baby rattle set for kids and families. Safe and engaging toys for infant development.',
     seo_keywords: JSON.stringify(['baby rattle', 'infant toy', 'baby toy', 'sensory toy', 'newborn gift'])
   },
   {
@@ -641,7 +641,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Musical Baby Rattle - Musical Infant Toy | Khandelwal Toy Store',
-    seo_description: 'Buy musical baby rattle at wholesale price. Stimulates senses with sounds and lights.',
+    seo_description: 'Buy musical baby rattle for kids and families. Stimulates senses with sounds and lights.',
     seo_keywords: JSON.stringify(['musical rattle', 'baby toy', 'infant toy', 'sensory toy', 'musical toy'])
   },
 
@@ -679,7 +679,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Duck Family Bath Toy Set - Bath Time Toys | Khandelwal Toy Store',
-    seo_description: 'Buy duck family bath toy set at wholesale price. Water-safe toys for fun bath time.',
+    seo_description: 'Buy duck family bath toy set for kids and families. Water-safe toys for fun bath time.',
     seo_keywords: JSON.stringify(['bath toy', 'duck toy', 'water toy', 'bath time', 'floating toy'])
   },
   {
@@ -714,7 +714,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Water Wheel Bath Toy - Interactive Bath Toy | Khandelwal Toy Store',
-    seo_description: 'Buy water wheel bath toy at wholesale price. Interactive and fun for bath time.',
+    seo_description: 'Buy water wheel bath toy for kids and families. Interactive and fun for bath time.',
     seo_keywords: JSON.stringify(['water wheel', 'bath toy', 'interactive toy', 'bath time', 'water play'])
   },
 
@@ -752,7 +752,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Piggy Bank Classic - Coin Bank Toy | Khandelwal Toy Store',
-    seo_description: 'Buy classic piggy bank at wholesale price. Teach kids about saving money.',
+    seo_description: 'Buy classic piggy bank for kids and families. Teach kids about saving money.',
     seo_keywords: JSON.stringify(['piggy bank', 'coin bank', 'money saving', 'educational toy', 'piggy'])
   },
   {
@@ -788,7 +788,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Electronic Coin Bank with Counter - Digital Piggy Bank | Khandelwal Toy Store',
-    seo_description: 'Buy electronic coin bank at wholesale price. Digital counter teaches money counting.',
+    seo_description: 'Buy electronic coin bank for kids and families. Digital counter teaches money counting.',
     seo_keywords: JSON.stringify(['electronic coin bank', 'digital piggy bank', 'coin counter', 'money saving', 'educational'])
   },
 
@@ -827,7 +827,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Mini Drone with Camera - Kids Drone | Khandelwal Toy Store',
-    seo_description: 'Buy mini drone with camera at wholesale price. Perfect for kids and beginners.',
+    seo_description: 'Buy mini drone with camera for kids and families. Perfect for kids and beginners.',
     seo_keywords: JSON.stringify(['drone', 'mini drone', 'drone with camera', 'quadcopter', 'flying toy'])
   },
   {
@@ -863,7 +863,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Toy Drone Beginner - Kids Flying Toy | Khandelwal Toy Store',
-    seo_description: 'Buy beginner friendly toy drone at wholesale price. Safe and fun for kids.',
+    seo_description: 'Buy beginner friendly toy drone for kids and families. Safe and fun for kids.',
     seo_keywords: JSON.stringify(['toy drone', 'beginner drone', 'kids drone', 'flying toy', 'quadcopter'])
   },
 
@@ -902,7 +902,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Electric Car Ride On - Kids Electric Vehicle | Khandelwal Toy Store',
-    seo_description: 'Buy electric car ride-on at wholesale price. Battery-powered vehicle for kids.',
+    seo_description: 'Buy electric car ride-on for kids and families. Battery-powered vehicle for kids.',
     seo_keywords: JSON.stringify(['electric car', 'ride on', 'kids vehicle', 'battery car', 'electric ride on'])
   },
   {
@@ -938,7 +938,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Electric Motorcycle Ride On - Kids Motorcycle | Khandelwal Toy Store',
-    seo_description: 'Buy electric motorcycle ride-on at wholesale price. Cool battery-powered vehicle.',
+    seo_description: 'Buy electric motorcycle ride-on for kids and families. Cool battery-powered vehicle.',
     seo_keywords: JSON.stringify(['electric motorcycle', 'ride on', 'kids motorcycle', 'battery vehicle', 'electric ride'])
   },
 
@@ -976,7 +976,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Pedal Car Classic - Manual Ride On | Khandelwal Toy Store',
-    seo_description: 'Buy classic pedal car at wholesale price. Manual ride-on promotes exercise.',
+    seo_description: 'Buy classic pedal car for kids and families. Manual ride-on promotes exercise.',
     seo_keywords: JSON.stringify(['pedal car', 'manual ride on', 'kids car', 'pedal vehicle', 'outdoor toy'])
   },
   {
@@ -1012,7 +1012,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Balance Bike for Kids - Toddler Bike | Khandelwal Toy Store',
-    seo_description: 'Buy balance bike at wholesale price. Helps toddlers learn balance and coordination.',
+    seo_description: 'Buy balance bike for kids and families. Helps toddlers learn balance and coordination.',
     seo_keywords: JSON.stringify(['balance bike', 'toddler bike', 'manual ride on', 'balance training', 'kids bike'])
   },
 
@@ -1050,7 +1050,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Musical Keyboard Toy - Kids Keyboard | Khandelwal Toy Store',
-    seo_description: 'Buy musical keyboard toy at wholesale price. Introduces kids to music and sounds.',
+    seo_description: 'Buy musical keyboard toy for kids and families. Introduces kids to music and sounds.',
     seo_keywords: JSON.stringify(['musical keyboard', 'keyboard toy', 'musical toy', 'kids keyboard', 'music toy'])
   },
   {
@@ -1086,7 +1086,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Drum Set for Kids - Musical Toy | Khandelwal Toy Store',
-    seo_description: 'Buy kids drum set at wholesale price. Develops rhythm and musical skills.',
+    seo_description: 'Buy kids drum set for kids and families. Develops rhythm and musical skills.',
     seo_keywords: JSON.stringify(['drum set', 'kids drums', 'musical toy', 'rhythm toy', 'drum toy'])
   },
 
@@ -1124,7 +1124,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Doctor Play Set - Role Play Toy | Khandelwal Toy Store',
-    seo_description: 'Buy doctor play set at wholesale price. Complete medical tools for role play.',
+    seo_description: 'Buy doctor play set for kids and families. Complete medical tools for role play.',
     seo_keywords: JSON.stringify(['doctor set', 'role play', 'medical toys', 'pretend play', 'doctor toy'])
   },
   {
@@ -1160,7 +1160,7 @@ const products = [
     }),
     warranty: '1 Year Manufacturer Warranty',
     seo_title: 'Kitchen Play Set - Role Play Kitchen | Khandelwal Toy Store',
-    seo_description: 'Buy kitchen play set at wholesale price. Complete utensils for pretend cooking.',
+    seo_description: 'Buy kitchen play set for kids and families. Complete utensils for pretend cooking.',
     seo_keywords: JSON.stringify(['kitchen set', 'role play', 'cooking toys', 'pretend play', 'kitchen toy'])
   }
 ];

@@ -1,9 +1,17 @@
+const crypto = require('crypto');
 const express = require('express');
 const { getPool } = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 const { logAudit, getEntityName } = require('../middleware/auditLog');
 const { v4: uuidv4 } = require('uuid');
 const { buildSmartSearchCondition } = require('../utils/searchHelper');
+const { notifyAdminProductEnquiry, notifyAdminCartEnquiry } = require('../services/enquiryLeadNotifier');
+
+function generateOrderRequestPublicRef() {
+  const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const rand = crypto.randomBytes(4).toString('hex').toUpperCase();
+  return `KTS-${ymd}-${rand}`;
+}
 
 const router = express.Router();
 
@@ -17,6 +25,27 @@ function parseJSON(value) {
     }
   }
   return value;
+}
+
+const HOME_HERO_BANNER_SLIDE_IDS = new Set(['1', '2', '3', '4']);
+
+/** Validated list of hero slide ids for homepage product spots */
+function normalizeHomeBannerSlides(body) {
+  let raw = body.home_banner_slides;
+  if (raw == null || raw === '') {
+    return [];
+  }
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return [...new Set(raw.map(String).filter((id) => HOME_HERO_BANNER_SLIDE_IDS.has(id)))];
 }
 
 // Helper function to prepare data for database
@@ -230,7 +259,7 @@ router.post('/services/:id/restore', authenticateToken, async (req, res) => {
 router.get('/products', async (req, res) => {
   try {
     const pool = getPool();
-    const { search, is_active, only_deleted, include_deleted, exclude_services } = req.query;
+    const { search, is_active, only_deleted, include_deleted, exclude_services, home_banner } = req.query;
     
     let query = 'SELECT * FROM products WHERE 1=1';
     const params = [];
@@ -244,6 +273,14 @@ router.get('/products', async (req, res) => {
       query += ' AND is_deleted = 1';
     } else if (include_deleted !== 'true') {
       query += ' AND is_deleted = 0';
+    }
+
+    /** Homepage hero strip: only products flagged in admin */
+    if (home_banner === 'true' || home_banner === '1') {
+      query += ' AND promote_home_banner = 1';
+      if (is_active === undefined) {
+        query += ' AND is_active = 1';
+      }
     }
     
     // Smart filtering: exclude service-like items by default (unless explicitly included)
@@ -269,10 +306,16 @@ router.get('/products', async (req, res) => {
       }
     }
     
-    query += ' ORDER BY created_at DESC';
+    if (home_banner === 'true' || home_banner === '1') {
+      query += ' ORDER BY banner_sort_order ASC, name ASC LIMIT 48';
+    } else {
+      query += ' ORDER BY created_at DESC';
+    }
     
     const [rows] = await pool.execute(query, params);
-    const products = rows.map(row => formatDataFromDB(row, ['images', 'features', 'specifications', 'seo_keywords']));
+    const products = rows.map(row =>
+      formatDataFromDB(row, ['images', 'video_urls', 'home_banner_slides', 'features', 'specifications', 'seo_keywords'])
+    );
     res.json(products);
   } catch (error) {
     console.error('[Content API] Get products error:', error);
@@ -296,7 +339,14 @@ router.get('/products/:id', async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    const product = formatDataFromDB(rows[0], ['images', 'features', 'specifications', 'seo_keywords']);
+    const product = formatDataFromDB(rows[0], [
+      'images',
+      'video_urls',
+      'home_banner_slides',
+      'features',
+      'specifications',
+      'seo_keywords',
+    ]);
     res.json(product);
   } catch (error) {
     console.error('[Content API] Get product error:', error);
@@ -336,23 +386,43 @@ router.post('/products', authenticateToken, async (req, res) => {
       slug = `${slug}-${Date.now()}`;
     }
 
-    const data = prepareDataForDB({ ...req.body, id: productId, slug }, [
-      'id', 'name', 'slug', 'description', 'short_description', 'price', 'price_includes_gst', 'category',
-      'brand', 'hsn_code', 'image', 'images', 'features', 'specifications', 'warranty',
-      'seo_title', 'seo_description', 'seo_keywords', 'is_active'
-    ]);
+    const sortOrderRaw = parseInt(req.body.banner_sort_order, 10);
+    const bannerSortOrder =
+      Number.isFinite(sortOrderRaw) ? Math.min(999, Math.max(0, sortOrderRaw)) : 0;
+    const homeBannerSlides = normalizeHomeBannerSlides(req.body);
+    const promoteHomeBanner = homeBannerSlides.length > 0;
+
+    const data = prepareDataForDB(
+      {
+        ...req.body,
+        id: productId,
+        slug,
+        home_banner_slides: homeBannerSlides,
+        promote_home_banner: promoteHomeBanner,
+        banner_sort_order: bannerSortOrder,
+      },
+      [
+        'id', 'name', 'slug', 'description', 'short_description', 'price', 'price_includes_gst', 'category',
+        'brand', 'hsn_code', 'image', 'images', 'video_urls', 'features', 'specifications', 'warranty',
+        'seo_title', 'seo_description', 'seo_keywords', 'is_active',
+        'promote_home_banner', 'banner_sort_order', 'home_banner_slides',
+      ]
+    );
 
     await pool.execute(
       `INSERT INTO products (id, name, slug, description, short_description, price, price_includes_gst, category, 
-       brand, hsn_code, image, images, features, specifications, warranty, seo_title, seo_description, 
-       seo_keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       brand, hsn_code, image, images, video_urls, features, specifications, warranty, seo_title, seo_description, 
+       seo_keywords, is_active, promote_home_banner, banner_sort_order, home_banner_slides) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.id, data.name, data.slug, data.description, data.short_description,
         data.price, (data.price_includes_gst !== undefined && data.price_includes_gst !== null) ? data.price_includes_gst : false,
-        data.category, data.brand, data.hsn_code, data.image, data.images,
+        data.category, data.brand, data.hsn_code, data.image, data.images, data.video_urls,
         data.features, data.specifications, data.warranty,
         data.seo_title, data.seo_description, data.seo_keywords,
-        data.is_active !== undefined ? data.is_active : true
+        data.is_active !== undefined ? data.is_active : true,
+        data.promote_home_banner === true || data.promote_home_banner === 1,
+        data.banner_sort_order ?? 0,
+        data.home_banner_slides,
       ]
     );
 
@@ -372,27 +442,54 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
     
     // Get old data for audit log
     const [oldRows] = await pool.execute('SELECT * FROM products WHERE id = ?', [productId]);
-    const oldData = oldRows.length > 0 ? formatDataFromDB(oldRows[0], ['images', 'features', 'specifications', 'seo_keywords']) : null;
+    const oldData = oldRows.length > 0
+      ? formatDataFromDB(oldRows[0], [
+          'images',
+          'video_urls',
+          'home_banner_slides',
+          'features',
+          'specifications',
+          'seo_keywords',
+        ])
+      : null;
     
-    const data = prepareDataForDB(req.body, [
-      'name', 'slug', 'description', 'short_description', 'price', 'price_includes_gst', 'category',
-      'brand', 'hsn_code', 'image', 'images', 'features', 'specifications', 'warranty',
-      'seo_title', 'seo_description', 'seo_keywords', 'is_active'
-    ]);
+    const sortOrderRawPut = parseInt(req.body.banner_sort_order, 10);
+    const bannerSortOrderPut =
+      Number.isFinite(sortOrderRawPut) ? Math.min(999, Math.max(0, sortOrderRawPut)) : 0;
+    const homeBannerSlidesPut = normalizeHomeBannerSlides(req.body);
+    const promoteHomeBannerPut = homeBannerSlidesPut.length > 0;
+
+    const data = prepareDataForDB(
+      {
+        ...req.body,
+        home_banner_slides: homeBannerSlidesPut,
+        promote_home_banner: promoteHomeBannerPut,
+        banner_sort_order: bannerSortOrderPut,
+      },
+      [
+        'name', 'slug', 'description', 'short_description', 'price', 'price_includes_gst', 'category',
+        'brand', 'hsn_code', 'image', 'images', 'video_urls', 'features', 'specifications', 'warranty',
+        'seo_title', 'seo_description', 'seo_keywords', 'is_active',
+        'promote_home_banner', 'banner_sort_order', 'home_banner_slides',
+      ]
+    );
 
     await pool.execute(
       `UPDATE products SET name = ?, slug = ?, description = ?, short_description = ?, 
-       price = ?, price_includes_gst = ?, category = ?, brand = ?, hsn_code = ?, image = ?, images = ?, features = ?, 
+       price = ?, price_includes_gst = ?, category = ?, brand = ?, hsn_code = ?, image = ?, images = ?, video_urls = ?, features = ?, 
        specifications = ?, warranty = ?, seo_title = ?, seo_description = ?, 
-       seo_keywords = ?, is_active = ?, updated_at = NOW() WHERE id = ?`,
+       seo_keywords = ?, is_active = ?, promote_home_banner = ?, banner_sort_order = ?, home_banner_slides = ?, updated_at = NOW() WHERE id = ?`,
       [
         data.name, data.slug, data.description, data.short_description,
         data.price, (data.price_includes_gst !== undefined && data.price_includes_gst !== null) ? data.price_includes_gst : false,
-        data.category, data.brand, data.hsn_code, data.image, data.images,
+        data.category, data.brand, data.hsn_code, data.image, data.images, data.video_urls,
         data.features, data.specifications, data.warranty,
         data.seo_title, data.seo_description, data.seo_keywords,
         data.is_active !== undefined ? data.is_active : true,
-        productId
+        data.promote_home_banner === true || data.promote_home_banner === 1,
+        data.banner_sort_order ?? 0,
+        data.home_banner_slides,
+        productId,
       ]
     );
 
@@ -412,7 +509,16 @@ router.delete('/products/:id', authenticateToken, async (req, res) => {
     
     // Get old data for audit log
     const [oldRows] = await pool.execute('SELECT * FROM products WHERE id = ?', [productId]);
-    const oldData = oldRows.length > 0 ? formatDataFromDB(oldRows[0], ['images', 'features', 'specifications', 'seo_keywords']) : null;
+    const oldData = oldRows.length > 0
+      ? formatDataFromDB(oldRows[0], [
+          'images',
+          'video_urls',
+          'home_banner_slides',
+          'features',
+          'specifications',
+          'seo_keywords',
+        ])
+      : null;
     
     await pool.execute(
       'UPDATE products SET is_deleted = 1, is_active = 0, deleted_at = NOW() WHERE id = ?',
@@ -2082,13 +2188,30 @@ router.post('/enquiries', async (req, res) => {
       enquiry_type = 'product'
     } = req.body;
 
-    // Validate required fields
-    if (!product_name || !customer_name || !customer_phone || !quantity) {
+    const qty = Math.max(1, parseInt(String(quantity ?? 1), 10) || 1);
+    if (!product_name || String(product_name).trim() === '') {
       return res.status(400).json({
         error: 'Missing required fields',
-        message: 'Product name, customer name, phone, and quantity are required'
+        message: 'Product name is required'
       });
     }
+
+    const name =
+      customer_name != null && String(customer_name).trim() !== ''
+        ? String(customer_name).trim()
+        : null;
+    const phone =
+      customer_phone != null && String(customer_phone).trim() !== ''
+        ? String(customer_phone).trim()
+        : null;
+    const email =
+      customer_email != null && String(customer_email).trim() !== ''
+        ? String(customer_email).trim()
+        : null;
+    const message =
+      custom_message != null && String(custom_message).trim() !== ''
+        ? String(custom_message).trim()
+        : null;
 
     // Insert enquiry
     const [result] = await pool.execute(
@@ -2098,23 +2221,35 @@ router.post('/enquiries', async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`,
       [
         product_id || null,
-        product_name,
+        String(product_name).trim(),
         product_slug || null,
-        customer_name,
-        customer_email || null,
-        customer_phone,
-        quantity,
-        requested_price || null,
-        custom_message || null,
+        name,
+        email,
+        phone,
+        qty,
+        requested_price != null && requested_price !== '' ? requested_price : null,
+        message,
         whatsapp_number || null,
         enquiry_type
       ]
     );
 
+    const enquiryId = result.insertId;
+    await notifyAdminProductEnquiry(pool, {
+      enquiryId,
+      product_name: String(product_name).trim(),
+      product_slug: product_slug || null,
+      quantity: qty,
+      customer_name: name,
+      customer_phone: phone,
+      customer_email: email,
+      custom_message: message,
+    });
+
     res.json({
       success: true,
       message: 'Enquiry logged successfully',
-      enquiry_id: result.insertId
+      enquiry_id: enquiryId
     });
   } catch (error) {
     console.error('[Content API] Create enquiry error:', error);
@@ -2122,6 +2257,202 @@ router.post('/enquiries', async (req, res) => {
       error: 'Failed to log enquiry',
       message: error.message
     });
+  }
+});
+
+// Cart / order request: multiple products, one row (cart_enquiries) + admin email.
+// POST /order-requests is an alias for the same handler.
+async function createCartOrderRequest(req, res) {
+  try {
+    const pool = getPool();
+    const {
+      items: rawItems,
+      customer_name,
+      customer_email,
+      customer_phone,
+      custom_message,
+      whatsapp_number,
+    } = req.body;
+
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'Provide a non-empty items array',
+      });
+    }
+
+    const items = [];
+    for (const row of rawItems) {
+      const product_name = row.product_name != null ? String(row.product_name).trim() : '';
+      if (!product_name) {
+        return res.status(400).json({
+          error: 'Invalid item',
+          message: 'Each item needs product_name',
+        });
+      }
+      const qty = Math.max(1, parseInt(String(row.quantity ?? 1), 10) || 1);
+      let unit_price = null;
+      if (row.unit_price != null && row.unit_price !== '') {
+        const p = parseFloat(String(row.unit_price));
+        if (!Number.isNaN(p) && p >= 0) {
+          unit_price = p;
+        }
+      }
+      const brand =
+        row.brand != null && String(row.brand).trim() !== '' ? String(row.brand).trim() : null;
+      let line_note = null;
+      const rawNote = row.line_note != null ? String(row.line_note).trim() : '';
+      if (rawNote) {
+        line_note = rawNote.length > 500 ? rawNote.slice(0, 500) : rawNote;
+      }
+      items.push({
+        product_id: row.product_id != null ? String(row.product_id) : null,
+        product_name,
+        product_slug: row.product_slug != null ? String(row.product_slug).trim() : null,
+        quantity: qty,
+        unit_price,
+        brand,
+        line_note,
+      });
+    }
+
+    const name =
+      customer_name != null && String(customer_name).trim() !== ''
+        ? String(customer_name).trim()
+        : null;
+    const phone =
+      customer_phone != null && String(customer_phone).trim() !== ''
+        ? String(customer_phone).trim()
+        : null;
+    const email =
+      customer_email != null && String(customer_email).trim() !== ''
+        ? String(customer_email).trim()
+        : null;
+    const message =
+      custom_message != null && String(custom_message).trim() !== ''
+        ? String(custom_message).trim()
+        : null;
+
+    const itemsJson = JSON.stringify(items);
+
+    let insertId = null;
+    let publicRef = null;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      publicRef = generateOrderRequestPublicRef();
+      try {
+        const [result] = await pool.execute(
+          `INSERT INTO cart_enquiries (
+            public_ref, items_json, customer_name, customer_email, customer_phone,
+            custom_message, whatsapp_number, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'new')`,
+          [publicRef, itemsJson, name, email, phone, message, whatsapp_number || null],
+        );
+        insertId = result.insertId;
+        break;
+      } catch (e) {
+        if (e.code === 'ER_DUP_ENTRY') {
+          continue;
+        }
+        throw e;
+      }
+    }
+
+    if (!insertId) {
+      return res.status(500).json({
+        error: 'Failed to save order request',
+        message: 'Could not allocate a unique reference. Please try again.',
+      });
+    }
+
+    const [savedRows] = await pool.execute(
+      'SELECT id, public_ref, created_at FROM cart_enquiries WHERE id = ? LIMIT 1',
+      [insertId],
+    );
+    const row0 = savedRows[0] || {};
+    const createdAt =
+      row0.created_at instanceof Date ? row0.created_at.toISOString() : new Date().toISOString();
+    const refOut = row0.public_ref != null ? String(row0.public_ref) : publicRef;
+
+    await notifyAdminCartEnquiry(pool, {
+      cartId: insertId,
+      public_ref: refOut,
+      items,
+      customer_name: name,
+      customer_phone: phone,
+      customer_email: email,
+      custom_message: message,
+    });
+
+    res.json({
+      success: true,
+      message: 'Order request received. Use your reference to track this request.',
+      request_ref: refOut,
+      id: insertId,
+      created_at: createdAt,
+      cart_enquiry_id: insertId,
+    });
+  } catch (error) {
+    console.error('[Content API] Create order request error:', error);
+    res.status(500).json({
+      error: 'Failed to save order request',
+      message: error.message,
+    });
+  }
+}
+
+router.post('/cart-enquiries', createCartOrderRequest);
+router.post('/order-requests', createCartOrderRequest);
+
+// Public: look up a saved order request by reference (for customer tracking + PDF)
+router.get('/order-requests/:publicRef', async (req, res) => {
+  try {
+    const raw = req.params.publicRef != null ? String(req.params.publicRef).trim() : '';
+    if (!raw || !/^[A-Za-z0-9-]+$/.test(raw) || raw.length > 40) {
+      return res.status(400).json({ error: 'Invalid reference' });
+    }
+    const pool = getPool();
+    const [rows] = await pool.execute(
+      `SELECT id, public_ref, items_json, customer_name, customer_email, customer_phone,
+              custom_message, status, created_at
+       FROM cart_enquiries
+       WHERE public_ref = ?
+       LIMIT 1`,
+      [raw],
+    );
+    if (!rows.length) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'No order request matches this reference.',
+      });
+    }
+    const r = rows[0];
+    let items = parseJSON(r.items_json);
+    if (!Array.isArray(items)) {
+      items = [];
+    }
+    const createdAt =
+      r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at || '');
+    res.json({
+      success: true,
+      request_ref: r.public_ref != null ? String(r.public_ref) : null,
+      id: r.id,
+      items,
+      customer_name: r.customer_name,
+      customer_email: r.customer_email,
+      customer_phone: r.customer_phone,
+      custom_message: r.custom_message,
+      status: r.status,
+      created_at: createdAt,
+    });
+  } catch (error) {
+    if (String(error.message || '').includes('Unknown column') && String(error.message || '').includes('public_ref')) {
+      return res.status(503).json({
+        error: 'Unavailable',
+        message: 'Order reference lookup requires a database update. Contact the store with your enquiry details.',
+      });
+    }
+    console.error('[Content API] order-requests lookup error:', error);
+    res.status(500).json({ error: 'Lookup failed', message: error.message });
   }
 });
 

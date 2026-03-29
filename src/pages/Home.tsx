@@ -2,27 +2,26 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  ShoppingCart,
   Store,
   Package,
   ArrowRight, 
   Star, 
   CheckCircle,
   Gift,
-  Sparkles,
   Users,
   Truck,
   ChevronLeft,
   ChevronRight,
-  TrendingUp,
   Eye
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { contentApi } from '../utils/api';
+import { mapDbProductToFrontend } from '../utils/catalogFromDb';
 import type { Product } from '../types/catalog';
 import ProductDetailModal from '../components/ProductDetailModal';
 import ProductCard from '../components/ProductCard';
-import { getPlaceholderImage } from '../utils/imagePlaceholder';
+import HeroPromotedProductSlider from '../components/HeroPromotedProductSlider';
+import { filterProductsForHeroSlide } from '../constants/homeHeroBanners';
 
 interface HeroSlide {
   id: string;
@@ -36,62 +35,58 @@ interface HeroSlide {
   overlay?: 'light' | 'dark' | 'none';
 }
 
-// Map database product to frontend Product interface
-function mapDbProductToFrontend(dbProduct: any): Product {
-  const images = dbProduct.images ? (Array.isArray(dbProduct.images) ? dbProduct.images : [dbProduct.images]) : [];
-  if (dbProduct.image && !images.includes(dbProduct.image)) {
-    images.unshift(dbProduct.image);
-  }
-  if (images.length === 0 || !images[0] || images[0].trim() === '') {
-    images.push(getPlaceholderImage(400, 300, dbProduct.name || 'Product'));
-  }
+const heroSlides: HeroSlide[] = [
+  {
+    id: '1',
+    title: 'Your neighbourhood',
+    subtitle: 'toy store',
+    description:
+      'Walk in, browse, and take home quality toys for every age. Friendly advice, fair prices, and gifts that kids actually love — right here in your area.',
+    image: '/images/hero/toys-hero.jpg',
+    imageAlt: 'Colourful toys at Khandelwal Toy Store',
+    primaryButton: { text: 'Shop toys', link: '/products' },
+    secondaryButton: { text: 'Visit or contact us', link: '/contact' },
+    overlay: 'dark',
+  },
+  {
+    id: '2',
+    title: 'Products by',
+    subtitle: 'AGES',
+    description:
+      'Find the perfect toys for every age group! From infants (0-2 years) to teens (13+), we have age-appropriate toys that spark imagination and support development at every stage.',
+    image: '/images/hero/products-by-age.jpg',
+    imageAlt: 'Toys organized by age groups',
+    primaryButton: { text: 'Browse by Age', link: '/products?filter=age' },
+    secondaryButton: { text: 'View All Ages', link: '/products' },
+    overlay: 'dark',
+  },
+  {
+    id: '3',
+    title: 'Products by',
+    subtitle: 'OCCASIONS',
+    description:
+      'Perfect toys for every occasion! Birthday gifts, holiday celebrations, back-to-school, festivals, and more. Find the right toy for every special moment.',
+    image: '/images/hero/products-by-occasion.jpg',
+    imageAlt: 'Toys for different occasions',
+    primaryButton: { text: 'Browse by Occasion', link: '/products?filter=occasion' },
+    secondaryButton: { text: 'View All Occasions', link: '/products' },
+    overlay: 'dark',
+  },
+  {
+    id: '4',
+    title: 'Featured',
+    subtitle: 'Toy Collections',
+    description:
+      'Action figures, educational toys, board games, remote control toys, and more. Discover our best-selling collections.',
+    image: '/images/hero/featured-toys.jpg',
+    imageAlt: 'Featured toy collections',
+    primaryButton: { text: 'View Collections', link: '/products?filter=featured' },
+    secondaryButton: { text: 'New Arrivals', link: '/products?filter=new-arrival' },
+    overlay: 'dark',
+  },
+];
 
-  const features = dbProduct.features ? (Array.isArray(dbProduct.features) ? dbProduct.features : []) : [];
-  const specifications = dbProduct.specifications ? (typeof dbProduct.specifications === 'object' ? dbProduct.specifications : {}) : {};
-
-  // Parse occasion from JSON if it's a string
-  let occasion: string[] = [];
-  if (dbProduct.occasion) {
-    if (typeof dbProduct.occasion === 'string') {
-      try {
-        occasion = JSON.parse(dbProduct.occasion);
-      } catch {
-        occasion = [dbProduct.occasion];
-      }
-    } else if (Array.isArray(dbProduct.occasion)) {
-      occasion = dbProduct.occasion;
-    }
-  }
-
-  return {
-    id: dbProduct.id,
-    name: dbProduct.name,
-    slug: dbProduct.slug || dbProduct.id,
-    description: dbProduct.description || dbProduct.short_description || 'High-quality toy product',
-    price: dbProduct.price || 0,
-    originalPrice: undefined,
-    images: images,
-    category: dbProduct.category || 'toys',
-    brand: dbProduct.brand || 'Khandelwal Toy Store',
-    model: specifications.model || specifications.Model || dbProduct.name,
-    inStock: dbProduct.stock_quantity ? dbProduct.stock_quantity > 0 : true,
-    stockQuantity: dbProduct.stock_quantity || 0,
-    rating: 4.5,
-    reviews: 0,
-    features: features,
-    specifications: specifications,
-    warranty: dbProduct.warranty || undefined,
-    ageGroup: dbProduct.age_group,
-    occasion: occasion,
-    gender: dbProduct.gender,
-    materialType: dbProduct.material_type,
-    educationalValue: dbProduct.educational_value || false,
-    minimumOrderQuantity: dbProduct.minimum_order_quantity || 1,
-    bulkDiscountPercentage: dbProduct.bulk_discount_percentage || 0,
-    sku: dbProduct.sku,
-    priceIncludesGst: dbProduct.price_includes_gst || false
-  };
-}
+const HERO_SLIDE_COUNT = heroSlides.length;
 
 const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -109,6 +104,15 @@ const Home: React.FC = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const { data: bannerDbProducts = [] } = useQuery({
+    queryKey: ['products', 'home-banner'],
+    queryFn: async () => {
+      const response = await contentApi.getProducts({ home_banner: true, is_active: true });
+      return response.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Map database products to frontend format and get best sellers (first 12 products)
   const bestSellers = useMemo(() => {
     const products = dbProducts
@@ -118,6 +122,22 @@ const Home: React.FC = () => {
     // Return first 12 products as best sellers (you can add a "bestseller" flag in DB later)
     return products.slice(0, 12);
   }, [dbProducts]);
+
+  const bannerProducts = useMemo(() => {
+    const sorted = [...bannerDbProducts].sort((a, b) => {
+      const ao = Number((a as { banner_sort_order?: number }).banner_sort_order) || 0;
+      const bo = Number((b as { banner_sort_order?: number }).banner_sort_order) || 0;
+      if (ao !== bo) return ao - bo;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+    return sorted.map(mapDbProductToFrontend);
+  }, [bannerDbProducts]);
+
+  const bannerProductsForCurrentSlide = useMemo(() => {
+    const slideId = heroSlides[currentSlide]?.id;
+    if (!slideId) return [];
+    return filterProductsForHeroSlide(bannerProducts, slideId);
+  }, [bannerProducts, currentSlide]);
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -129,62 +149,15 @@ const Home: React.FC = () => {
     setSelectedProduct(null);
   };
 
-  const heroSlides: HeroSlide[] = [
-    {
-      id: '1',
-      title: 'Wholesale Prices,',
-      subtitle: 'Unmatched Quality',
-      description: 'Order in bulk and save! Minimum quantity, maximum discount. High-quality toys for retailers, distributors, and e-commerce platforms across India.',
-      image: '/images/hero/toys-hero.jpg',
-      imageAlt: 'Wholesale toys collection',
-      primaryButton: { text: 'View Products', link: '/products' },
-      secondaryButton: { text: 'Get Quote', link: '/contact' },
-      overlay: 'dark'
-    },
-    {
-      id: '2',
-      title: 'Products by',
-      subtitle: 'AGES',
-      description: 'Find the perfect toys for every age group! From infants (0-2 years) to teens (13+), we have age-appropriate toys that spark imagination and support development at every stage.',
-      image: '/images/hero/products-by-age.jpg',
-      imageAlt: 'Toys organized by age groups',
-      primaryButton: { text: 'Browse by Age', link: '/products?filter=age' },
-      secondaryButton: { text: 'View All Ages', link: '/products' },
-      overlay: 'dark'
-    },
-    {
-      id: '3',
-      title: 'Products by',
-      subtitle: 'OCCASIONS',
-      description: 'Perfect toys for every occasion! Birthday gifts, holiday celebrations, back-to-school, festivals, and more. Find the right toy for every special moment.',
-      image: '/images/hero/products-by-occasion.jpg',
-      imageAlt: 'Toys for different occasions',
-      primaryButton: { text: 'Browse by Occasion', link: '/products?filter=occasion' },
-      secondaryButton: { text: 'View All Occasions', link: '/products' },
-      overlay: 'dark'
-    },
-    {
-      id: '4',
-      title: 'Featured',
-      subtitle: 'Toy Collections',
-      description: 'Action figures, educational toys, board games, remote control toys, and more. Discover our best-selling collections.',
-      image: '/images/hero/featured-toys.jpg',
-      imageAlt: 'Featured toy collections',
-      primaryButton: { text: 'View Collections', link: '/products?filter=featured' },
-      secondaryButton: { text: 'New Arrivals', link: '/products?filter=new-arrival' },
-      overlay: 'dark'
-    }
-  ];
-
   useEffect(() => {
     if (!isAutoPlaying) return;
 
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDE_COUNT);
     }, 6000); // Change slide every 6 seconds
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, heroSlides.length]);
+  }, [isAutoPlaying]);
 
 
   const goToSlide = (index: number) => {
@@ -194,102 +167,54 @@ const Home: React.FC = () => {
   };
 
   const nextSlide = () => {
-    goToSlide((currentSlide + 1) % heroSlides.length);
+    goToSlide((currentSlide + 1) % HERO_SLIDE_COUNT);
   };
 
   const prevSlide = () => {
-    goToSlide((currentSlide - 1 + heroSlides.length) % heroSlides.length);
+    goToSlide((currentSlide - 1 + HERO_SLIDE_COUNT) % HERO_SLIDE_COUNT);
   };
-
-  const categories = [
-    {
-      icon: <Sparkles className="h-8 w-8" />,
-      title: 'Action Figures',
-      description: 'Superheroes, characters, and collectible action figures for all ages.',
-      features: ['Superhero Collections', 'Character Figures', 'Collectibles', 'Age 3+'],
-      image: '/images/categories/action-figures.jpg',
-      categoryLink: '/products?category=action-figures'
-    },
-    {
-      icon: <Gift className="h-8 w-8" />,
-      title: 'Educational & Learning',
-      description: 'STEM toys, puzzles, and learning games that spark creativity and development.',
-      features: ['STEM Toys', 'Puzzles & Games', 'Learning Aids', 'Age-Appropriate'],
-      image: '/images/categories/educational-learning.jpg',
-      categoryLink: '/products?category=educational-learning'
-    },
-    {
-      icon: <Package className="h-8 w-8" />,
-      title: 'Art & Crafts',
-      description: 'Creative toys, coloring sets, and craft supplies for artistic expression.',
-      features: ['Coloring Sets', 'Craft Kits', 'Art Supplies', 'Creative Play'],
-      image: '/images/categories/art-crafts.jpg',
-      categoryLink: '/products?category=art-crafts'
-    },
-    {
-      icon: <ShoppingCart className="h-8 w-8" />,
-      title: 'Remote Control Toys',
-      description: 'Cars, drones, helicopters, and more exciting RC toys for kids and adults.',
-      features: ['RC Cars', 'Drones', 'Helicopters', 'Battery Operated'],
-      image: '/images/categories/remote-control.jpg',
-      categoryLink: '/products?category=remote-control'
-    },
-    {
-      icon: <Users className="h-8 w-8" />,
-      title: 'Board Games',
-      description: 'Family games, strategy games, and card games for quality family time.',
-      features: ['Family Games', 'Strategy Games', 'Card Games', 'Multi-Player'],
-      image: '/images/categories/board-games.jpg',
-      categoryLink: '/products?category=board-games'
-    },
-    {
-      icon: <Gift className="h-8 w-8" />,
-      title: 'Dolls & Doll Houses',
-      description: 'Fashion dolls, baby dolls, and beautiful doll houses for imaginative play.',
-      features: ['Fashion Dolls', 'Baby Dolls', 'Doll Houses', 'Accessories'],
-      image: '/images/categories/dolls.jpg',
-      categoryLink: '/products?category=dolls'
-    }
-  ];
 
   const features = [
     {
-      icon: <TrendingUp className="h-6 w-6" />,
-      title: 'Bulk Discounts',
-      description: 'Maximum discount on minimum quantity orders. Better prices for larger orders.'
+      icon: <Store className="h-6 w-6" />,
+      title: 'Shop in person',
+      description: 'See products before you buy. Our team helps you pick the right toy for the right age.'
     },
     {
       icon: <Truck className="h-6 w-6" />,
-      title: 'Pan-India Shipping',
-      description: 'Fast and reliable delivery across India. Serving retailers and distributors nationwide.'
+      title: 'Local pickup & delivery',
+      description: 'Convenient options for nearby customers. Ask us what works best for your area.'
     },
     {
       icon: <CheckCircle className="h-6 w-6" />,
-      title: 'Quality Assured',
-      description: 'High-quality toys that meet safety standards. Trusted by retailers across India.'
+      title: 'Quality you can trust',
+      description: 'Curated toys with safety and durability in mind — the same standards we’d want for our own families.'
     }
   ];
 
   const testimonials = [
     {
       name: 'Rajesh Kumar',
-      company: 'Toy Retailer, Surat',
+      company: 'Parent, local customer',
       rating: 5,
-      comment: 'Great wholesale prices and excellent quality. My customers love the toys and I get good margins. Fast delivery too!',
+      comment:
+        'Staff helped us pick a birthday gift for our 5-year-old — great quality and my son hasn’t put it down. Will come back for festivals.',
       avatar: '/images/testimonials/rajesh.jpg'
     },
     {
       name: 'Priya Sharma',
-      company: 'Online Toy Store',
+      company: 'Grandparent',
       rating: 5,
-      comment: 'Perfect for my e-commerce business. Bulk discounts help me stay competitive. Quality is consistent and packaging is excellent.',
+      comment:
+        'Nice variety under one roof. I could compare a few options and the prices felt fair. Easy to find parking and quick checkout.',
       avatar: '/images/testimonials/priya.jpg'
     },
     {
       name: 'Amit Patel',
-      company: 'Distributor, Gujarat',
+      company: 'Neighbourhood shopper',
       rating: 5,
-      comment: 'Reliable supplier with wide range of products. Minimum order quantities are reasonable and bulk pricing is very competitive.',
+      comment:
+        'We message on WhatsApp to check stock before visiting. They’re responsive and the toys match what we saw online.',
       avatar: '/images/testimonials/amit.jpg'
     }
   ];
@@ -308,9 +233,11 @@ const Home: React.FC = () => {
   return (
     <>
       <SEO
-        title="Khandelwal Toy Store - Wholesale Toy Supplier | Toys for Retailers & Distributors"
-        description="Khandelwal Toy Store - Wholesale toy supplier in India. High-quality toys for retailers, distributors, and e-commerce platforms. Action figures, educational toys, board games, remote control toys, and more. Best wholesale prices with bulk discounts."
+        title="Khandelwal Toy Store | Local toy shop — toys & gifts for kids"
+        description="Khandelwal Toy Store is your neighbourhood toy shop. Browse action figures, educational toys, board games, RC toys, and gifts for birthdays and festivals. Visit us or enquire on WhatsApp."
         path="/"
+        image="/images/hero/toys-hero.jpg"
+        imageAlt="Khandelwal Toy Store — toys and gifts for kids"
       />
       <div className="min-h-screen">
       {/* Hero Carousel Section */}
@@ -318,24 +245,19 @@ const Home: React.FC = () => {
         {/* Colorful Kid-Friendly Background */}
         <div className="absolute inset-0 z-0">
           {/* Animated Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-400 via-blue-400 to-yellow-400 animate-gradient-xy"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-lavender via-brand-peach to-brand-sand animate-gradient-xy"></div>
           
-          {/* Floating Colorful Shapes */}
+          {/* Floating shapes — logo-adjacent palette */}
           <div className="absolute inset-0 overflow-hidden">
-            {/* Large Circles */}
-            <div className="absolute top-10 left-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-            <div className="absolute top-20 right-20 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-            <div className="absolute bottom-10 right-10 w-64 h-64 bg-green-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-6000"></div>
-            
-            {/* Medium Circles */}
-            <div className="absolute top-1/3 left-1/3 w-48 h-48 bg-orange-300 rounded-full mix-blend-multiply filter blur-lg opacity-60 animate-blob animation-delay-1000"></div>
-            <div className="absolute bottom-1/3 right-1/3 w-56 h-56 bg-purple-300 rounded-full mix-blend-multiply filter blur-lg opacity-60 animate-blob animation-delay-3000"></div>
-            
-            {/* Small Colorful Dots */}
-            <div className="absolute top-1/4 right-1/4 w-24 h-24 bg-red-400 rounded-full opacity-50 animate-bounce"></div>
-            <div className="absolute bottom-1/4 left-1/4 w-20 h-20 bg-cyan-400 rounded-full opacity-50 animate-bounce animation-delay-1000"></div>
-            <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-lime-400 rounded-full opacity-50 animate-bounce animation-delay-2000"></div>
+            <div className="absolute top-10 left-10 w-72 h-72 bg-brand-sunshine rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div className="absolute top-20 right-20 w-96 h-96 bg-brand-peach rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-brand-sky rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+            <div className="absolute bottom-10 right-10 w-64 h-64 bg-brand-leaf rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-6000"></div>
+            <div className="absolute top-1/3 left-1/3 w-48 h-48 bg-brand-coral rounded-full mix-blend-multiply filter blur-lg opacity-55 animate-blob animation-delay-1000"></div>
+            <div className="absolute bottom-1/3 right-1/3 w-56 h-56 bg-brand-lavender rounded-full mix-blend-multiply filter blur-lg opacity-60 animate-blob animation-delay-3000"></div>
+            <div className="absolute top-1/4 right-1/4 w-24 h-24 bg-brand-coral rounded-full opacity-45 animate-bounce"></div>
+            <div className="absolute bottom-1/4 left-1/4 w-20 h-20 bg-brand-sky rounded-full opacity-45 animate-bounce animation-delay-1000"></div>
+            <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-brand-sunshine rounded-full opacity-50 animate-bounce animation-delay-2000"></div>
           </div>
           
           {/* Pattern Overlay */}
@@ -359,41 +281,65 @@ const Home: React.FC = () => {
             >
               {/* Note: Video background is now the primary background for all slides */}
 
-              {/* Content - Left Aligned */}
-              <div className="relative z-20 h-full flex items-center pt-20 pb-32 md:pt-0 md:pb-0">
+              {/* Content — headline left, promoted product slider right (lg+) */}
+              <div className="relative z-20 h-full flex items-center pt-20 pb-28 sm:pb-32 md:pt-0 md:pb-28 lg:pb-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                  <div className="max-w-3xl pr-12 sm:pr-16 md:pr-0">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 sm:mb-4 leading-tight break-words drop-shadow-2xl" style={{
-                      textShadow: '3px 3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(0,0,0,0.2)'
-                    }}>
-                      {slide.title}
-                      {slide.subtitle && (
-                        <span className="block mt-1 sm:mt-2 break-words">{slide.subtitle}</span>
-                      )}
-                    </h1>
-                    <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white mb-6 sm:mb-8 leading-relaxed max-w-2xl break-words font-semibold drop-shadow-lg" style={{
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
-                    }}>
-                      {slide.description}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <Link
-                        to={slide.primaryButton.link}
-                        className="bg-white text-primary-600 px-6 py-2.5 sm:px-8 sm:py-3 rounded-full text-sm sm:text-base font-bold hover:bg-yellow-100 hover:scale-105 transition-all duration-300 flex items-center justify-center w-full sm:w-fit shadow-xl border-4 border-yellow-300"
+                  <div
+                    className={`grid grid-cols-1 gap-8 lg:gap-10 items-center w-full ${
+                      bannerProductsForCurrentSlide.length > 0 ? 'lg:grid-cols-12' : ''
+                    }`}
+                  >
+                    <div
+                      className={
+                        bannerProductsForCurrentSlide.length > 0
+                          ? 'lg:col-span-7 xl:col-span-6 max-w-3xl pr-0 sm:pr-8 lg:pr-4'
+                          : 'max-w-3xl pr-12 sm:pr-16 md:pr-0'
+                      }
+                    >
+                      <h1
+                        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 sm:mb-4 leading-tight break-words drop-shadow-2xl"
+                        style={{
+                          textShadow: '3px 3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(0,0,0,0.2)',
+                        }}
                       >
-                        {slide.primaryButton.text}
-                        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                      </Link>
-                      {slide.secondaryButton && (
+                        {slide.title}
+                        {slide.subtitle && (
+                          <span className="block mt-1 sm:mt-2 break-words">{slide.subtitle}</span>
+                        )}
+                      </h1>
+                      <p
+                        className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white mb-6 sm:mb-8 leading-relaxed max-w-2xl break-words font-semibold drop-shadow-lg"
+                        style={{
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        {slide.description}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <Link
-                          to={slide.secondaryButton.link}
-                          className="bg-primary-600 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-full text-sm sm:text-base font-bold hover:bg-primary-700 hover:scale-105 transition-all duration-300 flex items-center justify-center w-full sm:w-fit shadow-xl border-4 border-white"
+                          to={slide.primaryButton.link}
+                          className="bg-white text-primary-600 px-6 py-2.5 sm:px-8 sm:py-3 rounded-full text-sm sm:text-base font-bold hover:bg-brand-sand hover:scale-105 transition-all duration-300 flex items-center justify-center w-full sm:w-fit shadow-xl border-4 border-brand-sunshine"
                         >
-                          {slide.secondaryButton.text}
+                          {slide.primaryButton.text}
                           <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                         </Link>
-                      )}
+                        {slide.secondaryButton && (
+                          <Link
+                            to={slide.secondaryButton.link}
+                            className="bg-primary-600 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-full text-sm sm:text-base font-bold hover:bg-primary-700 hover:scale-105 transition-all duration-300 flex items-center justify-center w-full sm:w-fit shadow-xl border-4 border-white"
+                          >
+                            {slide.secondaryButton.text}
+                            <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                          </Link>
+                        )}
+                      </div>
                     </div>
+
+                    {bannerProductsForCurrentSlide.length > 0 && (
+                      <div className="hidden lg:flex lg:col-span-5 xl:col-span-6 justify-center xl:justify-end items-center">
+                        <HeroPromotedProductSlider products={bannerProductsForCurrentSlide} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -401,17 +347,56 @@ const Home: React.FC = () => {
           ))}
         </div>
 
+        {/* Promoted products: horizontal strip on small screens; desktop uses hero-right slider */}
+        {bannerProductsForCurrentSlide.length > 0 && (
+          <div className="lg:hidden absolute bottom-14 sm:bottom-16 left-0 right-0 z-[25] pointer-events-none px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto pointer-events-auto">
+              <p className="text-white text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] drop-shadow-md mb-2 pl-0.5">
+                In focus now
+              </p>
+              <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory touch-pan-x">
+                {bannerProductsForCurrentSlide.map((product: Product) => (
+                  <Link
+                    key={product.id}
+                    to={`/products/${product.slug}`}
+                    className="snap-start flex-shrink-0 w-[6.75rem] sm:w-28 md:w-32 rounded-xl bg-white/95 shadow-lg border-2 border-brand-sunshine/90 overflow-hidden hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                  >
+                    <div className="aspect-square bg-gray-100">
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="p-1.5 sm:p-2">
+                      <p className="text-[10px] sm:text-xs font-semibold text-gray-900 line-clamp-2 leading-tight">
+                        {product.name}
+                      </p>
+                      {product.price > 0 && (
+                        <p className="text-[10px] sm:text-xs text-primary-600 font-bold mt-0.5">
+                          ₹{Number(product.price).toLocaleString('en-IN')}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-yellow-100 backdrop-blur-sm text-primary-600 p-3 sm:p-4 rounded-full transition-all duration-300 hover:scale-110 hidden sm:flex items-center justify-center shadow-xl border-4 border-yellow-300"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-brand-sand backdrop-blur-sm text-primary-600 p-3 sm:p-4 rounded-full transition-all duration-300 hover:scale-110 hidden sm:flex items-center justify-center shadow-xl border-4 border-brand-sunshine"
           aria-label="Previous slide"
         >
           <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7 font-bold" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-yellow-100 backdrop-blur-sm text-primary-600 p-3 sm:p-4 rounded-full transition-all duration-300 hover:scale-110 hidden sm:flex items-center justify-center shadow-xl border-4 border-yellow-300"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-brand-sand backdrop-blur-sm text-primary-600 p-3 sm:p-4 rounded-full transition-all duration-300 hover:scale-110 hidden sm:flex items-center justify-center shadow-xl border-4 border-brand-sunshine"
           aria-label="Next slide"
         >
           <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 font-bold" />
@@ -432,7 +417,7 @@ const Home: React.FC = () => {
                   onClick={() => goToSlide(index)}
                   className={`text-sm lg:text-base xl:text-lg font-bold transition-all duration-300 relative whitespace-nowrap flex-shrink-0 px-4 py-2.5 rounded-full ${
                     index === currentSlide
-                      ? 'text-white bg-white/30 backdrop-blur-sm shadow-lg border-2 border-yellow-300'
+                      ? 'text-white bg-white/30 backdrop-blur-sm shadow-lg border-2 border-brand-sunshine'
                       : 'text-white/90 hover:text-white hover:bg-white/20 backdrop-blur-sm'
                   }`}
                   aria-label={`Go to slide: ${displayTitle}`}
@@ -455,7 +440,7 @@ const Home: React.FC = () => {
               onClick={() => goToSlide(index)}
               className={`rounded-full transition-all duration-300 shadow-lg ${
                 index === currentSlide
-                  ? 'w-10 h-3 bg-yellow-300 border-2 border-white'
+                  ? 'w-10 h-3 bg-brand-sunshine border-2 border-white'
                   : 'w-3 h-3 bg-white/70 hover:bg-white border-2 border-white/50'
               }`}
               aria-label={`Go to slide ${index + 1}`}
@@ -468,7 +453,7 @@ const Home: React.FC = () => {
           <div className="absolute bottom-0 left-0 right-0 h-2 bg-white/30 z-30">
             <div
               key={currentSlide}
-              className="h-full bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400"
+              className="h-full bg-gradient-to-r from-brand-sunshine via-brand-coral to-brand-lavender"
               style={{
                 width: '0%',
                 animation: 'slideProgress 6s linear forwards',
@@ -531,6 +516,78 @@ const Home: React.FC = () => {
         }
       `}</style>
 
+      {/* Popular Toys / best sellers — first major section after hero (drives sales) */}
+      <section className="py-14 md:py-20 bg-gradient-to-b from-primary-50/80 via-white to-white relative overflow-hidden border-t-4 border-primary-500 shadow-[0_-10px_36px_-18px_rgba(232,90,42,0.22)]">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob animation-delay-2000 pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-10 md:mb-14">
+            <div className="inline-block mb-3">
+              <span className="text-primary-600 font-display font-bold text-sm uppercase tracking-[0.2em]">
+                Best sellers
+              </span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Popular Toys
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Favourites families ask for again and again — great starting points when you visit the store.
+            </p>
+          </div>
+
+          {productsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, idx) => (
+                <div key={idx} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse border border-gray-100">
+                  <div className="h-64 bg-gray-200" />
+                  <div className="p-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-3" />
+                    <div className="h-6 bg-gray-200 rounded w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : bestSellers.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {bestSellers.map((product: Product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onViewDetails={handleProductClick}
+                  showBestSellerBadge={true}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 text-lg">No products available at the moment.</p>
+              <Link
+                to="/products"
+                className="mt-4 inline-flex items-center text-primary-600 font-semibold hover:text-primary-700 transition-colors"
+              >
+                Browse All Products
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </div>
+          )}
+
+          {bestSellers.length > 0 && (
+            <div className="text-center mt-12">
+              <Link
+                to="/products"
+                className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-xl font-display font-semibold hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              >
+                <span>View all products</span>
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Promotional Banners Section */}
       <section className="py-12 bg-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -583,199 +640,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Product Categories Section */}
-      <section className="py-24 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 left-0 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-0 right-0 w-72 h-72 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <div className="inline-block mb-4">
-              <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Our Products</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Featured Products
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Wide range of high-quality toys at wholesale prices. From action figures to educational toys, we have everything you need.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-            {categories.map((category, index) => (
-              <Link
-                key={index}
-                to={category.categoryLink || '/products'}
-                className="group bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-primary-200 hover:-translate-y-2 relative block"
-              >
-                {/* Product Image */}
-                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary-100 via-primary-200 to-secondary-200 flex items-center justify-center">
-                  <img
-                    src={category.image}
-                    alt={category.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 absolute inset-0"
-                    onError={(e) => {
-                      // Hide image on error, fallback gradient and icon will show
-                      const target = e.target as HTMLImageElement;
-                      if (target) {
-                        target.style.display = 'none';
-                      }
-                    }}
-                  />
-                  {/* Fallback Icon (shown when image fails or as background) */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-primary-600 text-6xl opacity-30">
-                      {category.icon}
-                    </div>
-                  </div>
-                  {/* Overlay gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  {/* Title */}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
-                    {category.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-gray-600 mb-4 leading-relaxed text-sm">
-                    {category.description}
-                  </p>
-
-                  {/* Features List */}
-                  <ul className="space-y-2 mb-4">
-                    {category.features.map((feature: string, idx: number) => (
-                      <li key={idx} className="flex items-center text-xs text-gray-700 group-hover:text-gray-900 transition-colors">
-                        <div className="flex-shrink-0 mr-2">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        </div>
-                        <span className="font-medium">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* View Products Link */}
-                  <div className="inline-flex items-center text-primary-600 font-semibold group-hover:text-primary-700 transition-colors">
-                    <span>View Products</span>
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-
-                {/* Decorative Corner Element */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-primary-100/0 to-primary-100/0 group-hover:from-primary-100/30 group-hover:to-transparent rounded-bl-full transition-all duration-300 pointer-events-none"></div>
-              </Link>
-            ))}
-          </div>
-
-          {/* View All Products CTA */}
-          <div className="text-center mt-12">
-            <Link
-              to="/products"
-              className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-            >
-              <span>View All Products</span>
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </div>
-        </div>
-
-        <style>{`
-          @keyframes blob {
-            0%, 100% {
-              transform: translate(0, 0) scale(1);
-            }
-            33% {
-              transform: translate(30px, -50px) scale(1.1);
-            }
-            66% {
-              transform: translate(-20px, 20px) scale(0.9);
-            }
-          }
-          .animate-blob {
-            animation: blob 7s infinite;
-          }
-          .animation-delay-2000 {
-            animation-delay: 2s;
-          }
-        `}</style>
-      </section>
-
-      {/* Best Sellers Section - Moved Up */}
-      <section className="py-20 bg-white relative overflow-hidden">
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12">
-            <div className="inline-block mb-4">
-              <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Best Sellers</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Popular Toys
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover our most popular toys that retailers and distributors love to stock
-            </p>
-          </div>
-
-          {productsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, idx) => (
-                <div key={idx} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse border border-gray-100">
-                  <div className="h-64 bg-gray-200"></div>
-                  <div className="p-4">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
-                    <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : bestSellers.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {bestSellers.map((product: Product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onViewDetails={handleProductClick}
-                  showBestSellerBadge={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 text-lg">No products available at the moment.</p>
-              <Link
-                to="/products"
-                className="mt-4 inline-flex items-center text-primary-600 font-semibold hover:text-primary-700 transition-colors"
-              >
-                Browse All Products
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </div>
-          )}
-
-          {/* View All Products CTA */}
-          {bestSellers.length > 0 && (
-            <div className="text-center mt-12">
-              <Link
-                to="/products"
-                className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-              >
-                <span>View All Products</span>
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Features Section - Moved Down */}
+      {/* Features Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -783,7 +648,7 @@ const Home: React.FC = () => {
               Why Choose Khandelwal Toy Store?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Your trusted wholesale partner for high-quality toys
+              Why families shop with us
             </p>
           </div>
 
@@ -819,10 +684,10 @@ const Home: React.FC = () => {
               <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Testimonials</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              What Our Clients Say
+              What our customers say
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Don't just take our word for it - hear from our satisfied customers
+              Word from shoppers who’ve visited the store or ordered with us
             </p>
           </div>
 
@@ -885,7 +750,7 @@ const Home: React.FC = () => {
             <div className="inline-flex items-center space-x-8 flex-wrap justify-center gap-4">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-6 w-6 text-green-500" />
-                <span className="text-gray-700 font-medium">100+ Satisfied Customers</span>
+                <span className="text-gray-700 font-medium">Happy families & repeat shoppers</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Star className="h-6 w-6 text-yellow-400 fill-current" />
@@ -893,7 +758,7 @@ const Home: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Truck className="h-6 w-6 text-primary-600" />
-                <span className="text-gray-700 font-medium">Pan-India Delivery</span>
+                <span className="text-gray-700 font-medium">Helpful team on site & WhatsApp</span>
               </div>
             </div>
           </div>
@@ -905,17 +770,17 @@ const Home: React.FC = () => {
       <section className="py-20 bg-primary-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to Stock Quality Toys?
+            Looking for the perfect toy or gift?
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Get wholesale pricing and bulk discounts on quality toys. Contact us for a quote and start your toy business today.
+            Message us on WhatsApp, call, or drop by — we’ll help with stock, suggestions for age and budget, and store timings.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/contact"
               className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
             >
-              Get Quote
+              Contact & location
             </Link>
             <Link
               to="/products"

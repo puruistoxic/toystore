@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, Eye } from 'lucide-react';
+import { Star, Eye, ShoppingCart } from 'lucide-react';
 import type { Product } from '../types/catalog';
+import { useCart } from '../contexts/CartContext';
+import { useAddToListModal } from '../contexts/AddToListModalContext';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
 
 interface ProductCardProps {
@@ -18,16 +20,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
   className = ''
 }) => {
   const navigate = useNavigate();
+  const { items } = useCart();
+  const { openAddToList } = useAddToListModal();
+  const inList = useMemo(
+    () => items.some((l) => l.productId === String(product.id)),
+    [items, product.id],
+  );
   const mainImage = product.images && product.images.length > 0 
     ? product.images[0] 
     : getPlaceholderImage(400, 300, product.name);
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // If clicking on the View Details button or link, let it handle navigation
     if ((e.target as HTMLElement).closest('a, button')) {
       return;
     }
-    // Otherwise, navigate to product details page
+    if (onViewDetails) {
+      onViewDetails(product);
+      return;
+    }
     navigate(`/products/${product.slug}`);
   };
 
@@ -35,9 +45,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     if (onViewDetails) {
       onViewDetails(product);
-    } else {
-      navigate(`/products/${product.slug}`);
     }
+  };
+
+  const handleAddToList = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openAddToList(product);
   };
 
   return (
@@ -121,30 +134,43 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <span className="ml-2 text-xs text-gray-500">(GST Inc.)</span>
               )}
             </div>
-            {product.bulkDiscountPercentage && product.bulkDiscountPercentage > 0 && (
-              <p className="text-xs text-green-600 mt-0.5 font-medium">
-                {product.bulkDiscountPercentage}% off on bulk
-              </p>
-            )}
           </div>
         )}
 
-        {/* MOQ Info */}
-        {product.minimumOrderQuantity && product.minimumOrderQuantity > 1 && (
-          <div className="mb-3 text-xs text-gray-600">
-            <span className="font-medium">MOQ:</span> {product.minimumOrderQuantity} units
-          </div>
-        )}
-
-        {/* View Details Button */}
-        <Link
-          to={`/products/${product.slug}`}
-          onClick={handleViewDetailsClick}
-          className="block w-full bg-primary-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center shadow-md hover:shadow-lg text-sm"
-        >
-          <Eye className="h-4 w-4 mr-2" />
-          View Details
-        </Link>
+        <div className="grid grid-cols-1 gap-2">
+          {onViewDetails ? (
+            <button
+              type="button"
+              onClick={handleViewDetailsClick}
+              className="w-full bg-primary-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center shadow-md hover:shadow-lg text-sm"
+            >
+              <Eye className="h-4 w-4 mr-2" aria-hidden />
+              View Details
+            </button>
+          ) : (
+            <Link
+              to={`/products/${product.slug}`}
+              onClick={handleViewDetailsClick}
+              className="block w-full bg-primary-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center shadow-md hover:shadow-lg text-sm"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View Details
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={handleAddToList}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold border-2 transition-colors text-sm shadow-sm ${
+              inList
+                ? 'border-green-500 bg-green-50 text-green-800'
+                : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50'
+            }`}
+            aria-label={inList ? 'Product is in your order list. Click to add another.' : 'Add to order list'}
+          >
+            <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />
+            {inList ? 'In your list' : 'Add to list'}
+          </button>
+        </div>
       </div>
     </div>
   );

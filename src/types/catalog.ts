@@ -6,6 +6,10 @@ export interface Product {
   price: number;
   originalPrice?: number;
   images: string[];
+  /** YouTube (or youtu.be) links; playable in product modal / detail */
+  videoUrls?: string[];
+  /** Homepage hero slide ids (`1`–`4`) where this product appears in “In focus” */
+  homeBannerSlides?: string[];
   category: string;
   brand: string;
   model: string;

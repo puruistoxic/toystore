@@ -67,6 +67,24 @@ router.post('/image', authenticateToken, upload.single('image'), (req, res) => {
   }
 });
 
+// Upload multiple images (same auth & limits per file)
+router.post('/images', authenticateToken, upload.array('images', 24), (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+    const urls = req.files.map((f) => `/uploads/${f.filename}`);
+    res.json({
+      success: true,
+      urls,
+      count: urls.length
+    });
+  } catch (error) {
+    console.error('[Upload API] Multi upload error:', error);
+    res.status(500).json({ error: 'Failed to upload images', message: error.message });
+  }
+});
+
 module.exports = router;
 
 

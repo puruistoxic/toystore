@@ -161,6 +161,13 @@ const categories = [
     short_description: 'Wooden toys',
     icon: 'tree'
   },
+  {
+    name: 'Kids Drinkware',
+    type: 'product',
+    description: 'Insulated bottles, sippers, and flasks for kids, school, and travel.',
+    short_description: 'Kids water bottles and drinkware',
+    icon: 'cup-soda'
+  },
   // Legacy categories (keeping for backward compatibility)
   {
     name: 'CCTV Camera',
@@ -307,8 +314,9 @@ const categories = [
 const brands = [
   {
     name: 'Khandelwal Toy Store',
-    description: 'Khandelwal Toy Store - Your trusted wholesale toy supplier offering high-quality toys for retailers and distributors.',
-    short_description: 'Wholesale toy supplier',
+    description:
+      'Khandelwal Toy Store — neighbourhood toy shop for quality toys, games, and gifts. Visit in person or enquire for stock and advice.',
+    short_description: 'Local toy shop',
     website: 'https://khandelwaltoystore.com',
     partnership_type: 'partner',
     partnership_since: '2024'
@@ -320,6 +328,43 @@ const brands = [
     website: 'https://maketoys.in',
     partnership_type: 'partner',
     partnership_since: '2024'
+  },
+  {
+    name: 'Manku Toys',
+    description: 'Manku Toys — playsets, dolls, baby gyms, and activity toys for children.',
+    short_description: 'Kids playsets and activity toys',
+    partnership_type: 'partner',
+    partnership_since: '2025'
+  },
+  {
+    name: 'Pexpo',
+    description: 'Pexpo insulated stainless steel water bottles and drinkware.',
+    short_description: 'Insulated bottles and flasks',
+    website: 'https://www.pexpo.in',
+    partnership_type: 'partner',
+    partnership_since: '2025'
+  },
+  {
+    name: 'Milton',
+    description: 'Milton steel thermoware and insulated bottles — trusted Indian household brand.',
+    short_description: 'Steel thermoware and bottles',
+    website: 'https://www.milton.in',
+    partnership_type: 'partner',
+    partnership_since: '2025'
+  },
+  {
+    name: 'EKTA',
+    description: 'EKTA building blocks and construction toys — made in India educational play.',
+    short_description: 'Building blocks and construction sets',
+    partnership_type: 'partner',
+    partnership_since: '2025'
+  },
+  {
+    name: 'K.LAL',
+    description: 'K.LAL toys including seasonal and outdoor play items.',
+    short_description: 'Outdoor and seasonal toys',
+    partnership_type: 'partner',
+    partnership_since: '2025'
   },
   // Legacy brands (keeping for backward compatibility)
   {

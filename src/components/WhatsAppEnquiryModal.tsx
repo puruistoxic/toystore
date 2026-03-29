@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, MessageCircle, Send } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../utils/api';
 import type { Product } from '../types/catalog';
+import { getCanonicalUrl } from '../utils/seo';
 
 interface WhatsAppEnquiryModalProps {
   isOpen: boolean;
@@ -21,7 +23,6 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     quantity: 1,
-    requestedPrice: '',
     customMessage: '',
     customerName: '',
     customerEmail: '',
@@ -31,7 +32,6 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch company settings to get WhatsApp number
   const { data: settings } = useQuery<CompanySettings>({
     queryKey: ['company-settings-public'],
     queryFn: async () => {
@@ -43,10 +43,8 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // Reset form when modal opens
       setFormData({
         quantity: 1,
-        requestedPrice: '',
         customMessage: '',
         customerName: '',
         customerEmail: '',
@@ -56,19 +54,29 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
     }
   }, [isOpen, product]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.quantity || formData.quantity < 1) {
       newErrors.quantity = 'Quantity must be at least 1';
-    }
-
-    if (formData.customerName.trim().length < 2) {
-      newErrors.customerName = 'Please enter your name';
-    }
-
-    if (formData.customerPhone.trim().length < 10) {
-      newErrors.customerPhone = 'Please enter a valid phone number';
     }
 
     if (formData.customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) {
@@ -77,6 +85,38 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const buildWhatsAppMessage = () => {
+    const productPageUrl = getCanonicalUrl(`/products/${product.slug}`);
+    let message = `Hello Khandelwal Toy Store Team,\n\n`;
+    message += `I'm interested in:\n`;
+    message += `Product: ${product.name}\n`;
+    if (product.brand) {
+      message += `Brand: ${product.brand}\n`;
+    }
+    if (product.sku) {
+      message += `SKU: ${product.sku}\n`;
+    }
+    message += `Product page: ${productPageUrl}\n\n`;
+    message += `Quantity: ${formData.quantity} unit(s)\n`;
+    if (formData.customMessage.trim()) {
+      message += `\nMessage: ${formData.customMessage.trim()}\n`;
+    }
+    const extras: string[] = [];
+    if (formData.customerName.trim()) {
+      extras.push(`Name: ${formData.customerName.trim()}`);
+    }
+    if (formData.customerPhone.trim()) {
+      extras.push(`Phone: ${formData.customerPhone.trim()}`);
+    }
+    if (formData.customerEmail.trim()) {
+      extras.push(`Email: ${formData.customerEmail.trim()}`);
+    }
+    if (extras.length) {
+      message += `\n${extras.join('\n')}\n`;
+    }
+    return message;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,106 +128,87 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
 
     setIsSubmitting(true);
 
+    const whatsappNumber = settings?.whatsapp_number || '919898524462';
+    const cleanNumber = whatsappNumber.replace(/[^0-9]/g, '');
+
     try {
-      // Compose WhatsApp message
-      const whatsappNumber = settings?.whatsapp_number || '8851577973';
-      const cleanNumber = whatsappNumber.replace(/[^0-9]/g, '');
+      await api.post('/content/enquiries', {
+        product_id: product.id,
+        product_name: product.name,
+        product_slug: product.slug,
+        customer_name: formData.customerName.trim() || null,
+        customer_email: formData.customerEmail.trim() || null,
+        customer_phone: formData.customerPhone.trim() || null,
+        quantity: formData.quantity,
+        custom_message: formData.customMessage.trim() || null,
+        whatsapp_number: cleanNumber,
+        enquiry_type: 'product'
+      });
+    } catch (logError) {
+      console.error('Failed to log enquiry:', logError);
+      alert('We could not save your enquiry. Please check your connection and try again.');
+      setIsSubmitting(false);
+      return;
+    }
 
-      let message = `Hello Khandelwal Toy Store Team,\n\n`;
-      message += `I'm interested in:\n`;
-      message += `Product: ${product.name}\n`;
-      message += `Link: ${window.location.href}\n\n`;
-      
-      message += `Details:\n`;
-      message += `Quantity: ${formData.quantity} units\n`;
-      
-      if (formData.requestedPrice) {
-        message += `Requested Price: ₹${formData.requestedPrice}\n`;
-      }
-      
-      if (formData.customMessage) {
-        message += `\nMessage: ${formData.customMessage}\n`;
-      }
-      
-      message += `\nContact Information:\n`;
-      message += `Name: ${formData.customerName}\n`;
-      message += `Phone: ${formData.customerPhone}\n`;
-      if (formData.customerEmail) {
-        message += `Email: ${formData.customerEmail}\n`;
-      }
-
-      // Log enquiry to backend
-      try {
-        await api.post('/content/enquiries', {
-          product_id: product.id,
-          product_name: product.name,
-          product_slug: product.slug,
-          customer_name: formData.customerName,
-          customer_email: formData.customerEmail || null,
-          customer_phone: formData.customerPhone,
-          quantity: formData.quantity,
-          requested_price: formData.requestedPrice ? parseFloat(formData.requestedPrice) : null,
-          custom_message: formData.customMessage || null,
-          whatsapp_number: cleanNumber,
-          enquiry_type: 'product'
-        });
-      } catch (logError) {
-        console.error('Failed to log enquiry:', logError);
-        // Continue even if logging fails
-      }
-
-      // Open WhatsApp
+    try {
+      const message = buildWhatsAppMessage();
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-
-      // Close modal after a short delay
-      setTimeout(() => {
-        onClose();
-        setIsSubmitting(false);
-      }, 500);
+      onClose();
     } catch (error) {
-      console.error('Error submitting enquiry:', error);
-      alert('Failed to send enquiry. Please try again.');
+      console.error('Error opening WhatsApp:', error);
+      alert('Your enquiry was saved. Open WhatsApp manually if the app did not open.');
+      onClose();
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
+  /* Portal avoids position:fixed being trapped by transformed ancestors (e.g. PageNavigationFX shell). */
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[240] flex items-center justify-center p-4 sm:p-6"
+      role="presentation"
+    >
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="absolute inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
+        aria-hidden
       />
 
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
-            <div className="flex items-center space-x-3">
-              <div className="bg-[#25D366] p-2 rounded-lg">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="whatsapp-enquiry-title"
+        className="relative z-10 flex max-h-[min(90dvh,40rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+      >
+          <div className="shrink-0 border-b border-gray-200 bg-white px-6 py-4 flex items-center justify-between rounded-t-xl">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="bg-[#25D366] p-2 rounded-lg shrink-0">
                 <MessageCircle className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">WhatsApp Enquiry</h2>
-                <p className="text-sm text-gray-500">{product.name}</p>
+              <div className="min-w-0">
+                <h2 id="whatsapp-enquiry-title" className="text-xl font-bold text-gray-900">
+                  WhatsApp Enquiry
+                </h2>
+                <p className="text-sm text-gray-500 truncate">{product.name}</p>
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+              aria-label="Close"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* Quantity */}
+          <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Quantity <span className="text-red-500">*</span>
@@ -196,7 +217,7 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
                 type="number"
                 min={1}
                 value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value, 10) || 1 })}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                   errors.quantity ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -207,91 +228,47 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
               )}
             </div>
 
-            {/* Requested Price (Optional) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Requested Price (Optional)
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.requestedPrice}
-                  onChange={(e) => setFormData({ ...formData, requestedPrice: e.target.value })}
-                  placeholder="Enter your expected price per unit"
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-              {product.price > 0 && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Current price: ₹{product.price.toLocaleString('en-IN')} {product.priceIncludesGst ? '(GST Inc.)' : ''}
-                </p>
-              )}
-            </div>
-
-            {/* Custom Message */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Additional Message (Optional)
+                Additional message <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <textarea
                 value={formData.customMessage}
                 onChange={(e) => setFormData({ ...formData, customMessage: e.target.value })}
-                placeholder="Any specific requirements or questions..."
-                rows={4}
+                placeholder="Questions, delivery area, age of child, etc."
+                rows={3}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               />
             </div>
 
-            {/* Contact Information */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Contact Information</h3>
-              
-              {/* Name */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Name <span className="text-red-500">*</span>
-                </label>
+            <div className="border-t border-gray-200 pt-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-900">Contact <span className="text-gray-500 font-normal">(all optional)</span></h3>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Your name</label>
                 <input
                   type="text"
                   value={formData.customerName}
                   onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                    errors.customerName ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  autoComplete="name"
                 />
-                {errors.customerName && (
-                  <p className="mt-1 text-sm text-red-500">{errors.customerName}</p>
-                )}
               </div>
 
-              {/* Phone */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone / WhatsApp</label>
                 <input
                   type="tel"
                   value={formData.customerPhone}
                   onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                    errors.customerPhone ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  autoComplete="tel"
+                  placeholder="So we can reach you if needed"
                 />
-                {errors.customerPhone && (
-                  <p className="mt-1 text-sm text-red-500">{errors.customerPhone}</p>
-                )}
               </div>
 
-              {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email (Optional)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input
                   type="email"
                   value={formData.customerEmail}
@@ -299,6 +276,7 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                     errors.customerEmail ? 'border-red-500' : 'border-gray-300'
                   }`}
+                  autoComplete="email"
                 />
                 {errors.customerEmail && (
                   <p className="mt-1 text-sm text-red-500">{errors.customerEmail}</p>
@@ -306,38 +284,37 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
                 disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-[#25D366] text-white rounded-lg font-semibold hover:bg-[#20BA5A] transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-[#25D366] text-white rounded-lg font-semibold hover:bg-[#20BA5A] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Sending...
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Sending…
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send via WhatsApp
+                    <Send className="h-4 w-4" />
+                    Send
                   </>
                 )}
               </button>
             </div>
           </form>
-        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

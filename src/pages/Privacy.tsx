@@ -1,197 +1,263 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Shield, Lock, Eye, FileText, Mail } from 'lucide-react';
+import SEO from '../components/SEO';
+
+const STORE_NAME = 'Khandelwal Toy Store';
+const STORE_EMAIL = 'wainsogps@gmail.com';
+const STORE_PHONE_PRIMARY = '+91 98998 60975';
+const STORE_PHONE_SECONDARY = '+91 82927 17044';
 
 const Privacy: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="Privacy Policy | Khandelwal Toy Store"
+        description="How Khandelwal Toy Store collects, uses, and protects your information when you use our website, WhatsApp, or shop with us in person."
+        path="/privacy"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8 md:p-12">
           <div className="flex items-center mb-8">
-            <Shield className="h-8 w-8 text-primary-600 mr-3" />
+            <Shield className="h-8 w-8 text-primary-600 mr-3 shrink-0" />
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Privacy Policy</h1>
           </div>
-          
+
           <p className="text-gray-600 mb-8">
-            <strong>Last Updated:</strong> {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+            <strong>Last updated:</strong>{' '}
+            {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
           <div className="prose prose-lg max-w-none">
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
-                <Lock className="h-6 w-6 text-primary-600 mr-2" />
+                <Lock className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
                 1. Introduction
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                WAINSO ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website, use our services, or interact with us for CCTV installation, GPS tracking, and maintenance services.
+                <strong>{STORE_NAME}</strong> (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy. This
+                Privacy Policy describes how we collect, use, store, and share information when you visit{' '}
+                <strong>khandelwaltoystore.com</strong> (or related pages we operate), message us (including WhatsApp),
+                call or email us, or <strong>shop at our physical toy store</strong>.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                By using our services, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our services.
+                By using our website or giving us your details, you agree to this policy. If you do not agree, please do not
+                use our site or share personal information with us. For purchases and legal terms, see our{' '}
+                <Link to="/terms" className="text-primary-600 hover:underline">
+                  Terms of Service
+                </Link>
+                .
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
-                <Eye className="h-6 w-6 text-primary-600 mr-2" />
-                2. Information We Collect
+                <Eye className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
+                2. Information we collect
               </h2>
-              
-              <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">2.1 Personal Information</h3>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                We may collect personal information that you voluntarily provide to us when you:
-              </p>
+
+              <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">2.1 Information you provide</h3>
+              <p className="text-gray-700 leading-relaxed mb-3">We may collect information when you:</p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Request a quote or consultation</li>
-                <li>Contact us via phone, email, or WhatsApp</li>
-                <li>Subscribe to our newsletter or marketing communications</li>
-                <li>Use our services or products</li>
-                <li>Participate in surveys or promotions</li>
+                <li>Contact us by phone, email, WhatsApp, or the contact form (name, phone, email, message content)</li>
+                <li>Ask about product availability, prices, directions, or party / bulk orders</li>
+                <li>Subscribe to updates or marketing, if we offer that and you opt in</li>
+                <li>
+                  <strong>Shop in store</strong> — we may process name, phone, or email on a bill or for warranty notes, and
+                  payment-related information as needed to complete the sale
+                </li>
+                <li>Take part in a survey, contest, or promotion we run</li>
               </ul>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                This information may include:
-              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">This may include:</p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li><strong>Name and Contact Information:</strong> Full name, email address, phone number, postal address</li>
-                <li><strong>Business Information:</strong> Company name, business type, industry</li>
-                <li><strong>Service Requirements:</strong> Details about CCTV, GPS, or maintenance needs</li>
-                <li><strong>Payment Information:</strong> Billing address, payment method (processed securely through third-party providers)</li>
-                <li><strong>Communication Records:</strong> Correspondence, call recordings (with consent), support tickets</li>
+                <li>
+                  <strong>Identity &amp; contact:</strong> name, email, phone number, postal address (if you give it)
+                </li>
+                <li>
+                  <strong>Enquiry details:</strong> toys or categories you asked about, child&apos;s age range if you share it
+                  for recommendations (optional — you choose what to tell us)
+                </li>
+                <li>
+                  <strong>Transaction data:</strong> items purchased, date, amount, payment method type (card/UPI/cash as
+                  applicable); card or UPI details are handled by banks or payment providers where electronic payment is used
+                </li>
+                <li>
+                  <strong>Records:</strong> copies of messages or emails needed to respond to you or support warranty /
+                  exchange requests
+                </li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">2.2 Automatically Collected Information</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">2.2 Automatically collected (website)</h3>
               <p className="text-gray-700 leading-relaxed mb-3">
-                When you visit our website, we may automatically collect certain information about your device and browsing behavior:
+                When you browse our site, standard logs and tools may collect:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>IP address and location data</li>
-                <li>Browser type and version</li>
-                <li>Operating system</li>
-                <li>Pages visited, time spent on pages, and navigation patterns</li>
-                <li>Referring website addresses</li>
-                <li>Device identifiers and mobile network information</li>
+                <li>IP address and approximate region</li>
+                <li>Browser type, device type, and operating system</li>
+                <li>Pages viewed, approximate time on site, and referring page</li>
+                <li>Basic error or performance diagnostics</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">2.3 Cookies and Tracking Technologies</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">2.3 Cookies and similar technologies</h3>
               <p className="text-gray-700 leading-relaxed mb-4">
-                We use cookies, web beacons, and similar tracking technologies to enhance your experience, analyze usage patterns, and improve our services. You can control cookie preferences through your browser settings.
+                We may use cookies or local storage for essential site function, preferences, or analytics (e.g. understanding
+                which pages are popular). You can control cookies through your browser settings; blocking some cookies may
+                affect how the site works.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
-                <FileText className="h-6 w-6 text-primary-600 mr-2" />
-                3. How We Use Your Information
+                <FileText className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
+                3. How we use your information
               </h2>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                We use the collected information for various purposes:
-              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">We use information to:</p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li><strong>Service Delivery:</strong> To provide, maintain, and improve our CCTV, GPS tracking, and maintenance services</li>
-                <li><strong>Communication:</strong> To respond to inquiries, send quotes, provide customer support, and send service updates</li>
-                <li><strong>Business Operations:</strong> To process transactions, manage accounts, and fulfill contractual obligations</li>
-                <li><strong>Marketing:</strong> To send promotional materials, newsletters, and information about new services (with your consent)</li>
-                <li><strong>Legal Compliance:</strong> To comply with applicable laws, regulations, and legal processes</li>
-                <li><strong>Security:</strong> To detect, prevent, and address fraud, security breaches, and technical issues</li>
-                <li><strong>Analytics:</strong> To analyze usage patterns, improve website functionality, and enhance user experience</li>
+                <li>
+                  <strong>Respond to you</strong> — stock checks, directions, product questions, and after-sales help
+                </li>
+                <li>
+                  <strong>Run the shop</strong> — billing, receipts, exchanges or refunds as per our policies, and internal
+                  records
+                </li>
+                <li>
+                  <strong>Improve the website</strong> — fix issues, understand usage, and make the catalogue easier to use
+                </li>
+                <li>
+                  <strong>Marketing</strong> — only where you have agreed (e.g. newsletter); you can opt out anytime
+                </li>
+                <li>
+                  <strong>Legal &amp; safety</strong> — comply with law, tax, or accounting rules; detect fraud or misuse; protect
+                  our rights and customers
+                </li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Information Sharing and Disclosure</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Sharing and disclosure</h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                We do not sell your personal information. We may share your information in the following circumstances:
+                We <strong>do not sell</strong> your personal information. We may share it only as needed:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li><strong>Service Providers:</strong> With trusted third-party service providers who assist in operations (payment processors, cloud storage, analytics providers)</li>
-                <li><strong>Business Partners:</strong> With authorized dealers, installers, or partners involved in service delivery</li>
-                <li><strong>Legal Requirements:</strong> When required by law, court order, or government regulation</li>
-                <li><strong>Business Transfers:</strong> In connection with mergers, acquisitions, or sale of assets (with notice to users)</li>
-                <li><strong>Consent:</strong> When you have given explicit consent for sharing</li>
+                <li>
+                  <strong>Service providers</strong> — e.g. website hosting, email, analytics, or payment partners, under
+                  contracts that require them to protect data and use it only for our instructions
+                </li>
+                <li>
+                  <strong>Legal</strong> — if required by law, court order, or competent authority, or to protect safety and
+                  rights
+                </li>
+                <li>
+                  <strong>Business transfer</strong> — if our business is merged or sold, your information may transfer as part
+                  of the business (we will seek to inform you where practical)
+                </li>
+                <li>
+                  <strong>With your consent</strong> — any other sharing we describe at the time you agree
+                </li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Data Security</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Data security</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. These measures include:
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Encryption of sensitive data in transit and at rest</li>
-                <li>Secure authentication and access controls</li>
-                <li>Regular security assessments and updates</li>
-                <li>Employee training on data protection</li>
-                <li>Secure data storage and backup procedures</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed">
-                However, no method of transmission over the internet or electronic storage is 100% secure. While we strive to protect your information, we cannot guarantee absolute security.
+                We use reasonable technical and organisational measures suited to a small retail business — for example
+                access controls, secure connections where we host the site, and careful handling of devices at the counter. No
+                online or offline system is perfectly secure; we cannot guarantee absolute security.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Your Rights and Choices</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Your rights and choices</h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                Depending on your location, you may have certain rights regarding your personal information:
+                Under applicable law (including Indian data protection rules as they evolve), you may have rights to:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li><strong>Access:</strong> Request access to your personal information</li>
-                <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data</li>
-                <li><strong>Deletion:</strong> Request deletion of your personal information (subject to legal obligations)</li>
-                <li><strong>Objection:</strong> Object to processing of your personal information for certain purposes</li>
-                <li><strong>Portability:</strong> Request transfer of your data to another service provider</li>
-                <li><strong>Withdraw Consent:</strong> Withdraw consent for marketing communications at any time</li>
+                <li>Ask what personal data we hold about you</li>
+                <li>Request correction of inaccurate information</li>
+                <li>Request deletion where the law allows</li>
+                <li>Object to or limit certain processing</li>
+                <li>Withdraw consent for marketing</li>
               </ul>
               <p className="text-gray-700 leading-relaxed">
-                To exercise these rights, please contact us using the information provided in the "Contact Us" section below.
+                Contact us using the details in section 11. We may need to verify your identity before acting on a request.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Data Retention</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Data retention</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy, unless a longer retention period is required or permitted by law. Factors we consider include:
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>The nature and sensitivity of the information</li>
-                <li>Legal and regulatory requirements</li>
-                <li>Business needs and contractual obligations</li>
-                <li>Potential disputes or claims</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Children's Privacy</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Our services are not directed to individuals under the age of 18. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately, and we will take steps to delete such information.
+                We keep information only as long as needed for the purposes above — for example, enquiry messages for a
+                reasonable period, bills and tax records as required by law, and marketing lists until you unsubscribe.
+                When data is no longer needed, we delete or anonymise it where we can.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Third-Party Links</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Children&apos;s privacy</h2>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Our website and WhatsApp channels are intended for <strong>adults</strong> (parents, guardians, or shoppers).
+                We do not knowingly collect personal data directly from children under <strong>13</strong> without appropriate
+                parental involvement. If you are a parent and believe your child shared personal information with us without
+                your consent, please contact us and we will take steps to delete it where the law allows.
+              </p>
               <p className="text-gray-700 leading-relaxed">
-                Our website may contain links to third-party websites or services. We are not responsible for the privacy practices of these external sites. We encourage you to review the privacy policies of any third-party sites you visit.
+                Buying toys for children does not require us to collect the child&apos;s personal data; please avoid sharing
+                unnecessary details about minors in messages.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Changes to This Privacy Policy</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Third-party links</h2>
               <p className="text-gray-700 leading-relaxed">
-                We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or other factors. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. Your continued use of our services after such changes constitutes acceptance of the updated policy.
+                Our site may link to other websites (brands, social media, maps). We are not responsible for their privacy
+                practices. Please read their policies before you submit information there.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Changes to this policy</h2>
+              <p className="text-gray-700 leading-relaxed">
+                We may update this Privacy Policy from time to time. The &quot;Last updated&quot; date at the top will change
+                when we do. For important changes, we may also post a notice on the website or at the store where practical.
+                Continued use after updates means you accept the revised policy, except where the law requires otherwise.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
-                <Mail className="h-6 w-6 text-primary-600 mr-2" />
-                11. Contact Us
+                <Mail className="h-6 w-6 text-primary-600 mr-2 shrink-0" />
+                11. Contact us
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
+                Questions about this Privacy Policy or your personal data:
               </p>
-              <div className="bg-gray-50 rounded-lg p-6">
-                <p className="text-gray-900 font-semibold mb-2">WAINSO</p>
-                <p className="text-gray-700 mb-1">Email: <a href="mailto:wainsogps@gmail.com" className="text-primary-600 hover:underline">wainsogps@gmail.com</a></p>
-                <p className="text-gray-700 mb-1">Phone: <a href="tel:+919899860975" className="text-primary-600 hover:underline">+91 98998 60975</a></p>
-                <p className="text-gray-700 mt-4">
-                  <strong>Data Protection Officer:</strong> For privacy-related inquiries, please email us with "Privacy Policy" in the subject line.
+              <div className="bg-gray-50 rounded-lg p-6 not-prose">
+                <p className="text-gray-900 font-semibold mb-2">{STORE_NAME}</p>
+                <p className="text-gray-700 mb-1">
+                  Email:{' '}
+                  <a href={`mailto:${STORE_EMAIL}`} className="text-primary-600 hover:underline">
+                    {STORE_EMAIL}
+                  </a>
+                </p>
+                <p className="text-gray-700 mb-1">
+                  Phone:{' '}
+                  <a href="tel:+919899860975" className="text-primary-600 hover:underline">
+                    {STORE_PHONE_PRIMARY}
+                  </a>
+                  {', '}
+                  <a href="tel:+918292717044" className="text-primary-600 hover:underline">
+                    {STORE_PHONE_SECONDARY}
+                  </a>
+                </p>
+                <p className="text-gray-700 mt-3 text-sm">
+                  <Link to="/contact" className="text-primary-600 hover:underline">
+                    Contact page
+                  </Link>{' '}
+                  — store address and hours.
+                </p>
+                <p className="text-gray-700 mt-4 text-sm">
+                  <strong>Privacy requests:</strong> please use &quot;Privacy&quot; in the email subject line so we can route
+                  your message quickly.
                 </p>
               </div>
             </section>
@@ -203,4 +269,3 @@ const Privacy: React.FC = () => {
 };
 
 export default Privacy;
-

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar, Star, CheckCircle, ExternalLink } from 'lucide-react';
 import SEO from '../SEO';
 import { ContentItem } from '../../types/content';
+import { generatePageTitle, resolveOgImage } from '../../utils/seo';
 
 interface GenericDetailTemplateProps<T extends ContentItem = ContentItem> {
   data: T | undefined;
@@ -54,8 +55,10 @@ const GenericDetailTemplate = <T extends ContentItem = ContentItem>({
   }
 
   const displayTitle = data.title || data.name || 'Untitled';
-  const pageTitle = data.seo?.title || `${displayTitle} | WAINSO`;
-  const metaDescription = data.seo?.description || data.description;
+  const pageTitle = data.seo?.title || generatePageTitle(displayTitle);
+  const metaDescription = data.seo?.description || data.description || '';
+  const shareImage = data.image || data.localLogo;
+  const listKeywords = data.seo?.keywords?.filter(Boolean).join(', ');
 
   return (
     <>
@@ -63,6 +66,9 @@ const GenericDetailTemplate = <T extends ContentItem = ContentItem>({
         title={pageTitle}
         description={metaDescription}
         path={`/${type}s/${data.slug}`}
+        image={shareImage ? resolveOgImage(shareImage) : undefined}
+        imageAlt={displayTitle}
+        keywords={listKeywords}
       />
 
       {/* Breadcrumbs */}

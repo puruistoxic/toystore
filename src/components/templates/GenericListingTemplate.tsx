@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, Building, Factory, Filter } from 'lucide-react';
 import SEO from '../SEO';
 import { ContentItem } from '../../types/content';
+import { generatePageTitle } from '../../utils/seo';
 import { hybridSearch } from '../../utils/fuzzySearch';
 
 interface GenericListingTemplateProps {
@@ -115,11 +116,7 @@ const GenericListingTemplate: React.FC<GenericListingTemplateProps> = ({
 
   return (
     <>
-      <SEO
-        title={`${title} | WAINSO`}
-        description={description}
-        path={`/${type}s`}
-      />
+      <SEO title={generatePageTitle(title)} description={description} path={`/${type}s`} />
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">

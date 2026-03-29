@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../utils/api';
+import SEO from '../components/SEO';
 
 export default function NotFound() {
   const navigate = useNavigate();
@@ -32,16 +33,26 @@ export default function NotFound() {
 
   if (checkingRedirect) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4 py-16 bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-teal-600" />
-          <p className="mt-4 text-gray-600 text-sm">Checking redirects...</p>
+      <>
+        <SEO title="Checking… | Khandelwal Toy Store" description="Loading page." path={location.pathname} robots="noindex, nofollow" />
+        <div className="min-h-[60vh] flex items-center justify-center px-4 py-16 bg-gray-50">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-teal-600" />
+            <p className="mt-4 text-gray-600 text-sm">Checking redirects...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
+    <>
+      <SEO
+        title="Page not found | Khandelwal Toy Store"
+        description="We couldn't find this page on Khandelwal Toy Store. Browse our toy catalogue from the home page."
+        path={location.pathname}
+        robots="noindex, nofollow"
+      />
     <div className="min-h-[60vh] flex items-center justify-center px-4 py-16 bg-gray-50">
       <div className="max-w-xl w-full text-center bg-white shadow-md rounded-2xl px-6 py-10 border border-gray-100">
         <p className="text-sm font-semibold text-teal-600 mb-2">404</p>
@@ -67,6 +78,7 @@ export default function NotFound() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

@@ -129,8 +129,18 @@ export const invoicingApi = {
 
 // Content API functions (for products, categories, brands, etc.)
 export const contentApi = {
-  getProducts: (params?: { search?: string; is_active?: boolean }) =>
-    api.get('/content/products', { params }),
+  getProducts: (params?: {
+    search?: string;
+    is_active?: boolean;
+    /** Only products flagged for homepage hero (public catalogue) */
+    home_banner?: boolean;
+  }) =>
+    api.get('/content/products', {
+      params: {
+        ...params,
+        home_banner: params?.home_banner === true ? 'true' : undefined,
+      },
+    }),
   getProduct: (id: string) =>
     api.get(`/content/products/${id}`),
   createProduct: (data: any) =>

@@ -82,9 +82,10 @@ const Contact: React.FC = () => {
   return (
     <>
       <SEO
-        title="Contact WAINSO - IT, ERP, Security & Networking Partner"
-        description="Get in touch with WAINSO for ERP, networking, security, and IT services across Jharkhand and India. Call +91 98998 60975 or email wainsogps@gmail.com."
+        title="Contact Khandelwal Toy Store — toy shop & enquiries"
+        description="Contact Khandelwal Toy Store for directions, stock, and toy suggestions. Call +91 98998 60975 / +91 82927 17044 or email wainsogps@gmail.com."
         path="/contact"
+        keywords="Khandelwal Toy Store contact, toy shop phone, visit toy store, Surat toys, WhatsApp toy shop"
       />
       <div className="min-h-screen bg-gray-50">
       {/* Header */}

@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Upload, Trash2, ChevronUp, ChevronDown, ImageIcon } from 'lucide-react';
 import api from '../../utils/api';
 import RichTextEditor from './RichTextEditor';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
+import { HOME_HERO_BANNER_IDS, HOME_HERO_BANNER_SLIDES } from '../../constants/homeHeroBanners';
 
 interface ProductFormProps {
   productId?: string;
@@ -17,14 +20,17 @@ interface ProductFormState {
   hsnCode: string;
   shortDescription: string;
   description: string;
-  mainImage: string;
-  galleryImages: string; // one URL per line
+  youtubeLinks: string; // one YouTube URL per line
   features: string; // one feature per line
   specifications: string; // key: value per line
   seoTitle: string;
   seoDescription: string;
   seoKeywords: string; // comma-separated
   isActive: boolean;
+  /** Homepage hero slide ids (`1`–`4`) where this product appears */
+  homeBannerSlideIds: string[];
+  /** Lower numbers appear first (0–999) within each hero slide carousel */
+  bannerSortOrder: string;
 }
 
 const emptyState: ProductFormState = {
@@ -37,19 +43,76 @@ const emptyState: ProductFormState = {
   hsnCode: '',
   shortDescription: '',
   description: '',
-  mainImage: '',
-  galleryImages: '',
+  youtubeLinks: '',
   features: '',
   specifications: '',
   seoTitle: '',
   seoDescription: '',
   seoKeywords: '',
-  isActive: true
+  isActive: true,
+  homeBannerSlideIds: [],
+  bannerSortOrder: '0',
 };
+
+function mergeProductImagesFromApi(data: any): string[] {
+  const raw = data.images
+    ? Array.isArray(data.images)
+      ? [...data.images]
+      : [data.images]
+    : [];
+  if (data.image && typeof data.image === 'string' && data.image.trim() && !raw.includes(data.image)) {
+    raw.unshift(data.image);
+  }
+  return raw.map((u: string) => u.trim()).filter(Boolean);
+}
+
+function parseHomeBannerSlidesFromApi(data: any): string[] {
+  const allowed = new Set(HOME_HERO_BANNER_IDS);
+  let raw = data.home_banner_slides;
+  let arr: string[] = [];
+  if (Array.isArray(raw)) {
+    arr = raw.map(String);
+  } else if (typeof raw === 'string') {
+    try {
+      const j = JSON.parse(raw);
+      if (Array.isArray(j)) arr = j.map(String);
+    } catch {
+      /* ignore */
+    }
+  }
+  arr = arr.filter((id) => allowed.has(id));
+  if (arr.length > 0) {
+    return Array.from(new Set(arr)).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  }
+  if (data.promote_home_banner) {
+    return [...HOME_HERO_BANNER_IDS];
+  }
+  return [];
+}
+
+function normalizeVideoUrlsFromApi(data: any): string[] {
+  const v = data.video_urls;
+  if (!v) return [];
+  if (Array.isArray(v)) {
+    return v.filter((x): x is string => typeof x === 'string').map((s) => s.trim()).filter(Boolean);
+  }
+  if (typeof v === 'string') {
+    try {
+      const p = JSON.parse(v);
+      return Array.isArray(p) ? p.map(String).map((s) => s.trim()).filter(Boolean) : [];
+    } catch {
+      return v.trim() ? [v.trim()] : [];
+    }
+  }
+  return [];
+}
 
 export default function ProductForm({ productId }: ProductFormProps) {
   const isEdit = !!productId;
   const [form, setForm] = useState<ProductFormState>(emptyState);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState<boolean>(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,8 +140,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
           hsnCode: data.hsn_code || '',
           shortDescription: data.short_description || '',
           description: data.description || '',
-          mainImage: data.image || '',
-          galleryImages: Array.isArray(data.images) ? data.images.join('\n') : '',
+          youtubeLinks: normalizeVideoUrlsFromApi(data).join('\n'),
           features: Array.isArray(data.features) ? data.features.join('\n') : '',
           specifications: data.specifications
             ? Object.entries(data.specifications)
@@ -88,8 +150,14 @@ export default function ProductForm({ productId }: ProductFormProps) {
           seoTitle: data.seo_title || '',
           seoDescription: data.seo_description || '',
           seoKeywords: Array.isArray(data.seo_keywords) ? data.seo_keywords.join(', ') : '',
-          isActive: data.is_active !== false
+          isActive: data.is_active !== false,
+          homeBannerSlideIds: parseHomeBannerSlidesFromApi(data),
+          bannerSortOrder:
+            data.banner_sort_order != null && data.banner_sort_order !== ''
+              ? String(data.banner_sort_order)
+              : '0',
         });
+        setImageUrls(mergeProductImagesFromApi(data));
       } catch (e: any) {
         setError(e.response?.data?.error || 'Failed to load product');
       } finally {
@@ -145,6 +213,49 @@ export default function ProductForm({ productId }: ProductFormProps) {
     }));
   };
 
+  const handleImageFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    setUploadingImages(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      Array.from(files).forEach((f) => fd.append('images', f));
+      const { data } = await api.post<{ urls?: string[] }>('/upload/images', fd);
+      const urls = data.urls || [];
+      if (urls.length) {
+        setImageUrls((prev) => [...prev, ...urls]);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.response?.data?.message || 'Image upload failed');
+    } finally {
+      setUploadingImages(false);
+      e.target.value = '';
+    }
+  };
+
+  const updateImageUrlAt = (index: number, url: string) => {
+    setImageUrls((prev) => {
+      const next = [...prev];
+      next[index] = url;
+      return next;
+    });
+  };
+
+  const removeImageAt = (index: number) => {
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const moveImage = (index: number, dir: -1 | 1) => {
+    setImageUrls((prev) => {
+      const j = index + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[j]] = [next[j], next[index]];
+      return next;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -157,8 +268,10 @@ export default function ProductForm({ productId }: ProductFormProps) {
           .map((f) => f.trim())
           .filter(Boolean) || [];
 
-      const imagesArray =
-        form.galleryImages
+      const imagesArray = imageUrls.map((url) => url.trim()).filter(Boolean);
+
+      const videoUrlsArray =
+        form.youtubeLinks
           .split('\n')
           .map((url) => url.trim())
           .filter(Boolean) || [];
@@ -191,15 +304,22 @@ export default function ProductForm({ productId }: ProductFormProps) {
         category: form.category.trim() || null,
         brand: form.brand.trim() || null,
         hsn_code: form.hsnCode.trim() || null,
-        image: form.mainImage.trim() || null,
+        image: imagesArray[0] || null,
         images: imagesArray,
+        video_urls: videoUrlsArray,
         features: featuresArray,
         specifications: specs,
         warranty: null,
         seo_title: form.seoTitle.trim() || null,
         seo_description: form.seoDescription.trim() || null,
         seo_keywords: seoKeywordsArray,
-        is_active: form.isActive
+        is_active: form.isActive,
+        promote_home_banner: form.homeBannerSlideIds.length > 0,
+        home_banner_slides: form.homeBannerSlideIds,
+        banner_sort_order: (() => {
+          const n = parseInt(form.bannerSortOrder, 10);
+          return Number.isFinite(n) ? Math.min(999, Math.max(0, n)) : 0;
+        })(),
       };
 
       if (isEdit) {
@@ -321,13 +441,10 @@ export default function ProductForm({ productId }: ProductFormProps) {
             type="text"
             value={form.hsnCode}
             onChange={handleChange}
-            placeholder="e.g., 8528, 8526"
+            placeholder="e.g., 9503"
             maxLength={20}
             className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
           />
-          <p className="mt-1 text-xs text-gray-500">
-            HSN (Harmonized System of Nomenclature) code required for GST invoicing. Common codes: 8528 (CCTV/Video equipment), 8526 (GPS devices), 8531 (Security systems)
-          </p>
         </div>
         <div className="flex items-center space-x-2">
           <input
@@ -358,6 +475,58 @@ export default function ProductForm({ productId }: ProductFormProps) {
             Active
           </label>
         </div>
+        <div className="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50/80 p-4 space-y-3">
+          <p className="text-sm font-semibold text-amber-900">Homepage hero — “In focus” products</p>
+          <p className="text-xs text-amber-800/90">
+            Pick which rotating hero slides should show this product in the spotlight card. You can choose more
+            than one. Sort order applies within each slide’s carousel (lower = earlier).
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {HOME_HERO_BANNER_SLIDES.map((slide) => (
+              <label
+                key={slide.id}
+                className="flex items-start gap-2 rounded-md border border-amber-200/80 bg-white/80 px-3 py-2 cursor-pointer hover:bg-white"
+              >
+                <input
+                  type="checkbox"
+                  checked={form.homeBannerSlideIds.includes(slide.id)}
+                  onChange={() => {
+                    setForm((prev) => {
+                      const set = new Set(prev.homeBannerSlideIds);
+                      if (set.has(slide.id)) set.delete(slide.id);
+                      else set.add(slide.id);
+                      return {
+                        ...prev,
+                        homeBannerSlideIds: Array.from(set).sort(
+                          (a, b) => parseInt(a, 10) - parseInt(b, 10)
+                        ),
+                      };
+                    });
+                  }}
+                  className="mt-0.5 h-4 w-4 text-teal-600 border-gray-300 rounded"
+                />
+                <span className="text-sm text-gray-800">
+                  <span className="font-medium text-amber-950">{slide.label}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <label htmlFor="bannerSortOrder" className="text-sm text-gray-700 whitespace-nowrap">
+              Sort order (0–999)
+            </label>
+            <input
+              id="bannerSortOrder"
+              name="bannerSortOrder"
+              type="number"
+              min={0}
+              max={999}
+              value={form.bannerSortOrder}
+              onChange={handleChange}
+              className="w-24 border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+        </div>
       </div>
 
       <div>
@@ -379,28 +548,128 @@ export default function ProductForm({ productId }: ProductFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Main image URL</label>
+          <label className="block text-sm font-medium text-gray-900 mb-1">Product images</label>
+          <p className="text-xs text-gray-600 mb-3">
+            First image is the main photo on cards and galleries. Upload multiple files at once, or paste URLs
+            below. Files are stored on the server under <code className="text-gray-800">/uploads/</code>.
+          </p>
           <input
-            name="mainImage"
-            value={form.mainImage}
-            onChange={handleChange}
-            className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+            multiple
+            className="hidden"
+            onChange={handleImageFiles}
           />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingImages}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-teal-600 bg-white text-teal-700 text-sm font-medium hover:bg-teal-50 disabled:opacity-50"
+          >
+            <Upload className="h-4 w-4" />
+            {uploadingImages ? 'Uploading…' : 'Upload images'}
+          </button>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Gallery image URLs (one per line)
-          </label>
-          <textarea
-            name="galleryImages"
-            value={form.galleryImages}
-            onChange={handleChange}
-            rows={3}
-            className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-          />
-        </div>
+
+        {imageUrls.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg bg-white">
+            <ImageIcon className="h-10 w-10 text-gray-400 mb-2" />
+            <p>No images yet. Upload files or add a URL row.</p>
+            <button
+              type="button"
+              onClick={() => setImageUrls([''])}
+              className="mt-3 text-teal-600 font-medium hover:underline"
+            >
+              Add image URL
+            </button>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {imageUrls.map((url, i) => (
+              <li
+                key={`${i}-${url.slice(0, 24)}`}
+                className="flex flex-wrap items-center gap-2 p-2 rounded-lg border border-gray-200 bg-white"
+              >
+                <div className="h-16 w-16 shrink-0 rounded-md overflow-hidden bg-gray-100 border border-gray-200">
+                  {url.trim() ? (
+                    <img
+                      src={resolveMediaUrl(url)}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.opacity = '0.3';
+                      }}
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs">—</div>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => updateImageUrlAt(i, e.target.value)}
+                  placeholder="/images/... or https://..."
+                  className="flex-1 min-w-[200px] border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    title="Move up"
+                    onClick={() => moveImage(i, -1)}
+                    disabled={i === 0}
+                    className="p-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Move down"
+                    onClick={() => moveImage(i, 1)}
+                    disabled={i === imageUrls.length - 1}
+                    className="p-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Remove"
+                    onClick={() => removeImageAt(i)}
+                    className="p-1.5 rounded border border-red-200 text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setImageUrls((prev) => [...prev, ''])}
+          className="text-sm font-medium text-teal-600 hover:underline"
+        >
+          + Add another image URL
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">YouTube videos</label>
+        <p className="text-xs text-gray-500 mb-2">
+          One link per line (watch, embed, Shorts, or youtu.be). Shown on the product page; clicking opens the
+          video in a player.
+        </p>
+        <textarea
+          name="youtubeLinks"
+          value={form.youtubeLinks}
+          onChange={handleChange}
+          rows={3}
+          placeholder="https://www.youtube.com/watch?v=…"
+          className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

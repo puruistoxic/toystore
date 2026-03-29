@@ -110,7 +110,7 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                 Thank You!
               </h3>
               <p className="text-gray-600">
-                We'll get back to you soon with the best deals.
+                We’ll get back to you soon with product suggestions and store details.
               </p>
             </div>
           ) : (
@@ -212,9 +212,9 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
               </button>
 
               <div className="text-xs text-gray-500 space-y-1 pt-2">
-                <p>• Get quotes from multiple vendors</p>
-                <p>• Compare prices and choose the best deal</p>
-                <p>• Contact info will be sent to you by SMS/Email</p>
+                <p>• We’ll help you find the right toy for age and budget</p>
+                <p>• Ask about stock, store timings, and directions</p>
+                <p>• We may follow up by call or WhatsApp</p>
               </div>
             </form>
           )}
@@ -229,10 +229,10 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
           <div className="relative z-10 h-full flex flex-col justify-between">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                Wholesale Toy Supplier
+                Your local toy store
               </h2>
               <p className="text-primary-100 text-lg mb-6">
-                Trusted by retailers and distributors across India
+                Toys, games, and gifts for families nearby
               </p>
 
               <div className="space-y-4 mb-6">
@@ -251,8 +251,8 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                     <Navigation className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Bulk Discounts</h3>
-                    <p className="text-sm text-primary-100">Competitive wholesale pricing</p>
+                    <h3 className="font-semibold">Fair shop prices</h3>
+                    <p className="text-sm text-primary-100">See labels in store; we’ll confirm on WhatsApp too</p>
                   </div>
                 </div>
 
@@ -261,8 +261,8 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
                     <Settings className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Pan-India Shipping</h3>
-                    <p className="text-sm text-primary-100">Fast and reliable delivery</p>
+                    <h3 className="font-semibold">Pickup & local help</h3>
+                    <p className="text-sm text-primary-100">Visit us or ask about delivery options nearby</p>
                   </div>
                 </div>
               </div>
@@ -275,7 +275,7 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ onClose }) => {
               </div>
               <div className="flex items-center text-sm">
                 <CheckCircle className="h-5 w-5 mr-2 text-primary-200" />
-                <span>Best Wholesale Prices</span>
+                <span>Helpful, honest service</span>
               </div>
               <Link
                 to="/products"

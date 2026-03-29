@@ -1,8 +1,17 @@
 /**
  * Image Placeholder Utilities
- * 
+ *
  * Functions to generate and handle placeholder images when product images are missing
  */
+
+/** Escape text for safe use inside SVG (Unicode allowed; only XML special chars escaped). */
+function escapeSvgText(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 /**
  * Generate a placeholder image URL using a placeholder service
@@ -22,20 +31,19 @@ export function getPlaceholderImage(width: number = 400, height: number = 300, t
 }
 
 /**
- * Generate a data URI placeholder (works offline)
- * @param width - Image width in pixels
- * @param height - Image height in pixels
- * @param text - Optional text to display
- * @returns Data URI string
+ * Generate a data URI placeholder (works offline).
+ * Uses UTF-8 via encodeURIComponent — avoids btoa(), which throws on non-Latin1 (e.g. em dash, Hindi).
  */
 export function getDataURIPlaceholder(width: number = 400, height: number = 300, text: string = 'No Image'): string {
+  const short = text.length > 48 ? `${text.slice(0, 45)}…` : text;
+  const safe = escapeSvgText(short);
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <rect width="100%" height="100%" fill="#e5e7eb"/>
-      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle" dy=".3em">${text}</text>
+      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" dy=".3em">${safe}</text>
     </svg>
   `.trim();
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 /**
