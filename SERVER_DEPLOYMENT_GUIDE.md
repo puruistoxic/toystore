@@ -149,7 +149,8 @@ nano .env
 
 - `JWT_SECRET` — generate with: `openssl rand -base64 32`
 - `ADMIN_DEFAULT_PASSWORD` — strong password for first admin login
-- `MYSQL_*` — host (IP, hostname, or Docker service name), database, user, password
+- `MYSQL_*` — host (LAN IP of the DB server is common), database, user, and **`MYSQL_PASSWORD`** (required if MySQL uses auth). Put this file beside `docker-compose.yml`. If the password contains `#` or `$`, wrap it in single quotes in `.env`.
+- MySQL must allow the Docker bridge as a client (logs may show `user@172.x.x.x`). Grant for that host or `'%'` from your LAN, e.g. `CREATE USER ...`, `GRANT ... ON toystoredb.* TO 'dbuser'@'%';`
 - `SMTP_*` — mail provider credentials (e.g. ZeptoMail)
 - `PUBLIC_DOMAIN` and `NGINX_PROXY_REDIRECTS` — match your public hostname(s) for the reverse proxy labels
 - `REACT_APP_TINYMCE_API_KEY` — optional; required for admin rich text if you use TinyMCE

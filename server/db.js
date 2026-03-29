@@ -18,11 +18,23 @@ async function initDatabase() {
   const dbUser = process.env.MYSQL_USER || 'dbuser';
   const dbPassword = process.env.MYSQL_PASSWORD || process.env.MYSQL_PASS || process.env.DB_PASSWORD || '';
   const dbPort = parseInt(process.env.MYSQL_PORT || '3306');
-  const fallbackHost = process.env.MYSQL_FALLBACK_HOST || 'purushottam.dev';
+  // In production, do not default to a WAN fallback (avoids long ETIMEDOUT and a dead pool on failure).
+  const rawFallback = process.env.MYSQL_FALLBACK_HOST;
+  let fallbackHost;
+  if (rawFallback !== undefined) {
+    fallbackHost = rawFallback;
+  } else if (process.env.NODE_ENV === 'production') {
+    fallbackHost = '';
+  } else {
+    fallbackHost = 'purushottam.dev';
+  }
 
   console.log('[Database] Initializing database connection...');
   console.log(`[Database] Primary host: ${dbHost}:${dbPort}`);
-  console.log(`[Database] Fallback host: ${fallbackHost}:${dbPort} (if primary fails)`);
+  console.log(
+    `[Database] Fallback host: ${fallbackHost || '(disabled)'}:${dbPort}` +
+      (fallbackHost ? ' (if primary fails)' : '')
+  );
   console.log(`[Database] Database: ${dbDatabase}, User: ${dbUser}`);
   console.log(`[Database] Using password: ${dbPassword ? 'YES' : 'NO'}`);
 
@@ -54,24 +66,48 @@ async function initDatabase() {
   
   pool = mysql.createPool(poolConfig);
 
+  async function destroyPool() {
+    if (!pool) return;
+    const p = pool;
+    pool = null;
+    try {
+      await p.end();
+    } catch (e) {
+      console.warn('[Database] Pool end warning:', e.message);
+    }
+  }
+
   // Test connection with primary host
   try {
     console.log(`[Database] 🔌 Attempting connection to PRIMARY host: ${dbHost}:${dbPort}...`);
-    const testConnection = await pool.getConnection();
-    await testConnection.ping();
-    const connectionInfo = testConnection.config?.host || dbHost;
-    testConnection.release();
+    const conn = await pool.getConnection();
+    await conn.ping();
+    const connectionInfo = conn.config?.host || dbHost;
+    conn.release();
     console.log(`[Database] ✅ Successfully connected to database at ${dbHost}:${dbPort}/${dbDatabase}`);
     console.log(`[Database] 📍 Connection established to: ${connectionInfo}`);
   } catch (error) {
     console.warn(`[Database] ⚠️  Connection to ${dbHost} failed: ${error.message}`);
+
+    // No point trying fallback without a password if primary rejected auth
+    if (!dbPassword) {
+      await destroyPool();
+      throw new Error(
+        `Database connection failed: ${error.message}. MYSQL_PASSWORD is not set in the environment. ` +
+          'Add MYSQL_PASSWORD to the .env next to docker-compose.yml (quote values if they contain # or $). ' +
+          'Then: docker compose up -d --force-recreate toystore-api'
+      );
+    }
+
+    if (!fallbackHost) {
+      await destroyPool();
+      throw new Error(`Database connection failed (primary only): ${error.message}`);
+    }
+
     console.log(`[Database] 🔄 Attempting fallback connection to ${fallbackHost}...`);
-    
-    // Try fallback host
+
     try {
-      if (pool) {
-        await pool.end(); // Close the previous pool
-      }
+      await destroyPool();
       const fallbackPoolConfig = {
         host: fallbackHost,
         database: dbDatabase,
@@ -81,28 +117,27 @@ async function initDatabase() {
         connectionLimit: 10,
         queueLimit: 0,
         connectTimeout: 10000,
-        ssl: false
+        ssl: false,
+        password: dbPassword
       };
-      
-      // Only set password if it's provided
-      if (dbPassword) {
-        fallbackPoolConfig.password = dbPassword;
-      }
-      
+
       pool = mysql.createPool(fallbackPoolConfig);
-      
+
       console.log(`[Database] 🔌 Attempting connection to FALLBACK host: ${fallbackHost}:${dbPort}...`);
-      const testConnection = await pool.getConnection();
-      await testConnection.ping();
-      const connectionInfo = testConnection.config?.host || fallbackHost;
-      testConnection.release();
+      const conn2 = await pool.getConnection();
+      await conn2.ping();
+      const connectionInfo = conn2.config?.host || fallbackHost;
+      conn2.release();
       console.log(`[Database] ✅ Successfully connected to database at ${fallbackHost}:${dbPort}/${dbDatabase} (FALLBACK)`);
       console.log(`[Database] 📍 Connection established to: ${connectionInfo}`);
-      dbHost = fallbackHost; // Update for logging
+      dbHost = fallbackHost;
     } catch (fallbackError) {
       console.error(`[Database] ❌ Fallback connection to ${fallbackHost} also failed: ${fallbackError.message}`);
       console.error('[Database] Both primary and fallback database connections failed!');
-      throw new Error(`Database connection failed. Primary (${dbHost}): ${error.message}, Fallback (${fallbackHost}): ${fallbackError.message}`);
+      await destroyPool();
+      throw new Error(
+        `Database connection failed. Primary (${dbHost}): ${error.message}, Fallback (${fallbackHost}): ${fallbackError.message}`
+      );
     }
   }
 
