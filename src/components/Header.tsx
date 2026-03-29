@@ -219,7 +219,7 @@ const Header: React.FC = () => {
             </Link>
 
             {/* Desktop Navigation - Center */}
-            <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 relative flex-1 justify-center">
+            <nav className="hidden md:flex items-center space-x-5 lg:space-x-8 relative flex-1 justify-center">
               {navigation.map((item) => (
                 <div
                   key={item.name}
@@ -245,7 +245,7 @@ const Header: React.FC = () => {
                 >
                   <Link
                     to={item.href}
-                    className={`flex items-center px-3 py-2 text-base font-medium transition-colors ${
+                    className={`flex items-center px-3 py-2 text-lg lg:text-xl font-semibold transition-colors ${
                       isHomePage && !isScrolled
                         ? isActive(item.href)
                           ? 'text-white'
@@ -258,7 +258,7 @@ const Header: React.FC = () => {
                     {item.name}
                     {item.hasDropdown && (
                       <ChevronRight 
-                        className={`h-3 w-3 ml-1 transition-transform ${
+                        className={`h-4 w-4 ml-1 transition-transform ${
                           hoveredMenu === item.name ? 'rotate-90' : ''
                         }`} 
                       />
@@ -273,7 +273,7 @@ const Header: React.FC = () => {
               {/* Search Icon Button */}
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className={`hidden md:flex items-center justify-center w-10 h-10 rounded-full transition-all ${
+                className={`hidden md:flex items-center justify-center w-11 h-11 rounded-full transition-all ${
                   isHomePage && !isScrolled
                     ? isSearchOpen 
                       ? 'bg-white/20 text-white'
@@ -284,7 +284,7 @@ const Header: React.FC = () => {
                 }`}
                 aria-label="Search products"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-6 w-6" />
               </button>
 
               {/* Mobile menu button */}
@@ -329,7 +329,7 @@ const Header: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  className={`flex items-center px-3 py-2.5 rounded-md text-lg font-semibold transition-colors ${
                     isHomePage && !isScrolled
                       ? isActive(item.href)
                         ? 'text-white bg-white/10'
@@ -391,13 +391,13 @@ const Header: React.FC = () => {
             {item && item.name === 'All Categories' && item.dropdown && item.dropdown.type === 'list' && (
               <div className="grid grid-cols-2 gap-16">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 mb-4">Toy Categories</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Toy Categories</h3>
                   <div className="space-y-0">
                     {item.dropdown.items?.map((category: { name: string; link: string }, idx: number) => (
                       <Link
                         key={idx}
                         to={category.link}
-                        className="block py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                        className="block py-2.5 text-lg text-gray-700 hover:text-primary-600 transition-colors font-medium"
                       >
                         {category.name}
                       </Link>
@@ -405,29 +405,29 @@ const Header: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 mb-4">Quick Links</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Links</h3>
                   <div className="space-y-0">
                     <Link
                       to="/products?filter=new-arrival"
-                      className="block py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                      className="block py-2.5 text-lg text-gray-700 hover:text-primary-600 transition-colors font-medium"
                     >
                       New Arrivals
                     </Link>
                     <Link
                       to="/products?filter=best-seller"
-                      className="block py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                      className="block py-2.5 text-lg text-gray-700 hover:text-primary-600 transition-colors font-medium"
                     >
                       Best Sellers
                     </Link>
                     <Link
                       to="/products?filter=educational"
-                      className="block py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                      className="block py-2.5 text-lg text-gray-700 hover:text-primary-600 transition-colors font-medium"
                     >
                       Educational Toys
                     </Link>
                     <Link
                       to="/products?filter=bulk-discount"
-                      className="block py-2.5 text-base text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                      className="block py-2.5 text-lg text-gray-700 hover:text-primary-600 transition-colors font-medium"
                     >
                       Bulk Discounts
                     </Link>

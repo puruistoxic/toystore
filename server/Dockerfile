@@ -1,19 +1,18 @@
 FROM node:18-alpine
 
+RUN apk add --no-cache wget
+
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy application files
 COPY . .
 
-# Expose port
 EXPOSE 3001
 
-# Start the server
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3001/health > /dev/null || exit 1
+
 CMD ["node", "index.js"]
 

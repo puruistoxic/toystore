@@ -1,60 +1,50 @@
-version: '3.8'
-
 services:
   toystore-api:
     build:
       context: ./server
       dockerfile: Dockerfile
     container_name: toystore-api
-    restart: always
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - JWT_SECRET=your-secret-key-change-in-production-use-strong-random-string
-      - ADMIN_DEFAULT_PASSWORD=admin123
-      - SMTP_HOST=smtp.zeptomail.eu
-      - SMTP_PORT=587
-      - SMTP_USER=emailapikey
-      - SMTP_PASSWORD=yA6KbHtb4gihy2xRREVuhJKC+4sx/q0xiiSy4CHhfpYleNiz3KE20BFqINPuJ2CI0YfY5atVb45AI4266IsPfJlmPYUFLJTGTuv4P2uV48xh8ciEYNYkjJWuBrkWGqFPdx8jDioyQvMgWA==
-      - MYSQL_HOST=192.168.1.210
-      - MYSQL_DATABASE=toystoredb
-      - MYSQL_USER=dbuser
-      - MYSQL_PASSWORD='X9@uP!z1qF#D'
-      - MYSQL_PORT=3306
+      NODE_ENV: production
+      PORT: 3001
     networks:
       - nginx_proxy
     expose:
       - "3001"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
   toystore-web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-/api}
+        REACT_APP_TIMEZONE: ${REACT_APP_TIMEZONE:-Asia/Kolkata}
+        REACT_APP_TINYMCE_API_KEY: ${REACT_APP_TINYMCE_API_KEY:-}
+        REACT_APP_GOOGLE_ANALYTICS_ID: ${REACT_APP_GOOGLE_ANALYTICS_ID:-}
     container_name: toystore-web
-    restart: always
-    environment:
-      - NODE_ENV=production
-      - REACT_APP_API_URL=/api
-    # Logs are sent to stdout/stderr and captured by docker logs
-    # volumes:
-    #   - ./logs:/var/log/nginx
+    restart: unless-stopped
     networks:
       - nginx_proxy
     labels:
       - "nginx.proxy=true"
-      - "nginx.proxy.domain=toystore.purushottam.dev"
-      - "nginx.proxy.redirects=www.toystore.purushottam.dev:https://toystore.purushottam.dev"
+      - "nginx.proxy.domain=${PUBLIC_DOMAIN}"
+      - "nginx.proxy.redirects=${NGINX_PROXY_REDIRECTS}"
     expose:
       - "80"
     depends_on:
-      - toystore-api
-    # Add health check for better reliability
+      toystore-api:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/health"]
       interval: 30s
       timeout: 10s
       retries: 3

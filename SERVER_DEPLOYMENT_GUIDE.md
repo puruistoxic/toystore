@@ -135,32 +135,30 @@ ls -la
 
 ### Step 5: Configure Environment Variables
 
-**CRITICAL: Update secrets before deployment!**
+**CRITICAL: Never commit real secrets.** Configuration lives in `.env` (gitignored), not in `docker-compose.yml`.
 
 ```bash
-# Edit docker-compose.yml
-nano docker-compose.yml
+cd /opt/khandelwalstore   # or your clone path
+
+# Create env from the template
+cp .env.example .env
+nano .env
 ```
 
-**Update these lines (IMPORTANT for security):**
+**Set at minimum:**
 
-Line 13 - Generate a strong JWT secret:
+- `JWT_SECRET` — generate with: `openssl rand -base64 32`
+- `ADMIN_DEFAULT_PASSWORD` — strong password for first admin login
+- `MYSQL_*` — host (IP, hostname, or Docker service name), database, user, password
+- `SMTP_*` — mail provider credentials (e.g. ZeptoMail)
+- `PUBLIC_DOMAIN` and `NGINX_PROXY_REDIRECTS` — match your public hostname(s) for the reverse proxy labels
+- `REACT_APP_TINYMCE_API_KEY` — optional; required for admin rich text if you use TinyMCE
+
+Rebuild the **web** image after changing any `REACT_APP_*` variable:
+
 ```bash
-# Generate secret (in another terminal)
-openssl rand -base64 32
+docker compose build --no-cache toystore-web && docker compose up -d
 ```
-
-Then update in docker-compose.yml:
-```yaml
-- JWT_SECRET=<paste-generated-secret-here>
-```
-
-Line 14 - Change admin password:
-```yaml
-- ADMIN_DEFAULT_PASSWORD=YourSecurePassword123!
-```
-
-**Save and exit**: Press `Ctrl+X`, then `Y`, then `Enter`
 
 ### Step 6: Create Docker Network
 
@@ -391,7 +389,7 @@ cd /opt/khandelwalstore
 sudo mkdir -p /opt/backups/database
 
 # Backup database
-docker exec toystore-api sh -c 'mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE' > /opt/backups/database/toystore_$(date +%Y%m%d_%H%M%S).sql
+docker exec toystore-api sh -c 'mysqldump -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' > /opt/backups/database/toystore_$(date +%Y%m%d_%H%M%S).sql
 ```
 
 ### Automated Backup (Cron Job)
@@ -461,8 +459,8 @@ ping 192.168.1.210
 # mysql -h 192.168.1.210 -u dbuser -p
 exit
 
-# Check credentials in docker-compose.yml
-cat docker-compose.yml | grep MYSQL
+# Check MySQL-related variables (do not paste passwords into chat logs)
+grep '^MYSQL_' .env
 ```
 
 ### Can't Access Website
@@ -609,7 +607,7 @@ docker exec -it toystore-api sh
 3. Install Docker and Docker Compose
 4. Setup SSH key for GitHub
 5. Clone repository
-6. Update secrets in docker-compose.yml
+6. Copy `.env.example` to `.env` and set secrets
 7. Create nginx_proxy network
 8. Deploy application
 9. Initialize database

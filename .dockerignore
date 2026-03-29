@@ -2,7 +2,6 @@
 node_modules
 npm-debug.log
 yarn-error.log
-package-lock.json
 
 # Build artifacts
 build
@@ -49,13 +48,10 @@ __tests__
 .travis.yml
 azure-pipelines.yml
 
-# Docker files
-Dockerfile
-docker-compose.yml
+# Docker metadata (not needed inside image)
 .dockerignore
 
-# Scripts and tools
-scripts
+# Shell helpers (not needed in web image)
 *.sh
 *.bat
 
@@ -82,3 +78,4 @@ docker-cache-clear.sh
 rebuild-docker.sh
 deploy.sh
 server-setup.sh
+SERVER_COMMANDS.sh

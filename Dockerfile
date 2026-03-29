@@ -4,23 +4,27 @@ FROM node:18-alpine AS build
 # Install ffmpeg for video optimization
 RUN apk add --no-cache ffmpeg
 
-# Set working directory
+# Create React App: these must exist at build time
+ARG REACT_APP_API_URL=/api
+ARG REACT_APP_TIMEZONE=Asia/Kolkata
+ARG REACT_APP_TINYMCE_API_KEY=
+ARG REACT_APP_GOOGLE_ANALYTICS_ID=
+ENV REACT_APP_API_URL=$REACT_APP_API_URL \
+    REACT_APP_TIMEZONE=$REACT_APP_TIMEZONE \
+    REACT_APP_TINYMCE_API_KEY=$REACT_APP_TINYMCE_API_KEY \
+    REACT_APP_GOOGLE_ANALYTICS_ID=$REACT_APP_GOOGLE_ANALYTICS_ID
+
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-# Install all dependencies (including devDependencies for build)
 # Using --legacy-peer-deps because react-helmet-async doesn't support React 19 yet
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
-# Copy source code
 COPY . .
 
-# Optimize assets (videos/images) before build
 RUN npm run optimize || echo "Asset optimization skipped (ffmpeg may not be available)"
 
-# Build the application
 RUN npm run build
 
 # Production stage with Nginx

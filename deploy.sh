@@ -5,10 +5,8 @@
 
 set -e  # Exit on any error
 
-# Configuration
-PROJECT_NAME="toystore-web"
-DOCKER_IMAGE="toystore-web"
-CONTAINER_NAME="toystore-web"
+# Configuration (full stack: API + nginx web via docker compose)
+COMPOSE_FILE="docker-compose.yml"
 BACKUP_DIR="/opt/backups/toystore"
 LOG_FILE="/var/log/toystore-deploy.log"
 
@@ -81,18 +79,13 @@ create_backup() {
     # Create backup directory
     sudo mkdir -p "$BACKUP_PATH"
     
-    # Backup current container if it exists
-    if docker ps -a --format "table {{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
-        log "Backing up current container..."
-        docker commit "$CONTAINER_NAME" "${DOCKER_IMAGE}:backup_$TIMESTAMP" || warning "Failed to create container backup"
-        docker save "${DOCKER_IMAGE}:backup_$TIMESTAMP" | sudo tee "$BACKUP_PATH/container_backup.tar" > /dev/null || warning "Failed to save container backup"
-    fi
-    
-    # Backup current images
-    if docker images --format "table {{.Repository}}:{{.Tag}}" | grep -q "^$DOCKER_IMAGE:"; then
-        log "Backing up current images..."
-        docker save "$DOCKER_IMAGE:latest" | sudo tee "$BACKUP_PATH/image_backup.tar" > /dev/null || warning "Failed to save image backup"
-    fi
+    for name in toystore-web toystore-api; do
+        if docker ps -a --format "{{.Names}}" | grep -q "^${name}$"; then
+            log "Backing up image from container ${name}..."
+            docker commit "$name" "${name}:backup_$TIMESTAMP" || warning "Failed to commit ${name}"
+            docker save "${name}:backup_$TIMESTAMP" | sudo tee "$BACKUP_PATH/${name}_backup.tar" > /dev/null || warning "Failed to save ${name} image"
+        fi
+    done
     
     success "Backup created at $BACKUP_PATH"
 }
@@ -119,127 +112,70 @@ pull_changes() {
     success "Latest changes pulled successfully"
 }
 
-# Build Docker image
+run_compose() {
+    if docker compose version &> /dev/null 2>&1; then
+        docker compose -f "$COMPOSE_FILE" "$@"
+    else
+        docker-compose -f "$COMPOSE_FILE" "$@"
+    fi
+}
+
+# Build images (web + API)
 build_image() {
-    log "Building Docker image..."
-    
-    # Build the image
-    docker build -t "$DOCKER_IMAGE:latest" . || error "Failed to build Docker image"
-    
-    # Tag with timestamp
-    TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-    docker tag "$DOCKER_IMAGE:latest" "$DOCKER_IMAGE:$TIMESTAMP"
-    
-    success "Docker image built successfully"
+    log "Building Docker images (compose)..."
+    run_compose build --pull || error "Failed to build images"
+    success "Docker images built successfully"
 }
 
-# Stop and remove existing container
-stop_container() {
-    log "Stopping existing container..."
-    
-    if docker ps --format "table {{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
-        docker stop "$CONTAINER_NAME" || warning "Failed to stop container"
-        success "Container stopped"
-    else
-        log "No running container found"
-    fi
-    
-    if docker ps -a --format "table {{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
-        docker rm "$CONTAINER_NAME" || warning "Failed to remove container"
-        success "Container removed"
-    fi
+stop_stack() {
+    log "Stopping compose stack..."
+    run_compose down || warning "Compose down reported an issue"
 }
 
-# Start new container
-start_container() {
-    log "Starting new container..."
-    
-    # Use docker-compose if available, otherwise use docker run
-    if command -v docker-compose &> /dev/null; then
-        docker-compose up -d || error "Failed to start with docker-compose"
-    elif docker compose version &> /dev/null; then
-        docker compose up -d || error "Failed to start with docker compose"
-    else
-        # Fallback to docker run
-        docker run -d \
-            --name "$CONTAINER_NAME" \
-            --restart unless-stopped \
-            -p 80:80 \
-            -p 443:443 \
-            -v "$(pwd)/logs:/var/log/nginx" \
-            "$DOCKER_IMAGE:latest" || error "Failed to start container"
-    fi
-    
-    success "Container started successfully"
+start_stack() {
+    log "Starting compose stack..."
+    run_compose up -d || error "Failed to start stack"
+    success "Stack started"
 }
 
-# Health check
+# Health check (works when 80 is not published to host — uses exec inside containers)
 health_check() {
     log "Performing health check..."
-    
-    # Wait for container to be ready
-    sleep 10
-    
-    # Check if container is running
-    if ! docker ps --format "table {{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
-        error "Container is not running"
+    sleep 8
+    if ! docker ps --format "{{.Names}}" | grep -q "^toystore-web$"; then
+        error "toystore-web container is not running"
     fi
-    
-    # Check if application is responding
-    for i in {1..30}; do
-        if curl -f http://localhost/health &> /dev/null; then
-            success "Health check passed"
+    if ! docker ps --format "{{.Names}}" | grep -q "^toystore-api$"; then
+        error "toystore-api container is not running"
+    fi
+    for i in $(seq 1 30); do
+        if docker exec toystore-api wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 \
+            && docker exec toystore-web wget -qO- http://127.0.0.1/health >/dev/null 2>&1; then
+            success "Health check passed (API + web)"
             return 0
         fi
         log "Health check attempt $i/30 failed, retrying in 5 seconds..."
         sleep 5
     done
-    
     error "Health check failed after 30 attempts"
 }
 
-# Cleanup old images
 cleanup() {
-    log "Cleaning up old images..."
-    
-    # Remove dangling images
+    log "Cleaning up dangling images..."
     docker image prune -f || warning "Failed to prune dangling images"
-    
-    # Keep only last 3 versions of our image
-    docker images "$DOCKER_IMAGE" --format "table {{.Tag}}" | grep -v "latest" | tail -n +4 | xargs -r docker rmi || warning "Failed to remove old images"
-    
     success "Cleanup completed"
 }
 
 # Rollback function
 rollback() {
-    log "Rolling back to previous version..."
-    
-    # Stop current container
-    stop_container
-    
-    # Find latest backup
-    LATEST_BACKUP=$(sudo ls -t "$BACKUP_DIR" | head -n 1)
-    
-    if [ -z "$LATEST_BACKUP" ]; then
-        error "No backup found for rollback"
+    warning "Compose rollback: check out a known-good commit (git checkout <hash>), then run ./deploy.sh deploy."
+    warning "Or load backup tar files from $BACKUP_DIR/<timestamp>/ and retag images to match this project’s compose image names, then docker compose up -d."
+}
+
+check_env_file() {
+    if [[ ! -f .env ]]; then
+        error "Missing .env in $(pwd). Copy .env.example to .env and set secrets, MySQL, SMTP, and PUBLIC_DOMAIN."
     fi
-    
-    log "Rolling back to backup: $LATEST_BACKUP"
-    
-    # Load backup image
-    sudo cat "$BACKUP_DIR/$LATEST_BACKUP/image_backup.tar" | docker load || error "Failed to load backup image"
-    
-    # Start container with backup image
-    docker run -d \
-        --name "$CONTAINER_NAME" \
-        --restart unless-stopped \
-        -p 80:80 \
-        -p 443:443 \
-        -v "$(pwd)/logs:/var/log/nginx" \
-        "$DOCKER_IMAGE:latest" || error "Failed to start rollback container"
-    
-    success "Rollback completed"
 }
 
 # Main deployment function
@@ -249,16 +185,16 @@ deploy() {
     check_root
     check_docker
     check_docker_compose
+    check_env_file
     create_backup
     pull_changes
-    build_image
-    stop_container
-    start_container
+    log "Building and starting stack..."
+    run_compose up -d --build || error "Compose up failed"
     health_check
     cleanup
     
     success "Deployment completed successfully!"
-    log "Application is available at: http://localhost"
+    log "Containers: toystore-web (nginx + static app), toystore-api (Node). Point your reverse proxy at the published proxy network."
 }
 
 # Script usage
@@ -277,25 +213,22 @@ usage() {
 
 # Show logs
 show_logs() {
-    log "Showing application logs..."
-    docker logs -f "$CONTAINER_NAME"
+    log "Showing compose logs (Ctrl+C to exit)..."
+    run_compose logs -f
 }
 
 # Show status
 show_status() {
     log "Deployment Status:"
     echo ""
-    echo "Container Status:"
-    docker ps --filter "name=$CONTAINER_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+    run_compose ps
     echo ""
-    echo "Image Status:"
-    docker images "$DOCKER_IMAGE" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
-    echo ""
-    echo "Health Check:"
-    if curl -f http://localhost/health &> /dev/null; then
-        success "Application is healthy"
+    echo "Health (inside containers):"
+    if docker exec toystore-api wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 \
+        && docker exec toystore-web wget -qO- http://127.0.0.1/health >/dev/null 2>&1; then
+        success "API and web respond on internal health endpoints"
     else
-        error "Application is not responding"
+        warning "One or both containers failed the internal health check (see docker compose logs)"
     fi
 }
 

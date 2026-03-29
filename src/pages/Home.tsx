@@ -430,7 +430,7 @@ const Home: React.FC = () => {
                 {index > 0 && <div className="h-4 w-px bg-white/70 flex-shrink-0"></div>}
                 <button
                   onClick={() => goToSlide(index)}
-                  className={`text-xs xl:text-sm font-bold transition-all duration-300 relative whitespace-nowrap flex-shrink-0 px-4 py-2 rounded-full ${
+                  className={`text-sm lg:text-base xl:text-lg font-bold transition-all duration-300 relative whitespace-nowrap flex-shrink-0 px-4 py-2.5 rounded-full ${
                     index === currentSlide
                       ? 'text-white bg-white/30 backdrop-blur-sm shadow-lg border-2 border-yellow-300'
                       : 'text-white/90 hover:text-white hover:bg-white/20 backdrop-blur-sm'
