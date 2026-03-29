@@ -2030,15 +2030,23 @@ router.get('/audit-logs', authenticateToken, async (req, res) => {
 router.get('/company-settings/public', async (req, res) => {
   try {
     const pool = getPool();
-    const [rows] = await pool.execute('SELECT enable_enquiry_popup FROM company_settings ORDER BY id DESC LIMIT 1');
+    const [rows] = await pool.execute(
+      'SELECT enable_enquiry_popup, whatsapp_number FROM company_settings ORDER BY id DESC LIMIT 1',
+    );
     if (rows.length === 0) {
-      return res.json({ enable_enquiry_popup: true });
+      return res.json({ enable_enquiry_popup: true, whatsapp_number: null });
     }
-    res.json({ enable_enquiry_popup: rows[0].enable_enquiry_popup !== 0 });
+    const r = rows[0];
+    res.json({
+      enable_enquiry_popup: r.enable_enquiry_popup !== 0,
+      whatsapp_number:
+        r.whatsapp_number != null && String(r.whatsapp_number).trim() !== ''
+          ? String(r.whatsapp_number).trim()
+          : null,
+    });
   } catch (error) {
     console.error('[Content API] Get public company settings error:', error);
-    // Default to enabled if error
-    res.json({ enable_enquiry_popup: true });
+    res.json({ enable_enquiry_popup: true, whatsapp_number: null });
   }
 });
 

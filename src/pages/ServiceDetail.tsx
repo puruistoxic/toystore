@@ -158,7 +158,7 @@ const ServiceDetail: React.FC = () => {
           priceCurrency: 'INR',
           provider: {
             name: 'WAINSO',
-            telephone: '+919899860975',
+            telephone: '+919911484404',
             email: 'wainsogps@gmail.com',
             address: service.category === 'security' ? {
               addressLocality: 'Ramgarh',
@@ -359,7 +359,7 @@ const ServiceDetail: React.FC = () => {
               </p>
               <div className="space-y-3 text-sm">
                 <a
-                  href="tel:+919899860975"
+                  href="tel:+919911484404"
                   className="flex items-center text-gray-700 hover:text-primary-600 transition-colors"
                 >
                   <span className="font-medium mr-2">Phone:</span>

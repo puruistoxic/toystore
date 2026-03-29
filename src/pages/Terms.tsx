@@ -282,7 +282,7 @@ const Terms: React.FC = () => {
                 </p>
                 <p className="text-gray-700 mb-1">
                   Phone:{' '}
-                  <a href="tel:+919899860975" className="text-primary-600 hover:underline">
+                  <a href="tel:+919911484404" className="text-primary-600 hover:underline">
                     {STORE_PHONE_PRIMARY}
                   </a>
                   {', '}

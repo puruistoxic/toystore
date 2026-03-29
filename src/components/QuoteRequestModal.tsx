@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { X, MessageCircle, MailCheck, Phone, Building2, ShieldCheck, CheckCircle } from 'lucide-react';
 import { contentApi } from '../utils/api';
 import type { Product, Service } from '../types/catalog';
 import api from '../utils/api';
+import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
 
 type QuoteChannel = 'whatsapp' | 'email';
 
@@ -16,8 +18,6 @@ interface QuoteRequestModalProps {
   initialQuantity?: string;
   initialNotes?: string;
 }
-
-const WHATSAPP_NUMBER = '919899860975';
 
 const sanitiseLine = (value: string) => value.trim().replace(/\s+/g, ' ');
 
@@ -33,6 +33,15 @@ const QuoteRequestModal: React.FC<QuoteRequestModalProps> = ({
   initialQuantity = '',
   initialNotes = ''
 }) => {
+  const { data: companyPublic } = useQuery({
+    queryKey: ['company-settings-public'],
+    queryFn: async () => {
+      const res = await api.get('/content/company-settings/public');
+      return res.data as { whatsapp_number?: string | null };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [target, setTarget] = useState<{ kind: 'product' | 'service'; data: Product | Service } | null>(null);
   const [loadingTarget, setLoadingTarget] = useState(false);
 
@@ -187,7 +196,8 @@ const QuoteRequestModal: React.FC<QuoteRequestModalProps> = ({
     }
 
     if (preferredChannel === 'whatsapp') {
-      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(quoteMessage)}`;
+      const wa = normalizeWhatsAppDigits(companyPublic?.whatsapp_number);
+      const url = `https://wa.me/${wa}?text=${encodeURIComponent(quoteMessage)}`;
       window.open(url, '_blank', 'noopener,noreferrer');
       confirmSubmission('whatsapp');
       setFeedbackMessage('We opened WhatsApp with your quote request. Please review and send it to finish.');

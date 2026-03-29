@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { X, MessageCircle, Star, CheckCircle, Package, ShoppingCart, Play } from 'lucide-react';
 import type { Product } from '../types/catalog';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
@@ -7,6 +8,8 @@ import { getCanonicalUrl } from '../utils/seo';
 import { useCart } from '../contexts/CartContext';
 import { useAddToListModal } from '../contexts/AddToListModalContext';
 import { parseYoutubeVideoId, youtubeEmbedUrl, youtubeThumbnailUrl } from '../utils/youtube';
+import api from '../utils/api';
+import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -15,8 +18,6 @@ interface ProductDetailModalProps {
   /** Listing preview: shorter copy, no videos/features block, link to full PDP */
   variant?: 'default' | 'quickLook';
 }
-
-const WHATSAPP_NUMBER = '919898524462';
 
 const QUICK_DESC_MAX = 420;
 
@@ -32,6 +33,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [openVideoId, setOpenVideoId] = useState<string | null>(null);
   const { items } = useCart();
   const { openAddToList } = useAddToListModal();
+
+  const { data: companyPublic } = useQuery({
+    queryKey: ['company-settings-public'],
+    queryFn: async () => {
+      const res = await api.get('/content/company-settings/public');
+      return res.data as { whatsapp_number?: string | null };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const inList = Boolean(
     product && items.some((l) => l.productId === String(product.id)),
@@ -75,7 +85,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       'Thank you!',
     ].filter(Boolean);
     const message = encodeURIComponent(lines.join('\n'));
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank', 'noopener,noreferrer');
+    const wa = normalizeWhatsAppDigits(companyPublic?.whatsapp_number);
+    window.open(`https://wa.me/${wa}?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const incrementQuantity = () => {

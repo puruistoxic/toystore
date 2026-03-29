@@ -78,7 +78,7 @@ const organizationJsonLd = {
   url: SITE_ORIGIN,
   description:
     'Neighbourhood toy shop offering quality toys, games, and gifts for children. Visit in person or contact us on WhatsApp.',
-  telephone: '+91-98985-24462',
+  telephone: '+91-99114-84404',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Surat',

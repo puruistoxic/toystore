@@ -1156,13 +1156,14 @@ async function initializeTables() {
           'Gujarat',
           '394101',
           'India',
-          '+91 98985 24462',
+          '+91 99114 84404',
           '+91 99258 86973',
           'info@khandelwaltoystore.com',
           'khandelwaltoystore.com',
           '',
           '© 2024 Khandelwal Toy Store. All rights reserved. | Local toy shop',
-          FALSE
+          FALSE,
+          '9911484404'
         )
       `);
     }

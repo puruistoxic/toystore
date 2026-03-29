@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   MessageCircle,
   MailCheck,
@@ -13,14 +14,13 @@ import { services } from '../data/services';
 import type { Product, Service } from '../types/catalog';
 import api from '../utils/api';
 import SEO from '../components/SEO';
+import { normalizeWhatsAppDigits, STORE_PHONE_TEL_HREF } from '../utils/whatsappNumber';
 
 type QuoteChannel = 'whatsapp' | 'email';
 
 type QuoteTarget =
   | { kind: 'product'; data: Product }
   | { kind: 'service'; data: Service };
-
-const WHATSAPP_NUMBER = '919899860975';
 
 const sanitiseLine = (value: string) => value.trim().replace(/\s+/g, ' ');
 const formatCurrency = (value: number) => `₹${value.toLocaleString()}`;
@@ -87,6 +87,15 @@ const generateReference = () => `WAQ-${Date.now().toString(36).toUpperCase()}`;
 
 const QuoteRequest: React.FC = () => {
   const location = useLocation();
+  const { data: companyPublic } = useQuery({
+    queryKey: ['company-settings-public'],
+    queryFn: async () => {
+      const res = await api.get('/content/company-settings/public');
+      return res.data as { whatsapp_number?: string | null };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { target, quantity: quantityFromUrl, notes: notesFromUrl } = useMemo(
     () => parseTargetFromSearch(location.search),
     [location.search]
@@ -277,7 +286,8 @@ const QuoteRequest: React.FC = () => {
       return;
     }
 
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(quoteMessage)}`;
+    const wa = normalizeWhatsAppDigits(companyPublic?.whatsapp_number);
+    const url = `https://wa.me/${wa}?text=${encodeURIComponent(quoteMessage)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
     confirmSubmission('whatsapp');
     setFeedbackMessage('We opened WhatsApp with your quote request. Please review and send it to finish.');
@@ -846,11 +856,11 @@ const QuoteRequest: React.FC = () => {
                 Call us directly and mention that you have submitted a quote request online.
               </p>
               <a
-                href="tel:+919899860975"
+                href={STORE_PHONE_TEL_HREF}
                 className="inline-flex items-center bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
               >
                 <Phone className="h-4 w-4 mr-2" />
-                +91 98998 60975
+                +91 99114 84404
               </a>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../utils/api';
 import type { Product } from '../types/catalog';
 import { getCanonicalUrl } from '../utils/seo';
+import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
 
 interface WhatsAppEnquiryModalProps {
   isOpen: boolean;
@@ -128,8 +129,7 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
 
     setIsSubmitting(true);
 
-    const whatsappNumber = settings?.whatsapp_number || '919898524462';
-    const cleanNumber = whatsappNumber.replace(/[^0-9]/g, '');
+    const cleanNumber = normalizeWhatsAppDigits(settings?.whatsapp_number);
 
     try {
       await api.post('/content/enquiries', {

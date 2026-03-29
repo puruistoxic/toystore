@@ -3,8 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MessageCircle } from 'lucide-react';
 import api from '../utils/api';
 import { useProductWhatsApp } from '../contexts/ProductWhatsAppContext';
-
-const FALLBACK_WHATSAPP = '919898524462';
+import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
 
 /**
  * Floating WhatsApp — on a product page, the message includes that product’s name and page link.
@@ -19,7 +18,7 @@ const WhatsAppButton: React.FC = () => {
     },
   });
 
-  const cleanNumber = (settings?.whatsapp_number || FALLBACK_WHATSAPP).replace(/[^0-9]/g, '');
+  const cleanNumber = normalizeWhatsAppDigits(settings?.whatsapp_number);
 
   const handleWhatsAppClick = () => {
     const genericMessage = `Hello Khandelwal Toy Store,

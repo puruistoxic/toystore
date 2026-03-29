@@ -139,7 +139,7 @@ END:VCARD`;
             </div>
             <div className="flex-1">
               <p className="text-xs text-gray-500 mb-1">Phone</p>
-              <a href="tel:+919899860975" className="text-sm font-medium text-gray-900 hover:text-primary-600 block">
+              <a href="tel:+919911484404" className="text-sm font-medium text-gray-900 hover:text-primary-600 block">
                 +91 98998 60975
               </a>
               <a href="tel:+918292717044" className="text-sm font-medium text-gray-900 hover:text-primary-600 block">

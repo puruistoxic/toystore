@@ -17,8 +17,7 @@ import api from '../utils/api';
 import { generatePageTitle, getCanonicalUrl } from '../utils/seo';
 import { buildCartEnquiryWhatsAppMessage } from '../utils/cartWhatsApp';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
-
-const FALLBACK_WHATSAPP = '919898524462';
+import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
 
 function productDetailHref(slug: string): string {
   const path = `/products/${slug}`;
@@ -47,7 +46,7 @@ const CartPage: React.FC = () => {
     },
   });
 
-  const cleanNumber = (settings?.whatsapp_number || FALLBACK_WHATSAPP).replace(/[^0-9]/g, '');
+  const cleanNumber = normalizeWhatsAppDigits(settings?.whatsapp_number);
 
   const indicativeTotal = useMemo(() => {
     return items.reduce((sum, l) => sum + (l.price > 0 ? l.price * l.quantity : 0), 0);

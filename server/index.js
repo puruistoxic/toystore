@@ -226,7 +226,7 @@ app.post('/api/quote-request', async (req, res) => {
               <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #e6f7f7 0%, #d4f1f1 100%); border-radius: 8px; text-align: center;">
                 <p style="margin: 0; font-size: 14px; color: #006767;">
                   <strong>Need immediate assistance?</strong><br>
-                  Call us at <a href="tel:+919899860975" style="color: #004d4d; font-weight: bold; text-decoration: none;">+91 98998 60975</a>
+                  Call us at <a href="tel:+919911484404" style="color: #004d4d; font-weight: bold; text-decoration: none;">+91 99114 84404</a>
                 </p>
               </div>
               
@@ -245,7 +245,7 @@ app.post('/api/quote-request', async (req, res) => {
               <p style="margin: 5px 0;">Room No-9, 1st Floor, Yadav Complex</p>
               <p style="margin: 5px 0;">Near Block Chawck, Block Chowk, Ramgarh Cantt - 829122, Jharkhand</p>
               <p style="margin: 5px 0;">
-                Phone: <a href="tel:+919899860975" style="color: #006767;">+91 98998 60975</a> | 
+                Phone: <a href="tel:+919911484404" style="color: #006767;">+91 99114 84404</a> | 
                 <a href="tel:+918292717044" style="color: #006767;">+91 82927 17044</a>
               </p>
               <p style="margin: 5px 0;">
