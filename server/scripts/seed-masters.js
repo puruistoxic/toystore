@@ -313,10 +313,10 @@ const categories = [
 
 const brands = [
   {
-    name: 'Khandelwal Toy Store',
+    name: 'DigiDukaanLive',
     description:
-      'Khandelwal Toy Store — neighbourhood toy shop for quality toys, games, and gifts. Visit in person or enquire for stock and advice.',
-    short_description: 'Local toy shop',
+      'DigiDukaanLive — online and local store for quality toys, games, and gifts. Visit in person or enquire for stock and advice.',
+    short_description: 'Online & local store',
     website: 'https://khandelwaltoystore.com',
     partnership_type: 'partner',
     partnership_since: '2024'

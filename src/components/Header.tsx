@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MessageCircle, Menu, X, ChevronRight, Search, Sparkles, ShoppingCart } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import ProductSearchBar from './ProductSearchBar';
-import KhandelwalLogo from './KhandelwalLogo';
+import DigiDukaanLiveLogo from './DigiDukaanLiveLogo';
 import { contentApi } from '../utils/api';
 import { mapDbProductToFrontend } from '../utils/catalogFromDb';
 import {
@@ -156,7 +156,7 @@ const Header: React.FC = () => {
       hasDropdown: true,
     },
     {
-      name: 'Toy Finder',
+      name: 'Product Finder',
       href: '/toy-finder',
       hasDropdown: false,
     },
@@ -165,7 +165,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header 
-        className={`${isHomePage && !isScrolled ? 'absolute' : 'sticky'} top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`${isHomePage && !isScrolled ? 'absolute' : 'sticky'} top-0 left-0 right-0 z-[100] transition-all duration-300 ${
           isHomePage && !isScrolled
             ? 'bg-brand-ink/50 backdrop-blur-md'
             : 'bg-white shadow-lg'
@@ -183,14 +183,14 @@ const Header: React.FC = () => {
       >
         {/* Main Navigation */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-3 md:py-4">
-            {/* Logo — Khandelwal Toys + Imagination Unboxed */}
+          <div className="relative z-[110] flex justify-between items-center py-3 md:py-4 isolate">
+            {/* Logo — DigiDukaanLive */}
             <Link
               to="/"
               onClick={closeMegaMenu}
               className="group flex-shrink-0 min-w-0 transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-md"
             >
-              <KhandelwalLogo size="md" />
+              <DigiDukaanLiveLogo size="md" />
             </Link>
 
             {/* Desktop Navigation - Center */}
@@ -245,11 +245,14 @@ const Header: React.FC = () => {
             </nav>
 
             {/* Search — pill button (clear target + brand trim) */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
               <Link
                 to="/cart"
-                onClick={closeMegaMenu}
-                className={`relative inline-flex items-center justify-center rounded-full p-2.5 min-h-[44px] min-w-[44px] border-2 shadow-md transition-all font-display ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeMegaMenu();
+                }}
+                className={`relative z-[120] touch-manipulation inline-flex items-center justify-center rounded-full p-2.5 min-h-[44px] min-w-[44px] border-2 shadow-md transition-all font-display ${
                   isHomePage && !isScrolled
                     ? 'bg-white/20 text-white border-brand-sunshine/90 hover:bg-white/30'
                     : 'bg-white text-primary-600 border-primary-200 hover:bg-primary-50 hover:border-primary-400'
@@ -462,16 +465,19 @@ const Header: React.FC = () => {
               }, 200);
             }}
           >
-            <div
-              className="h-12 -mt-12 bg-transparent pointer-events-auto"
-              onMouseEnter={() => {
-                if (hoverTimeoutRef.current) {
-                  clearTimeout(hoverTimeoutRef.current);
-                  hoverTimeoutRef.current = null;
-                }
-                setHoveredMenu(hoveredMenu);
-              }}
-            />
+            {/* Narrow hover bridge under nav (left) only — full-width bridge sat over the cart and stole clicks */}
+            <div className="h-12 -mt-12 w-full flex justify-start pointer-events-none">
+              <div
+                className="h-full max-w-[min(42vw,300px)] min-w-[160px] pointer-events-auto bg-transparent"
+                onMouseEnter={() => {
+                  if (hoverTimeoutRef.current) {
+                    clearTimeout(hoverTimeoutRef.current);
+                    hoverTimeoutRef.current = null;
+                  }
+                  setHoveredMenu(hoveredMenu);
+                }}
+              />
+            </div>
             <div className="bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
               <div className="px-4 sm:px-6 lg:px-8 pt-8 pb-6">
                 {visibleCategoryFilters.length === 0 ? (
@@ -489,7 +495,7 @@ const Header: React.FC = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
                     <div className="lg:col-span-3 border-r border-gray-100 lg:pr-6">
                       <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">
-                        Toy categories
+                        Product categories
                       </h3>
                       <ul className="space-y-0 max-h-[min(420px,70vh)] overflow-y-auto">
                         {visibleCategoryFilters.map((c) => {
@@ -583,7 +589,7 @@ const Header: React.FC = () => {
                           className="flex items-center gap-2 py-2.5 text-base text-gray-700 hover:text-primary-600 font-medium transition-colors"
                         >
                           <Sparkles className="h-4 w-4 shrink-0 text-primary-500" />
-                          Toy Finder
+                          Product Finder
                         </Link>
                         <Link
                           to={productListingPathForCategory('educational-learning')}
@@ -608,13 +614,13 @@ const Header: React.FC = () => {
               <div className="bg-gray-50 border-t border-gray-200">
                 <div className="px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-gray-700">
                   <MessageCircle className="h-4 w-4 shrink-0" />
-                  <span>Need help finding the right toys?</span>
+                  <span>Need help finding the right product?</span>
                   <Link
                     to="/toy-finder"
                     onClick={closeMegaMenu}
                     className="text-primary-600 hover:text-primary-700 font-semibold"
                   >
-                    Try Toy Finder
+                    Try our finder
                   </Link>
                   <span className="text-gray-400 hidden sm:inline">·</span>
                   <Link

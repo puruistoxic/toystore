@@ -3,6 +3,8 @@
  * Provides auto-suggestions and generation for SEO fields
  */
 
+import { SITE_NAME } from './seo';
+
 /**
  * Generate SEO title from name/title
  */
@@ -19,9 +21,9 @@ export const generateSEOTitle = (name: string, maxLength: number = 60): string =
     if (lastSpace > 0) {
       title = title.substring(0, lastSpace);
     }
-    title += ' | Khandelwal Toy Store';
+    title += ` | ${SITE_NAME}`;
   } else {
-    title += ' | Khandelwal Toy Store';
+    title += ` | ${SITE_NAME}`;
   }
   
   return title;

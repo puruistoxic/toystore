@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Shield, Lock, Eye, FileText, Mail } from 'lucide-react';
 import SEO from '../components/SEO';
 
-const STORE_NAME = 'Khandelwal Toy Store';
+const STORE_NAME = 'DigiDukaanLive';
 const STORE_EMAIL = 'wainsogps@gmail.com';
 const STORE_PHONE_PRIMARY = '+91 98998 60975';
 const STORE_PHONE_SECONDARY = '+91 82927 17044';
@@ -12,8 +12,8 @@ const Privacy: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
-        title="Privacy Policy | Khandelwal Toy Store"
-        description="How Khandelwal Toy Store collects, uses, and protects your information when you use our website, WhatsApp, or shop with us in person."
+        title="Privacy Policy | DigiDukaanLive"
+        description="How DigiDukaanLive collects, uses, and protects your information when you use our website, WhatsApp, or shop with us in person."
         path="/privacy"
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -38,7 +38,7 @@ const Privacy: React.FC = () => {
                 <strong>{STORE_NAME}</strong> (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy. This
                 Privacy Policy describes how we collect, use, store, and share information when you visit{' '}
                 <strong>khandelwaltoystore.com</strong> (or related pages we operate), message us (including WhatsApp),
-                call or email us, or <strong>shop at our physical toy store</strong>.
+                call or email us, or <strong>shop at our physical store</strong>.
               </p>
               <p className="text-gray-700 leading-relaxed">
                 By using our website or giving us your details, you agree to this policy. If you do not agree, please do not

@@ -18,7 +18,7 @@ function categoryLabel(product: Product): string {
   if (raw) {
     return raw.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
-  return 'Toys';
+  return 'Products';
 }
 
 export interface HeroPromotedProductSliderProps {

@@ -143,7 +143,7 @@ const CartPage: React.FC = () => {
     <>
       <SEO
         title={generatePageTitle('Order request list')}
-        description="Build your toy list and submit one order request to Khandelwal Toy Store — get a tracking reference and continue on WhatsApp."
+        description="Build your order list and submit one request to DigiDukaanLive — get a tracking reference and continue on WhatsApp."
         path="/cart"
       />
       <div className="min-h-screen bg-gray-50">

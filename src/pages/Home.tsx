@@ -39,12 +39,12 @@ const heroSlides: HeroSlide[] = [
   {
     id: '1',
     title: 'Your neighbourhood',
-    subtitle: 'toy store',
+    subtitle: 'store',
     description:
-      'Walk in, browse, and take home quality toys for every age. Friendly advice, fair prices, and gifts that kids actually love — right here in your area.',
+      'Walk in, browse online, and take home quality products for every age. Friendly advice, fair prices, and gifts kids love — right here in your area.',
     image: '/images/hero/toys-hero.jpg',
-    imageAlt: 'Colourful toys at Khandelwal Toy Store',
-    primaryButton: { text: 'Shop toys', link: '/products' },
+    imageAlt: 'Colourful products at DigiDukaanLive',
+    primaryButton: { text: 'Shop now', link: '/products' },
     secondaryButton: { text: 'Visit or contact us', link: '/contact' },
     overlay: 'dark',
   },
@@ -75,11 +75,11 @@ const heroSlides: HeroSlide[] = [
   {
     id: '4',
     title: 'Featured',
-    subtitle: 'Toy Collections',
+    subtitle: 'Collections',
     description:
-      'Action figures, educational toys, board games, remote control toys, and more. Discover our best-selling collections.',
+      'Action figures, learning sets, board games, remote control models, and more. Discover our best-selling collections.',
     image: '/images/hero/featured-toys.jpg',
-    imageAlt: 'Featured toy collections',
+    imageAlt: 'Featured collections',
     primaryButton: { text: 'View Collections', link: '/products?filter=featured' },
     secondaryButton: { text: 'New Arrivals', link: '/products?filter=new-arrival' },
     overlay: 'dark',
@@ -178,7 +178,7 @@ const Home: React.FC = () => {
     {
       icon: <Store className="h-6 w-6" />,
       title: 'Shop in person',
-      description: 'See products before you buy. Our team helps you pick the right toy for the right age.'
+      description: 'See products before you buy. Our team helps you pick the right item for the right age.'
     },
     {
       icon: <Truck className="h-6 w-6" />,
@@ -188,7 +188,7 @@ const Home: React.FC = () => {
     {
       icon: <CheckCircle className="h-6 w-6" />,
       title: 'Quality you can trust',
-      description: 'Curated toys with safety and durability in mind — the same standards we’d want for our own families.'
+      description: 'Curated products with safety and durability in mind — the same standards we’d want for our own families.'
     }
   ];
 
@@ -214,7 +214,7 @@ const Home: React.FC = () => {
       company: 'Neighbourhood shopper',
       rating: 5,
       comment:
-        'We message on WhatsApp to check stock before visiting. They’re responsive and the toys match what we saw online.',
+        'We message on WhatsApp to check stock before visiting. They’re responsive and products match what we saw online.',
       avatar: '/images/testimonials/amit.jpg'
     }
   ];
@@ -233,11 +233,11 @@ const Home: React.FC = () => {
   return (
     <>
       <SEO
-        title="Khandelwal Toy Store | Local toy shop — toys & gifts for kids"
-        description="Khandelwal Toy Store is your neighbourhood toy shop. Browse action figures, educational toys, board games, RC toys, and gifts for birthdays and festivals. Visit us or enquire on WhatsApp."
+        title="DigiDukaanLive | Online & local store — toys & gifts for kids"
+        description="DigiDukaanLive is your online and local store. Browse action figures, educational toys, board games, RC toys, and gifts for birthdays and festivals. Visit us or enquire on WhatsApp."
         path="/"
         image="/images/hero/toys-hero.jpg"
-        imageAlt="Khandelwal Toy Store — toys and gifts for kids"
+        imageAlt="DigiDukaanLive — shop online and local"
       />
       <div className="min-h-screen">
       {/* Hero Carousel Section */}
@@ -516,7 +516,7 @@ const Home: React.FC = () => {
         }
       `}</style>
 
-      {/* Popular Toys / best sellers — first major section after hero (drives sales) */}
+      {/* Popular picks / best sellers — first major section after hero (drives sales) */}
       <section className="py-14 md:py-20 bg-gradient-to-b from-primary-50/80 via-white to-white relative overflow-hidden border-t-4 border-primary-500 shadow-[0_-10px_36px_-18px_rgba(232,90,42,0.22)]">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob animation-delay-2000 pointer-events-none" />
@@ -529,7 +529,7 @@ const Home: React.FC = () => {
               </span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Popular Toys
+              Popular picks
             </h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
               Favourites families ask for again and again — great starting points when you visit the store.
@@ -645,7 +645,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              Why Choose Khandelwal Toy Store?
+              Why Choose DigiDukaanLive?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Why families shop with us
@@ -770,7 +770,7 @@ const Home: React.FC = () => {
       <section className="py-20 bg-primary-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Looking for the perfect toy or gift?
+            Looking for the perfect product or gift?
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
             Message us on WhatsApp, call, or drop by — we’ll help with stock, suggestions for age and budget, and store timings.

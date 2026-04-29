@@ -68,7 +68,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const handleWhatsAppEnquiry = () => {
     const productPageUrl = getCanonicalUrl(`/products/${product.slug}`);
     const lines = [
-      'Hello Khandelwal Toy Store,',
+      'Hello DigiDukaanLive,',
       '',
       "I'm interested in this product:",
       '',
@@ -422,7 +422,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   {/* Info Box */}
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                     <p className="text-xs text-blue-900">
-                      <strong>Note:</strong> We’re a local toy shop — use WhatsApp to double-check stock and price before you visit. We’ll help with pickup, timing, or delivery where available.
+                      <strong>Note:</strong> We’re a local store — use WhatsApp to double-check stock and price before you visit. We’ll help with pickup, timing, or delivery where available.
                     </p>
                   </div>
                 </div>

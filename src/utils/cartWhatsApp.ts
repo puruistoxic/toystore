@@ -7,7 +7,7 @@ export function buildCartEnquiryWhatsAppMessage(
   requestRef?: string | null,
 ): string {
   const totalQty = lines.reduce((s, l) => s + l.quantity, 0);
-  let message = `Hello Khandelwal Toy Store Team,\n\n`;
+  let message = `Hello DigiDukaanLive Team,\n\n`;
   if (requestRef?.trim()) {
     message += `Order request reference: ${requestRef.trim()}\n\n`;
   }

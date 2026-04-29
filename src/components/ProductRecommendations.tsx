@@ -42,7 +42,7 @@ const ProductRecommendations: React.FC<Props> = ({ sections }) => {
           <SectionTitle
             icon={<Layers className="h-5 w-5" aria-hidden />}
             title="More from this category"
-            subtitle="Similar toys on the same shelf — easy upsell for collections or siblings."
+            subtitle="Similar items on the same shelf — great for collections or siblings."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {sameCategory.map((p) => (
@@ -57,7 +57,7 @@ const ProductRecommendations: React.FC<Props> = ({ sections }) => {
           <SectionTitle
             icon={<Gift className="h-5 w-5" aria-hidden />}
             title="Goes well for the same occasion"
-            subtitle="Different types of toys that match the same celebration or moment."
+            subtitle="Different picks that match the same celebration or moment."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {crossSell.map((p) => (
@@ -72,7 +72,7 @@ const ProductRecommendations: React.FC<Props> = ({ sections }) => {
           <SectionTitle
             icon={<Sparkles className="h-5 w-5" aria-hidden />}
             title="You may also like"
-            subtitle="Toys other customers often buy alongside similar items."
+            subtitle="Items other customers often buy alongside similar products."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {similar.map((p) => (
@@ -93,7 +93,7 @@ const ProductRecommendations: React.FC<Props> = ({ sections }) => {
           to="/toy-finder"
           className="inline-flex items-center justify-center rounded-xl border-2 border-primary-200 bg-white text-primary-700 px-5 py-2.5 text-sm font-display font-semibold hover:bg-primary-50 transition-colors"
         >
-          Toy Finder
+          Product finder
         </Link>
       </div>
     </section>

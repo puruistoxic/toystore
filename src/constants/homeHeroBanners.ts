@@ -1,6 +1,6 @@
 /** Homepage hero carousel slides (ids match `heroSlides` in Home.tsx). */
 export const HOME_HERO_BANNER_SLIDES = [
-  { id: '1', label: 'Your neighbourhood toy store', shortLabel: 'Neighbourhood' },
+  { id: '1', label: 'Your neighbourhood store', shortLabel: 'Neighbourhood' },
   { id: '2', label: 'Products by AGES', shortLabel: 'Ages' },
   { id: '3', label: 'Products by OCCASIONS', shortLabel: 'Occasions' },
   { id: '4', label: 'Featured Toy Collections', shortLabel: 'Featured' },

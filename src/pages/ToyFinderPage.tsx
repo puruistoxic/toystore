@@ -38,11 +38,11 @@ const ToyFinderPage: React.FC = () => {
   return (
     <>
       <SEO
-        title="Toy Finder | Khandelwal Toy Store"
-        description="Find toys by age, play style, and occasion. Quick questions to narrow our catalogue — then visit the shop or message us for stock."
+        title="Product Finder | DigiDukaanLive"
+        description="Find products by age, play style, and occasion. Quick questions to narrow our catalogue — then visit the store or message us for stock."
         path="/toy-finder"
         image="/images/hero/products-by-age.jpg"
-        keywords="Toy Finder, find toys by age, gift ideas toys, Khandelwal Toy Store, toy shop India"
+        keywords="product finder, find gifts by age, gift ideas, DigiDukaanLive, online store India"
       />
       <div className="min-h-screen bg-gray-50">
         <ToyFinder products={allCatalogProducts} onViewProduct={handleProductClick} />

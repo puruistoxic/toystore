@@ -10,8 +10,8 @@ const Refund: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
-        title="Refund & exchange policy | Khandelwal Toy Store"
-        description="How refunds, exchanges, and replacements work for our local toy store — in-store pickup, inspection at the counter, and replacement conditions."
+        title="Refund & exchange policy | DigiDukaanLive"
+        description="How refunds, exchanges, and replacements work for our store — in-store pickup, inspection at the counter, and replacement conditions."
         path="/refund"
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -30,7 +30,7 @@ const Refund: React.FC = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Overview</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                <strong>Khandelwal Toy Store</strong> is primarily a <strong>local, in-person</strong> toy shop. Most purchases
+                <strong>DigiDukaanLive</strong> is primarily a <strong>local, in-person</strong> retail store. Most purchases
                 are completed when you <strong>select items at the store</strong>, we show you the product, and you{' '}
                 <strong>take delivery at the counter</strong> after payment. This policy explains when we may offer an{' '}
                 <strong>exchange, replacement, or refund</strong> — and when we cannot, because you have already had the
@@ -259,7 +259,7 @@ const Refund: React.FC = () => {
                 For exchanges, replacements, or refund questions:
               </p>
               <div className="bg-gray-50 rounded-lg p-6 not-prose">
-                <p className="text-gray-900 font-semibold mb-2">Khandelwal Toy Store</p>
+                <p className="text-gray-900 font-semibold mb-2">DigiDukaanLive</p>
                 <p className="text-gray-700 mb-1">
                   Email:{' '}
                   <a href={`mailto:${STORE_EMAIL}`} className="text-primary-600 hover:underline">

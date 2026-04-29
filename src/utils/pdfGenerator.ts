@@ -389,7 +389,7 @@ export async function generateInvoicePDF(invoice: Invoice, companySettings: Comp
   // We resolve it once here and only render it through addPageNumber,
   // so the copyright can never appear twice on the same page.
   const invoiceDefaultFooterText =
-    '© 2025 Khandelwal Toy Store. All rights reserved. | Local toy shop';
+    '© 2025 DigiDukaanLive. All rights reserved. | Online & local store';
   const invoiceResolvedFooterText =
     (companySettings.footer_text && companySettings.footer_text.trim().length > 0
       ? companySettings.footer_text.trim()
@@ -886,7 +886,7 @@ export async function generateProposalPDF(proposal: Proposal, companySettings: C
   // We resolve it once here and only render it through addPageNumber,
   // so the copyright can never appear twice on the same page.
   const proposalDefaultFooterText =
-    '© 2025 Khandelwal Toy Store. All rights reserved. | Local toy shop';
+    '© 2025 DigiDukaanLive. All rights reserved. | Online & local store';
   const proposalResolvedFooterText =
     (companySettings.footer_text && companySettings.footer_text.trim().length > 0
       ? companySettings.footer_text.trim()
@@ -1628,7 +1628,7 @@ export async function generateOrderRequestPDF(
   doc.text('Request for quotation — not a tax invoice', pageWidth / 2, y, { align: 'center' });
   y += 7;
 
-  const companyName = companySettings.company_name || 'Khandelwal Toy Store';
+  const companyName = companySettings.company_name || 'DigiDukaanLive';
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(fontSize);
   doc.text(companyName, margin, y);

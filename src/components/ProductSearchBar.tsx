@@ -80,7 +80,7 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({ isHomePage = false,
           originalPrice: undefined,
           images: images,
           category: p.category || 'toys',
-          brand: p.brand || 'Khandelwal Toy Store',
+          brand: p.brand || 'DigiDukaanLive',
           model: specifications.model || specifications.Model || p.name,
           inStock: p.stock_quantity ? p.stock_quantity > 0 : true,
           stockQuantity: p.stock_quantity || 0,
@@ -204,7 +204,7 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({ isHomePage = false,
               setIsOpen(true);
             }
           }}
-          placeholder="Search toys..."
+          placeholder="Search products..."
           className={`w-full pl-10 pr-10 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
             isHomePage
               ? 'bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/60 focus:ring-white/50 focus:border-white/40'

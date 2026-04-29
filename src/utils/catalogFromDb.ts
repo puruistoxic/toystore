@@ -91,7 +91,7 @@ export function mapDbProductToFrontend(dbProduct: any): Product {
     videoUrls: normalizeDbVideoUrls(dbProduct),
     homeBannerSlides: normalizeHomeBannerSlidesFromDb(dbProduct),
     category: dbProduct.category || 'toys',
-    brand: dbProduct.brand || 'Khandelwal Toy Store',
+    brand: dbProduct.brand || 'DigiDukaanLive',
     model: specifications.model || specifications.Model || dbProduct.name,
     inStock: dbProduct.stock_quantity ? dbProduct.stock_quantity > 0 : true,
     stockQuantity: dbProduct.stock_quantity || 0,

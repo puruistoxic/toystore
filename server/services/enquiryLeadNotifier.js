@@ -39,7 +39,7 @@ async function notifyAdminProductEnquiry(pool, payload) {
   const from =
     process.env.SMTP_FROM ||
     process.env.NOTIFICATION_FROM ||
-    '"Khandelwal Toy Store" <noreply@khandelwaltoystore.com>';
+    '"DigiDukaanLive" <noreply@khandelwaltoystore.com>';
 
   const {
     enquiryId,
@@ -134,7 +134,7 @@ async function notifyAdminCartEnquiry(pool, payload) {
   const from =
     process.env.SMTP_FROM ||
     process.env.NOTIFICATION_FROM ||
-    '"Khandelwal Toy Store" <noreply@khandelwaltoystore.com>';
+    '"DigiDukaanLive" <noreply@khandelwaltoystore.com>';
 
   const {
     cartId,

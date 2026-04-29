@@ -337,10 +337,10 @@ const QuoteRequest: React.FC = () => {
   return (
     <>
       <SEO
-        title="Request a quote | Khandelwal Toy Store"
-        description="Request a verified quote for toys or services. Send by WhatsApp or email — we will confirm details and respond."
+        title="Request a quote | DigiDukaanLive"
+        description="Request a verified quote for products or services. Send by WhatsApp or email — we will confirm details and respond."
         path="/quote-request"
-        keywords="quote request, toy wholesale quote, Khandelwal Toy Store, bulk toys inquiry"
+        keywords="quote request, wholesale quote, DigiDukaanLive, bulk order inquiry"
       />
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

@@ -21,7 +21,7 @@ const WhatsAppButton: React.FC = () => {
   const cleanNumber = normalizeWhatsAppDigits(settings?.whatsapp_number);
 
   const handleWhatsAppClick = () => {
-    const genericMessage = `Hello Khandelwal Toy Store,
+    const genericMessage = `Hello DigiDukaanLive,
 
 I'd like to know about toys you have in stock.
 
@@ -33,7 +33,7 @@ Please share:
 Thank you!`;
 
     const productMessage = snapshot
-      ? `Hello Khandelwal Toy Store,
+      ? `Hello DigiDukaanLive,
 
 I'm enquiring about this product from your website:
 

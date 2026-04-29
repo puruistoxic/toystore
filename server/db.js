@@ -169,18 +169,30 @@ async function initializeTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
-    // Create enquiries table
+    // Create enquiries table (popup + simple leads)
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS enquiries (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         mobile VARCHAR(20) NOT NULL,
         email VARCHAR(255),
+        message TEXT,
         source VARCHAR(100) DEFAULT 'Website Popup Enquiry',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_created_at (created_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    try {
+      await connection.execute('ALTER TABLE enquiries ADD COLUMN message TEXT NULL');
+      console.log('[Database] Added enquiries.message column');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+        // already exists
+      } else {
+        console.warn('[Database] Could not add enquiries.message:', error.message);
+      }
+    }
 
     // Create quote_requests table
     await connection.execute(`
@@ -1006,7 +1018,7 @@ async function initializeTables() {
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS company_settings (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        company_name VARCHAR(255) NOT NULL DEFAULT 'Khandelwal Toy Store',
+        company_name VARCHAR(255) NOT NULL DEFAULT 'DigiDukaanLive',
         logo_url VARCHAR(500),
         address_line1 VARCHAR(255),
         address_line2 VARCHAR(255),
@@ -1148,7 +1160,7 @@ async function initializeTables() {
           company_name, address_line1, address_line2, address_line3, city, state, postal_code, country,
           phone, phone2, email, website, gstin, footer_text, enable_enquiry_popup, whatsapp_number
         ) VALUES (
-          'Khandelwal Toy Store',
+          'DigiDukaanLive',
           'Shed No-7/8, Sardar Campus',
           'opp River cant App, Mota Varachha',
           '',
@@ -1161,7 +1173,7 @@ async function initializeTables() {
           'info@khandelwaltoystore.com',
           'khandelwaltoystore.com',
           '',
-          '© 2024 Khandelwal Toy Store. All rights reserved. | Local toy shop',
+          '© 2024 DigiDukaanLive. All rights reserved. | Online & local store',
           FALSE,
           '9911484404'
         )

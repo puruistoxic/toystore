@@ -17,7 +17,7 @@ export const SITE_ORIGIN = (
     : 'https://khandelwaltoystore.com'
 );
 
-export const SITE_NAME = 'Khandelwal Toy Store';
+export const SITE_NAME = 'DigiDukaanLive';
 
 /**
  * Default share image path (served from public/). Use a ≥1200×630 JPG/PNG in production for best results.
@@ -26,17 +26,18 @@ export const SITE_NAME = 'Khandelwal Toy Store';
 export const DEFAULT_OG_IMAGE_PATH = '/images/hero/toys-hero.jpg';
 
 export const DEFAULT_KEYWORDS = [
-  'Khandelwal Toy Store',
-  'toy shop',
+  'DigiDukaanLive',
+  'online store',
+  'local store',
   'kids toys',
   'toys Surat',
   'educational toys',
   'board games',
   'dolls',
-  'birthday gifts toys',
-  'toy store India',
-  'buy toys online',
-  'WhatsApp toy shop',
+  'birthday gifts',
+  'online shopping India',
+  'buy online',
+  'WhatsApp order',
 ].join(', ');
 
 /** Turn a root-relative or absolute URL into an absolute URL for Open Graph / Twitter cards. */
@@ -83,7 +84,7 @@ export const generateProductMetaDescription = (
   brand?: string
 ): string => {
   const brandText = brand ? `${brand} ` : '';
-  return `Shop ${brandText}${productName} at Khandelwal Toy Store — local toy shop. Check availability and price on WhatsApp or visit us in store.`;
+  return `Shop ${brandText}${productName} at ${SITE_NAME} — online and local store. Check availability and price on WhatsApp or visit us in person.`;
 };
 
 /**
@@ -92,7 +93,7 @@ export const generateProductMetaDescription = (
 export const generatePageTitle = (
   pageName: string,
   location?: string,
-  suffix: string = ' | Khandelwal Toy Store'
+  suffix: string = ` | ${SITE_NAME}`
 ): string => {
   const locationText = location ? ` in ${location}` : '';
   return `${pageName}${locationText}${suffix}`;

@@ -133,15 +133,15 @@ const Products: React.FC = () => {
   const seoTitle =
     categorySeoMeta != null
       ? generatePageTitle(`Shop ${categorySeoMeta.name}`)
-      : 'Shop toys online catalogue | Khandelwal Toy Store';
+      : 'Shop our online catalogue | DigiDukaanLive';
   const seoDescription =
     categorySeoMeta != null
-      ? `Browse ${categorySeoMeta.name} at Khandelwal Toy Store — local toy shop. Visit us or message for stock and price.`
-      : 'Browse our toy catalogue — action figures, learning toys, board games, RC toys, dolls, and more. Visit the store or enquire on WhatsApp for availability and price.';
+      ? `Browse ${categorySeoMeta.name} at DigiDukaanLive — online and local store. Visit us or message for stock and price.`
+      : 'Browse our catalogue — action figures, learning toys, board games, RC models, dolls, and more. Visit the store or enquire on WhatsApp for availability and price.';
 
   const seoKeywords =
     categorySeoMeta != null
-      ? `${categorySeoMeta.name}, ${categorySeoMeta.name} toys, toy shop, Khandelwal Toy Store, kids toys, India`
+      ? `${categorySeoMeta.name}, ${categorySeoMeta.name} toys, online store, DigiDukaanLive, kids toys, India`
       : DEFAULT_KEYWORDS;
 
   const hasActiveFilters = activeCategoryId !== 'all' || Boolean(searchTerm.trim());
@@ -160,7 +160,7 @@ const Products: React.FC = () => {
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold font-display mb-3">Our Products</h1>
             <p className="text-lg sm:text-xl text-primary-100 max-w-2xl mx-auto">
-              Toys for kids of all ages — browse here, then visit us or message for stock and details.
+              Products for all ages — browse here, then visit us or message for stock and details.
             </p>
           </div>
         </div>
@@ -280,7 +280,7 @@ const Products: React.FC = () => {
                     className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-800 hover:bg-primary-50 hover:text-primary-700 border-2 border-transparent hover:border-primary-100 transition-colors"
                   >
                     <Sparkles className="h-4 w-4 text-primary-500 shrink-0" aria-hidden />
-                    Toy Finder
+                    Product Finder
                   </Link>
                 </div>
 

@@ -60,7 +60,7 @@ const OrderRequestPage: React.FC = () => {
         title={generatePageTitle(
           order?.request_ref ? `Order request ${order.request_ref}` : 'Track order request',
         )}
-        description="View your submitted order request reference and download a PDF summary for Khandelwal Toy Store."
+        description="View your submitted order request reference and download a PDF summary for DigiDukaanLive."
         path={`/order-request/${publicRef || ''}`}
         robots="noindex, nofollow"
       />

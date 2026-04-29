@@ -161,7 +161,7 @@ const ToyFinder: React.FC<ToyFinderProps> = ({ products, onViewProduct }) => {
         ${mobileFiltersOpen ? 'flex flex-col' : 'max-lg:hidden'}
         lg:flex lg:flex-col lg:sticky lg:top-24 lg:max-h-[calc(100vh-6.5rem)]
       `}
-      aria-label="Toy finder filters"
+      aria-label="Product finder filters"
     >
       <div className="p-4 sm:p-5 border-b border-primary-100 bg-brand-ink/[0.03]">
         <div className="flex items-start gap-3">
@@ -223,7 +223,7 @@ const ToyFinder: React.FC<ToyFinderProps> = ({ products, onViewProduct }) => {
           step={2}
           icon={<Palette className="h-4 w-4" aria-hidden />}
           title="What sounds fun?"
-          subtitle="Vibe → toy types in our store."
+          subtitle="Vibe → product types in our store."
           options={STYLE_OPTIONS}
           selected={style}
           onSelect={(id) => setStyle(id as ToyFinderStyle)}
@@ -264,10 +264,10 @@ const ToyFinder: React.FC<ToyFinderProps> = ({ products, onViewProduct }) => {
         {/* Page intro — full width */}
         <header className="text-center mb-8 lg:mb-10 max-w-2xl mx-auto">
           <p className="text-primary-600 font-display font-bold text-xs sm:text-sm uppercase tracking-[0.2em] mb-2">
-            Toy finder
+            Product finder
           </p>
           <h1 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-bold text-gray-900 font-display mb-3">
-            Find the right toy
+            Find the right product
           </h1>
           <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
             A quick, playful way to explore the catalogue — filters on the left (or tap below on your phone), treasures on

@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import type { Product } from '../types/catalog';
 
-const STORAGE_KEY = 'khandelwal-cart-v1';
+const STORAGE_KEY = 'digidukaanlive-cart-v1';
 
 export type CartLine = {
   productId: string;

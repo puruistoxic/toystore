@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Khandelwal Toys">
-  <!-- Slate-style tile (matches brand ink family) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="DigiDukaanLive">
+  <!-- Slate tile + pixel grid + live dot -->
   <rect width="32" height="32" rx="7" fill="#4A6278"/>
-  <!-- Four rounded blocks  brand palette -->
   <rect x="5" y="5" width="10" height="10" rx="2.4" fill="#FFD60A"/>
   <rect x="17" y="5" width="10" height="10" rx="2.4" fill="#FF6B35"/>
   <rect x="5" y="17" width="10" height="10" rx="2.4" fill="#2A9D6F"/>
-  <rect x="17" y="17" width="10" height="10" rx="2.4" fill="#5FB4D9"/>
+  <rect x="17" y="17" width="6" height="6" rx="1.4" fill="#5FB4D9"/>
+  <circle cx="26" cy="26" r="4.2" fill="#FF6B35"/>
+  <circle cx="26" cy="26" r="1.6" fill="#ffffff"/>
 </svg>

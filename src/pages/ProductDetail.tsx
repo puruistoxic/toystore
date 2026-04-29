@@ -159,8 +159,8 @@ const ProductDetail: React.FC = () => {
           title={generatePageTitle(provisionalName)}
           description={
             slug
-              ? `View ${provisionalName} at Khandelwal Toy Store — local toy shop in Surat. Loading full details…`
-              : 'Loading product from Khandelwal Toy Store…'
+              ? `View ${provisionalName} at DigiDukaanLive — online & local store in Surat. Loading full details…`
+              : 'Loading product from DigiDukaanLive…'
           }
           path={slug ? `/products/${slug}` : '/products'}
         />
@@ -178,7 +178,7 @@ const ProductDetail: React.FC = () => {
     return (
       <>
         <SEO
-          title="Product Not Found | Khandelwal Toy Store"
+          title="Product Not Found | DigiDukaanLive"
           description="The product you are looking for may have been moved or no longer exists."
           path="/products/not-found"
         />
@@ -220,8 +220,8 @@ const ProductDetail: React.FC = () => {
     product.materialType,
     ...(product.occasion || []),
     'toys',
-    'Khandelwal Toy Store',
-    'Surat toy shop',
+    'DigiDukaanLive',
+    'Surat online store',
     'buy toys India',
   ]
     .filter(Boolean)
@@ -254,7 +254,7 @@ const ProductDetail: React.FC = () => {
         path={`/products/${product.slug}`}
         type="product"
         image={product.images?.[0] ? resolveOgImage(product.images[0]) : undefined}
-        imageAlt={`${product.name}${product.brand ? ` (${product.brand})` : ''} — Khandelwal Toy Store`}
+        imageAlt={`${product.name}${product.brand ? ` (${product.brand})` : ''} — DigiDukaanLive`}
         keywords={productShareKeywords}
         productStructuredData={{
           name: product.name,

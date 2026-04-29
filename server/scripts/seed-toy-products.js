@@ -23,7 +23,7 @@ const products = [
     price: 280,
     price_includes_gst: true,
     category: 'Vehicles & Pull Back',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-8 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -48,9 +48,9 @@ const products = [
       'Dimensions': 'Approx 8cm x 4cm'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '09 Future Car - Pull Back Toy Car | Khandelwal Toy Store',
+    seo_title: '09 Future Car - Pull Back Toy Car | DigiDukaanLive',
     seo_description: 'Buy 09 Future Car pull-back toy for kids and families. Perfect for kids aged 3-8 years. Best quality toys.',
-    seo_keywords: JSON.stringify(['future car', 'pull back car', 'toy car', 'vehicle toy', 'toy shop'])
+    seo_keywords: JSON.stringify(['future car', 'pull back car', 'toy car', 'vehicle toy', 'online store'])
   },
   {
     name: '1:14 Simulated Model Car',
@@ -59,7 +59,7 @@ const products = [
     price: 1380,
     price_includes_gst: true,
     category: 'Vehicles & Pull Back',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '5-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Gift']),
@@ -84,7 +84,7 @@ const products = [
       'Dimensions': 'Approx 25cm x 10cm'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '1:14 Simulated Model Car - Scale Model Toy | Khandelwal Toy Store',
+    seo_title: '1:14 Simulated Model Car - Scale Model Toy | DigiDukaanLive',
     seo_description: 'Buy 1:14 simulated model car for kids and families. Detailed scale model perfect for kids and collectors.',
     seo_keywords: JSON.stringify(['model car', 'scale model', 'simulated car', 'toy car', 'collectible'])
   },
@@ -95,7 +95,7 @@ const products = [
     price: 1880,
     price_includes_gst: true,
     category: 'Vehicles & Pull Back',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '5-12 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -120,7 +120,7 @@ const products = [
       'Dimensions': 'Approx 28cm x 12cm'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '1:16 Racing Sport Mood Car - Racing Toy Car | Khandelwal Toy Store',
+    seo_title: '1:16 Racing Sport Mood Car - Racing Toy Car | DigiDukaanLive',
     seo_description: 'Buy 1:16 racing sport car for kids and families. Perfect for racing enthusiasts and action play.',
     seo_keywords: JSON.stringify(['racing car', 'sport car', 'toy car', 'racing toy', 'kids toys'])
   },
@@ -131,7 +131,7 @@ const products = [
     price: 840,
     price_includes_gst: true,
     category: 'Vehicles & Pull Back',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-8 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -156,7 +156,7 @@ const products = [
       'Dimensions': 'Approx 15cm x 7cm'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '1.18 Spray Transverse Car - Unique Toy Car | Khandelwal Toy Store',
+    seo_title: '1.18 Spray Transverse Car - Unique Toy Car | DigiDukaanLive',
     seo_description: 'Buy spray transverse car for kids and families. Unique design perfect for kids aged 3-8 years.',
     seo_keywords: JSON.stringify(['spray car', 'transverse car', 'toy car', 'unique toy'])
   },
@@ -169,7 +169,7 @@ const products = [
     price: 860,
     price_includes_gst: true,
     category: 'Art and Crafts',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9608',
     age_group: '5-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Back to School']),
@@ -194,7 +194,7 @@ const products = [
       'Includes': 'Crayons, Pencils, Markers'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '128 PCS Color Set - Art and Craft Supplies | Khandelwal Toy Store',
+    seo_title: '128 PCS Color Set - Art and Craft Supplies | DigiDukaanLive',
     seo_description: 'Buy 128 piece color set for kids and families. Complete art supplies for creative kids and projects.',
     seo_keywords: JSON.stringify(['color set', 'art supplies', 'craft set', 'crayons', 'art and craft'])
   },
@@ -205,7 +205,7 @@ const products = [
     price: 1180,
     price_includes_gst: true,
     category: 'Art and Crafts',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9608',
     age_group: '6-14 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Back to School']),
@@ -230,7 +230,7 @@ const products = [
       'Includes': 'Crayons, Pencils, Markers, Watercolors'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '145 Color Set - Premium Art Supplies | Khandelwal Toy Store',
+    seo_title: '145 Color Set - Premium Art Supplies | DigiDukaanLive',
     seo_description: 'Buy 145 piece premium color set for kids and families. Extensive art materials for young artists.',
     seo_keywords: JSON.stringify(['premium color set', 'art supplies', '145 piece', 'art kit', 'kids toys'])
   },
@@ -241,7 +241,7 @@ const products = [
     price: 390,
     price_includes_gst: true,
     category: 'Art and Crafts',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9608',
     age_group: '5-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Back to School']),
@@ -266,7 +266,7 @@ const products = [
       'Includes': 'Crayons, Pencils, Erasers, Sharpeners'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '150 Piece Color Art Set - Complete Art Kit | Khandelwal Toy Store',
+    seo_title: '150 Piece Color Art Set - Complete Art Kit | DigiDukaanLive',
     seo_description: 'Buy 150 piece art set for kids and families. Complete art supplies perfect for school projects.',
     seo_keywords: JSON.stringify(['art set', '150 piece', 'art kit', 'school supplies', 'kids toys'])
   },
@@ -279,7 +279,7 @@ const products = [
     price: 310,
     price_includes_gst: true,
     category: 'Card & Board Games',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9504',
     age_group: '6-14 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Family Time']),
@@ -304,7 +304,7 @@ const products = [
       'Players': '2-4'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '13 in 1 Family Board Magnetic Game - Multi Game Set | Khandelwal Toy Store',
+    seo_title: '13 in 1 Family Board Magnetic Game - Multi Game Set | DigiDukaanLive',
     seo_description: 'Buy 13-in-1 family board game for kids and families. Multiple games in one set for family entertainment.',
     seo_keywords: JSON.stringify(['board game', 'magnetic game', 'family game', '13 in 1', 'multi game'])
   },
@@ -315,7 +315,7 @@ const products = [
     price: 326,
     price_includes_gst: true,
     category: 'Card & Board Games',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9504',
     age_group: '5-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Family Time']),
@@ -340,7 +340,7 @@ const products = [
       'Players': '2-4'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '2 in 1 Ludo and Snakes & Ladders - Classic Board Game | Khandelwal Toy Store',
+    seo_title: '2 in 1 Ludo and Snakes & Ladders - Classic Board Game | DigiDukaanLive',
     seo_description: 'Buy 2-in-1 Ludo and Snakes & Ladders for kids and families. Two classic games in one board.',
     seo_keywords: JSON.stringify(['ludo', 'snakes and ladders', 'board game', 'classic game', 'family game'])
   },
@@ -353,7 +353,7 @@ const products = [
     price: 310,
     price_includes_gst: true,
     category: 'Remote Control Toys',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '5-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Summer']),
@@ -378,7 +378,7 @@ const products = [
       'Water Capacity': 'Approx 500ml'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: '2 In 1 Soft Aqua Blaster Gun - Water Toy | Khandelwal Toy Store',
+    seo_title: '2 In 1 Soft Aqua Blaster Gun - Water Toy | DigiDukaanLive',
     seo_description: 'Buy 2-in-1 soft aqua blaster gun for kids and families. Safe water toy for outdoor fun.',
     seo_keywords: JSON.stringify(['water gun', 'aqua blaster', 'water toy', 'outdoor toy', 'summer toy'])
   },
@@ -391,7 +391,7 @@ const products = [
     price: 450,
     price_includes_gst: true,
     category: 'Educational & Learning Toys',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '2-8 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Educational']),
@@ -416,7 +416,7 @@ const products = [
       'Material': 'Safe Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Educational Building Blocks Set - Learning Toy | Khandelwal Toy Store',
+    seo_title: 'Educational Building Blocks Set - Learning Toy | DigiDukaanLive',
     seo_description: 'Buy educational building blocks for kids and families. Develops creativity and motor skills in kids.',
     seo_keywords: JSON.stringify(['building blocks', 'educational toy', 'learning toy', 'construction toy'])
   },
@@ -429,7 +429,7 @@ const products = [
     price: 550,
     price_includes_gst: true,
     category: 'Soft Toys',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '0-10 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Gift']),
@@ -454,7 +454,7 @@ const products = [
       'Material': 'Premium Fabric'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Cuddly Teddy Bear Large - Soft Toy | Khandelwal Toy Store',
+    seo_title: 'Cuddly Teddy Bear Large - Soft Toy | DigiDukaanLive',
     seo_description: 'Buy large cuddly teddy bear for kids and families. Soft and safe companion for kids.',
     seo_keywords: JSON.stringify(['teddy bear', 'soft toy', 'stuffed toy', 'cuddly toy', 'plush toy'])
   },
@@ -467,7 +467,7 @@ const products = [
     price: 680,
     price_includes_gst: true,
     category: 'Action Figures',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '4-12 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -492,7 +492,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Superhero Action Figure Set - Action Toys | Khandelwal Toy Store',
+    seo_title: 'Superhero Action Figure Set - Action Toys | DigiDukaanLive',
     seo_description: 'Buy superhero action figure set for kids and families. Perfect for imaginative play and collection.',
     seo_keywords: JSON.stringify(['action figure', 'superhero', 'toy figures', 'collectible', 'kids toys'])
   },
@@ -505,7 +505,7 @@ const products = [
     price: 420,
     price_includes_gst: true,
     category: 'Doll & Doll House',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-10 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Gift']),
@@ -530,7 +530,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Fashion Doll with Accessories - Doll Toy | Khandelwal Toy Store',
+    seo_title: 'Fashion Doll with Accessories - Doll Toy | DigiDukaanLive',
     seo_description: 'Buy fashion doll with accessories for kids and families. Perfect for creative play and role-playing.',
     seo_keywords: JSON.stringify(['fashion doll', 'doll toy', 'doll accessories', 'role play', 'girls toy'])
   },
@@ -541,7 +541,7 @@ const products = [
     price: 1250,
     price_includes_gst: true,
     category: 'Doll & Doll House',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '4-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Gift']),
@@ -566,7 +566,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Princess Doll House Set - Doll House Toy | Khandelwal Toy Store',
+    seo_title: 'Princess Doll House Set - Doll House Toy | DigiDukaanLive',
     seo_description: 'Buy princess doll house set for kids and families. Beautiful doll house with furniture for imaginative play.',
     seo_keywords: JSON.stringify(['doll house', 'princess doll', 'doll furniture', 'girls toy', 'imaginative play'])
   },
@@ -579,7 +579,7 @@ const products = [
     price: 180,
     price_includes_gst: true,
     category: 'Baby Rattles',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '0-2 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Newborn Gift']),
@@ -604,7 +604,7 @@ const products = [
       'Material': 'Safe Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Colorful Baby Rattle Set - Infant Toy | Khandelwal Toy Store',
+    seo_title: 'Colorful Baby Rattle Set - Infant Toy | DigiDukaanLive',
     seo_description: 'Buy colorful baby rattle set for kids and families. Safe and engaging toys for infant development.',
     seo_keywords: JSON.stringify(['baby rattle', 'infant toy', 'baby toy', 'sensory toy', 'newborn gift'])
   },
@@ -615,7 +615,7 @@ const products = [
     price: 250,
     price_includes_gst: true,
     category: 'Baby Rattles',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '0-2 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Newborn Gift']),
@@ -640,7 +640,7 @@ const products = [
       'Battery': 'Included'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Musical Baby Rattle - Musical Infant Toy | Khandelwal Toy Store',
+    seo_title: 'Musical Baby Rattle - Musical Infant Toy | DigiDukaanLive',
     seo_description: 'Buy musical baby rattle for kids and families. Stimulates senses with sounds and lights.',
     seo_keywords: JSON.stringify(['musical rattle', 'baby toy', 'infant toy', 'sensory toy', 'musical toy'])
   },
@@ -653,7 +653,7 @@ const products = [
     price: 220,
     price_includes_gst: true,
     category: 'Bath Toys',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '1-5 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -678,7 +678,7 @@ const products = [
       'Material': 'Water-safe Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Duck Family Bath Toy Set - Bath Time Toys | Khandelwal Toy Store',
+    seo_title: 'Duck Family Bath Toy Set - Bath Time Toys | DigiDukaanLive',
     seo_description: 'Buy duck family bath toy set for kids and families. Water-safe toys for fun bath time.',
     seo_keywords: JSON.stringify(['bath toy', 'duck toy', 'water toy', 'bath time', 'floating toy'])
   },
@@ -689,7 +689,7 @@ const products = [
     price: 180,
     price_includes_gst: true,
     category: 'Bath Toys',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '2-6 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -713,7 +713,7 @@ const products = [
       'Material': 'Water-safe Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Water Wheel Bath Toy - Interactive Bath Toy | Khandelwal Toy Store',
+    seo_title: 'Water Wheel Bath Toy - Interactive Bath Toy | DigiDukaanLive',
     seo_description: 'Buy water wheel bath toy for kids and families. Interactive and fun for bath time.',
     seo_keywords: JSON.stringify(['water wheel', 'bath toy', 'interactive toy', 'bath time', 'water play'])
   },
@@ -726,7 +726,7 @@ const products = [
     price: 150,
     price_includes_gst: true,
     category: 'Coin Bank',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Educational']),
@@ -751,7 +751,7 @@ const products = [
       'Capacity': 'Large'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Piggy Bank Classic - Coin Bank Toy | Khandelwal Toy Store',
+    seo_title: 'Piggy Bank Classic - Coin Bank Toy | DigiDukaanLive',
     seo_description: 'Buy classic piggy bank for kids and families. Teach kids about saving money.',
     seo_keywords: JSON.stringify(['piggy bank', 'coin bank', 'money saving', 'educational toy', 'piggy'])
   },
@@ -762,7 +762,7 @@ const products = [
     price: 450,
     price_includes_gst: true,
     category: 'Coin Bank',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '5-14 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Educational']),
@@ -787,7 +787,7 @@ const products = [
       'Battery': 'Included'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Electronic Coin Bank with Counter - Digital Piggy Bank | Khandelwal Toy Store',
+    seo_title: 'Electronic Coin Bank with Counter - Digital Piggy Bank | DigiDukaanLive',
     seo_description: 'Buy electronic coin bank for kids and families. Digital counter teaches money counting.',
     seo_keywords: JSON.stringify(['electronic coin bank', 'digital piggy bank', 'coin counter', 'money saving', 'educational'])
   },
@@ -800,7 +800,7 @@ const products = [
     price: 2800,
     price_includes_gst: true,
     category: 'Drone',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '8-16 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Gift']),
@@ -826,7 +826,7 @@ const products = [
       'Battery': 'Included'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Mini Drone with Camera - Kids Drone | Khandelwal Toy Store',
+    seo_title: 'Mini Drone with Camera - Kids Drone | DigiDukaanLive',
     seo_description: 'Buy mini drone with camera for kids and families. Perfect for kids and beginners.',
     seo_keywords: JSON.stringify(['drone', 'mini drone', 'drone with camera', 'quadcopter', 'flying toy'])
   },
@@ -837,7 +837,7 @@ const products = [
     price: 1200,
     price_includes_gst: true,
     category: 'Drone',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '6-14 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -862,7 +862,7 @@ const products = [
       'Battery': 'Included'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Toy Drone Beginner - Kids Flying Toy | Khandelwal Toy Store',
+    seo_title: 'Toy Drone Beginner - Kids Flying Toy | DigiDukaanLive',
     seo_description: 'Buy beginner friendly toy drone for kids and families. Safe and fun for kids.',
     seo_keywords: JSON.stringify(['toy drone', 'beginner drone', 'kids drone', 'flying toy', 'quadcopter'])
   },
@@ -875,7 +875,7 @@ const products = [
     price: 4500,
     price_includes_gst: true,
     category: 'Electric Ride Ons',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-8 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Gift']),
@@ -901,7 +901,7 @@ const products = [
       'Speed': '2-3 km/h'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Electric Car Ride On - Kids Electric Vehicle | Khandelwal Toy Store',
+    seo_title: 'Electric Car Ride On - Kids Electric Vehicle | DigiDukaanLive',
     seo_description: 'Buy electric car ride-on for kids and families. Battery-powered vehicle for kids.',
     seo_keywords: JSON.stringify(['electric car', 'ride on', 'kids vehicle', 'battery car', 'electric ride on'])
   },
@@ -912,7 +912,7 @@ const products = [
     price: 3200,
     price_includes_gst: true,
     category: 'Electric Ride Ons',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-8 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -937,7 +937,7 @@ const products = [
       'Battery': '6V Included'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Electric Motorcycle Ride On - Kids Motorcycle | Khandelwal Toy Store',
+    seo_title: 'Electric Motorcycle Ride On - Kids Motorcycle | DigiDukaanLive',
     seo_description: 'Buy electric motorcycle ride-on for kids and families. Cool battery-powered vehicle.',
     seo_keywords: JSON.stringify(['electric motorcycle', 'ride on', 'kids motorcycle', 'battery vehicle', 'electric ride'])
   },
@@ -950,7 +950,7 @@ const products = [
     price: 1800,
     price_includes_gst: true,
     category: 'Manual Ride Ons',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-8 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -975,7 +975,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Pedal Car Classic - Manual Ride On | Khandelwal Toy Store',
+    seo_title: 'Pedal Car Classic - Manual Ride On | DigiDukaanLive',
     seo_description: 'Buy classic pedal car for kids and families. Manual ride-on promotes exercise.',
     seo_keywords: JSON.stringify(['pedal car', 'manual ride on', 'kids car', 'pedal vehicle', 'outdoor toy'])
   },
@@ -986,7 +986,7 @@ const products = [
     price: 1200,
     price_includes_gst: true,
     category: 'Manual Ride Ons',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '2-5 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Educational']),
@@ -1011,7 +1011,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Balance Bike for Kids - Toddler Bike | Khandelwal Toy Store',
+    seo_title: 'Balance Bike for Kids - Toddler Bike | DigiDukaanLive',
     seo_description: 'Buy balance bike for kids and families. Helps toddlers learn balance and coordination.',
     seo_keywords: JSON.stringify(['balance bike', 'toddler bike', 'manual ride on', 'balance training', 'kids bike'])
   },
@@ -1024,7 +1024,7 @@ const products = [
     price: 680,
     price_includes_gst: true,
     category: 'Musical Toys',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-10 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Educational']),
@@ -1049,7 +1049,7 @@ const products = [
       'Battery': 'Included'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Musical Keyboard Toy - Kids Keyboard | Khandelwal Toy Store',
+    seo_title: 'Musical Keyboard Toy - Kids Keyboard | DigiDukaanLive',
     seo_description: 'Buy musical keyboard toy for kids and families. Introduces kids to music and sounds.',
     seo_keywords: JSON.stringify(['musical keyboard', 'keyboard toy', 'musical toy', 'kids keyboard', 'music toy'])
   },
@@ -1060,7 +1060,7 @@ const products = [
     price: 850,
     price_includes_gst: true,
     category: 'Musical Toys',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '4-12 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Educational']),
@@ -1085,7 +1085,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Drum Set for Kids - Musical Toy | Khandelwal Toy Store',
+    seo_title: 'Drum Set for Kids - Musical Toy | DigiDukaanLive',
     seo_description: 'Buy kids drum set for kids and families. Develops rhythm and musical skills.',
     seo_keywords: JSON.stringify(['drum set', 'kids drums', 'musical toy', 'rhythm toy', 'drum toy'])
   },
@@ -1098,7 +1098,7 @@ const products = [
     price: 450,
     price_includes_gst: true,
     category: 'Role Play Set',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-10 Years',
     occasion: JSON.stringify(['Birthday', 'General', 'Educational']),
@@ -1123,7 +1123,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Doctor Play Set - Role Play Toy | Khandelwal Toy Store',
+    seo_title: 'Doctor Play Set - Role Play Toy | DigiDukaanLive',
     seo_description: 'Buy doctor play set for kids and families. Complete medical tools for role play.',
     seo_keywords: JSON.stringify(['doctor set', 'role play', 'medical toys', 'pretend play', 'doctor toy'])
   },
@@ -1134,7 +1134,7 @@ const products = [
     price: 580,
     price_includes_gst: true,
     category: 'Role Play Set',
-    brand: 'Khandelwal Toy Store',
+    brand: 'DigiDukaanLive',
     hsn_code: '9503',
     age_group: '3-10 Years',
     occasion: JSON.stringify(['Birthday', 'General']),
@@ -1159,7 +1159,7 @@ const products = [
       'Material': 'Plastic'
     }),
     warranty: '1 Year Manufacturer Warranty',
-    seo_title: 'Kitchen Play Set - Role Play Kitchen | Khandelwal Toy Store',
+    seo_title: 'Kitchen Play Set - Role Play Kitchen | DigiDukaanLive',
     seo_description: 'Buy kitchen play set for kids and families. Complete utensils for pretend cooking.',
     seo_keywords: JSON.stringify(['kitchen set', 'role play', 'cooking toys', 'pretend play', 'kitchen toy'])
   }

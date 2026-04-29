@@ -90,7 +90,7 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
 
   const buildWhatsAppMessage = () => {
     const productPageUrl = getCanonicalUrl(`/products/${product.slug}`);
-    let message = `Hello Khandelwal Toy Store Team,\n\n`;
+    let message = `Hello DigiDukaanLive Team,\n\n`;
     message += `I'm interested in:\n`;
     message += `Product: ${product.name}\n`;
     if (product.brand) {

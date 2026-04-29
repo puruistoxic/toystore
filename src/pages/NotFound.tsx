@@ -34,7 +34,7 @@ export default function NotFound() {
   if (checkingRedirect) {
     return (
       <>
-        <SEO title="Checking… | Khandelwal Toy Store" description="Loading page." path={location.pathname} robots="noindex, nofollow" />
+        <SEO title="Checking… | DigiDukaanLive" description="Loading page." path={location.pathname} robots="noindex, nofollow" />
         <div className="min-h-[60vh] flex items-center justify-center px-4 py-16 bg-gray-50">
           <div className="text-center">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-teal-600" />
@@ -48,8 +48,8 @@ export default function NotFound() {
   return (
     <>
       <SEO
-        title="Page not found | Khandelwal Toy Store"
-        description="We couldn't find this page on Khandelwal Toy Store. Browse our toy catalogue from the home page."
+        title="Page not found | DigiDukaanLive"
+        description="We couldn't find this page on DigiDukaanLive. Browse our catalogue from the home page."
         path={location.pathname}
         robots="noindex, nofollow"
       />

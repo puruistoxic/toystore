@@ -49,7 +49,7 @@ const createTransporter = () => {
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    service: 'khandelwal-toy-store-api'
+    service: 'digidukaanlive-api'
   });
 });
 
@@ -362,7 +362,13 @@ app.post('/api/quote-request', async (req, res) => {
 // Enquiry submission endpoint
 app.post('/api/enquiry', async (req, res) => {
   try {
-    const { name, mobile, email } = req.body;
+    const { name, mobile, email, message } = req.body;
+    const messageText =
+      typeof message === 'string' ? message.trim().slice(0, 4000) : '';
+    const messageHtmlSafe = messageText
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
 
     if (!name || !mobile) {
       return res.status(400).json({
@@ -408,6 +414,16 @@ app.post('/api/enquiry', async (req, res) => {
                 <td style="padding: 10px;"><a href="mailto:${email}">${email}</a></td>
               </tr>
               ` : ''}
+              ${
+                messageText
+                  ? `
+              <tr>
+                <td style="padding: 10px; font-weight: bold; vertical-align: top;">Message:</td>
+                <td style="padding: 10px; white-space: pre-wrap;">${messageHtmlSafe}</td>
+              </tr>
+              `
+                  : ''
+              }
               <tr>
                 <td style="padding: 10px; font-weight: bold;">Source:</td>
                 <td style="padding: 10px;">Website Popup Enquiry</td>
@@ -433,6 +449,7 @@ app.post('/api/enquiry', async (req, res) => {
         Name: ${name}
         Mobile: ${mobile}
         ${email ? `Email: ${email}` : ''}
+        ${messageText ? `Message: ${messageText}` : ''}
         Source: Website Popup Enquiry
         Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
         
@@ -445,8 +462,8 @@ app.post('/api/enquiry', async (req, res) => {
     // Store enquiry in database
     const pool = getPool();
     await pool.execute(
-      'INSERT INTO enquiries (name, mobile, email, source) VALUES (?, ?, ?, ?)',
-      [name, mobile, email || null, 'Website Popup Enquiry']
+      'INSERT INTO enquiries (name, mobile, email, message, source) VALUES (?, ?, ?, ?, ?)',
+      [name, mobile, email || null, messageText || null, 'Website Popup Enquiry']
     );
 
     console.log(`[Email API] Enquiry email sent successfully from ${name} (${mobile}) to wainsogps@gmail.com`);

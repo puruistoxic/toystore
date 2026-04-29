@@ -66,18 +66,17 @@ interface SEOProps {
   additionalJsonLd?: Record<string, unknown>[];
 }
 
-const DEFAULT_DESCRIPTION =
-  'Khandelwal Toy Store — your local toy shop for kids’ toys, games, and gifts. Browse the catalogue, visit the store, or message us for availability and friendly advice.';
+const DEFAULT_DESCRIPTION = `${SITE_NAME} — your online and local store for toys, games, and gifts. Browse the catalogue, visit us, or message us for availability and friendly advice.`;
 
-const DEFAULT_TITLE = `${SITE_NAME} | Neighbourhood toy shop`;
+const DEFAULT_TITLE = `${SITE_NAME} | Online & local store`;
 
 const organizationJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'ToyStore',
+  '@type': 'OnlineStore',
   name: SITE_NAME,
   url: SITE_ORIGIN,
   description:
-    'Neighbourhood toy shop offering quality toys, games, and gifts for children. Visit in person or contact us on WhatsApp.',
+    'Online and local store offering quality toys, games, and gifts. Browse online, visit in person, or contact us on WhatsApp.',
   telephone: '+91-99114-84404',
   address: {
     '@type': 'PostalAddress',
@@ -102,9 +101,13 @@ const SEO: React.FC<SEOProps> = ({
   additionalJsonLd,
 }) => {
   const canonicalUrl = getCanonicalUrl(path);
-  const fullTitle = title.includes('|') ? title : generatePageTitle(title.replace(/\s*\|\s*Khandelwal Toy Store\s*$/i, ''));
+  const titleSuffixRe = new RegExp(
+    `\\s*\\|\\s*${SITE_NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`,
+    'i',
+  );
+  const fullTitle = title.includes('|') ? title : generatePageTitle(title.replace(titleSuffixRe, ''));
   const ogImage = resolveOgImage(image);
-  const ogImageAlt = imageAlt || (productStructuredData?.name ? `${productStructuredData.name} — ${SITE_NAME}` : `${SITE_NAME} — toys and gifts`);
+  const ogImageAlt = imageAlt || (productStructuredData?.name ? `${productStructuredData.name} — ${SITE_NAME}` : `${SITE_NAME} — shop online & local`);
 
   const facebookAppId = typeof process !== 'undefined' ? process.env.REACT_APP_FACEBOOK_APP_ID : undefined;
   const twitterHandle = typeof process !== 'undefined' ? process.env.REACT_APP_TWITTER_SITE : undefined;

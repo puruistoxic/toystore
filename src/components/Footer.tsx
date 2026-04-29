@@ -1,22 +1,27 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin, ShoppingCart } from 'lucide-react';
-import KhandelwalLogo from './KhandelwalLogo';
+import { Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import DigiDukaanLiveLogo from './DigiDukaanLiveLogo';
 import { productListingPathForCategory } from '../utils/productCategoryFilters';
 
+const FOOTER_EMAIL = 'shop@digidukaanlive.com';
+const FOOTER_EMAIL_DISPLAY = 'shop@DigiDukaanLive.com';
+
 const Footer: React.FC = () => {
+  const year = new Date().getFullYear();
+
   return (
     <footer className="bg-brand-ink text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <div className="max-w-[min(100%,280px)]">
-              <KhandelwalLogo size="sm" variant="onDark" />
+            <div className="w-full max-w-md min-w-0">
+              <DigiDukaanLiveLogo size="footer" variant="onDark" />
             </div>
             <p className="text-gray-300 text-sm">
-              Your neighbourhood toy store for quality playthings and gifts. We help families find
-              age-right toys, party favours, and festival surprises — visit us in person or reach out
+              Your neighbourhood store for quality products and gifts. We help families find
+              age-right picks, party favours, and festival surprises — visit us in person or reach out
               on WhatsApp for stock and directions.
             </p>
             <div className="flex space-x-4">
@@ -40,37 +45,18 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
                 <Link to="/products" className="text-gray-300 hover:text-primary-400 transition-colors">
                   Products
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/cart"
-                  className="inline-flex items-center gap-2 text-gray-300 hover:text-primary-400 transition-colors"
-                >
-                  <ShoppingCart className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                  My order list
-                </Link>
-              </li>
-              <li>
                 <Link to="/toy-finder" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Toy Finder
+                  Product Finder
                 </Link>
               </li>
               <li>
                 <Link to="/brands" className="text-gray-300 hover:text-primary-400 transition-colors">
                   Our Brands
-                </Link>
-              </li>
-              <li>
-                <Link to="/industries" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Industries
                 </Link>
               </li>
               <li>
@@ -135,9 +121,12 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 text-primary-400 mr-3 flex-shrink-0" />
-                <div className="text-gray-300">
-                  <div>puruistoxic@gmail.com</div>
-                </div>
+                <a
+                  href={`mailto:${FOOTER_EMAIL}`}
+                  className="text-gray-300 hover:text-primary-400 transition-colors break-all"
+                >
+                  {FOOTER_EMAIL_DISPLAY}
+                </a>
               </div>
               <div className="flex items-start">
                 <Clock className="h-5 w-5 text-primary-400 mt-0.5 mr-3 flex-shrink-0" />
@@ -153,8 +142,10 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm">
-              <p>© 2024 Khandelwal Toy Store. All rights reserved.</p>
-              <p className="mt-1 text-xs">Local retail toy shop | Walk-in welcome</p>
+              <p>
+                © {year} DigiDukaanLive. All rights reserved.
+              </p>
+              <p className="mt-1 text-xs">Local & online retail | Walk-in welcome</p>
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">

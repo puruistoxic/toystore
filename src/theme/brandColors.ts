@@ -1,5 +1,5 @@
 /**
- * Khandelwal Toys — canonical hex values for logo SVG and any JS usage.
+ * DigiDukaanLive — canonical hex values for logo SVG and any JS usage.
  * Keep in sync with `tailwind.config.js` (`brand`, `primary`) and `docs/BRAND_GUIDELINES.md`.
  */
 export const brandColors = {

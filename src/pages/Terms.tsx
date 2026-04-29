@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FileText, Scale, AlertCircle, CheckCircle, Package, Store } from 'lucide-react';
 import SEO from '../components/SEO';
 
-const STORE_NAME = 'Khandelwal Toy Store';
+const STORE_NAME = 'DigiDukaanLive';
 const STORE_EMAIL = 'wainsogps@gmail.com';
 const STORE_PHONE_PRIMARY = '+91 98998 60975';
 const STORE_PHONE_SECONDARY = '+91 82927 17044';
@@ -12,8 +12,8 @@ const Terms: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
-        title="Terms of Service | Khandelwal Toy Store"
-        description="Terms for using the Khandelwal Toy Store website and shopping at our local toy shop — pickup, product information, payments, and policies."
+        title="Terms of Service | DigiDukaanLive"
+        description="Terms for using the DigiDukaanLive website and shopping at our store — pickup, product information, payments, and policies."
         path="/terms"
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -52,7 +52,7 @@ const Terms: React.FC = () => {
                 2. What we offer
               </h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                {STORE_NAME} is a <strong>local retail toy shop</strong>. We provide:
+                {STORE_NAME} is a <strong>local retail store</strong>. We provide:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
                 <li>

@@ -2056,7 +2056,7 @@ router.get('/company-settings', authenticateToken, async (req, res) => {
     const [rows] = await pool.execute('SELECT * FROM company_settings ORDER BY id DESC LIMIT 1');
     if (rows.length === 0) {
       return res.json({
-        company_name: 'Khandelwal Toy Store',
+        company_name: 'DigiDukaanLive',
         address_line1: '',
         address_line2: '',
         address_line3: '',
@@ -2103,7 +2103,7 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
           footer_text, terms_and_conditions, enable_enquiry_popup, whatsapp_number
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          data.company_name || 'Khandelwal Toy Store',
+          data.company_name || 'DigiDukaanLive',
           data.logo_url || null,
           data.address_line1 || null,
           data.address_line2 || null,
@@ -2139,7 +2139,7 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
           bank_branch = ?, footer_text = ?, terms_and_conditions = ?, enable_enquiry_popup = ?, whatsapp_number = ?
         WHERE id = ?`,
         [
-          data.company_name || 'Khandelwal Toy Store',
+          data.company_name || 'DigiDukaanLive',
           data.logo_url || null,
           data.address_line1 || null,
           data.address_line2 || null,
