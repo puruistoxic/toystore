@@ -3,6 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { companySettingsApi } from '../../utils/api';
 import { Building2, Save } from 'lucide-react';
+import {
+  parseServicePincodesJson,
+  parseServicePincodesText,
+  servicePincodesToText,
+} from '../../utils/servicePincodes';
 
 export default function CompanySettings() {
   const queryClient = useQueryClient();
@@ -30,7 +35,8 @@ export default function CompanySettings() {
     footer_text: '',
     terms_and_conditions: '',
     enable_enquiry_popup: true,
-    whatsapp_number: ''
+    whatsapp_number: '',
+    service_pincodes_text: '',
   });
 
   const { data: settings, isLoading } = useQuery({
@@ -67,7 +73,10 @@ export default function CompanySettings() {
         footer_text: settings.footer_text || '',
         terms_and_conditions: settings.terms_and_conditions || '',
         enable_enquiry_popup: settings.enable_enquiry_popup !== undefined ? settings.enable_enquiry_popup : true,
-        whatsapp_number: settings.whatsapp_number || ''
+        whatsapp_number: settings.whatsapp_number || '',
+        service_pincodes_text: servicePincodesToText(
+          parseServicePincodesJson((settings as { service_pincodes_json?: unknown }).service_pincodes_json),
+        ),
       });
     }
   }, [settings]);
@@ -76,6 +85,7 @@ export default function CompanySettings() {
     mutationFn: (data: any) => companySettingsApi.updateSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['company-settings-public'] });
       // Clear the public cache so frontend picks up the new setting
       localStorage.removeItem('company_settings_cache');
       alert('Company settings saved successfully!');
@@ -85,7 +95,9 @@ export default function CompanySettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await updateMutation.mutateAsync(formData);
+      const service_pincodes_json = JSON.stringify(parseServicePincodesText(formData.service_pincodes_text));
+      const { service_pincodes_text: _t, ...rest } = formData;
+      await updateMutation.mutateAsync({ ...rest, service_pincodes_json });
     } catch (error: any) {
       alert(error.response?.data?.message || 'Failed to save settings');
     }
@@ -370,6 +382,26 @@ export default function CompanySettings() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Delivery / service pincodes */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delivery areas (pincodes)</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              When you add one or more pincodes below, visitors must choose a served pincode before sending a
+              WhatsApp product enquiry or submitting an order request list. Leave empty to allow all pincodes.
+            </p>
+            <textarea
+              name="service_pincodes_text"
+              value={formData.service_pincodes_text}
+              onChange={handleChange}
+              rows={6}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent font-mono text-sm"
+              placeholder={'394101, Mota Varachha\n395007\n394105, Adajan'}
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              One entry per line: six-digit pincode, optionally followed by a comma and a short area label.
+            </p>
           </div>
 
           {/* Website Features */}

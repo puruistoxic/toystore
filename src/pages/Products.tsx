@@ -6,7 +6,6 @@ import { contentApi } from '../utils/api';
 import type { Product } from '../types/catalog';
 import SEO from '../components/SEO';
 import ProductCard from '../components/ProductCard';
-import ProductDetailModal from '../components/ProductDetailModal';
 import { hybridSearch } from '../utils/fuzzySearch';
 import {
   isServiceItem,
@@ -35,7 +34,6 @@ const Products: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(true);
-  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
 
   const activeCategoryId = useMemo((): 'all' | string => {
     if (categorySlug) {
@@ -350,7 +348,6 @@ const Products: React.FC = () => {
                     key={product.id}
                     product={product}
                     showBestSellerBadge={false}
-                    onViewDetails={(p) => setPreviewProduct(p)}
                   />
                 ))}
               </div>
@@ -379,12 +376,6 @@ const Products: React.FC = () => {
         </div>
       </div>
     </div>
-      <ProductDetailModal
-        product={previewProduct}
-        isOpen={previewProduct != null}
-        onClose={() => setPreviewProduct(null)}
-        variant="quickLook"
-      />
     </>
   );
 };

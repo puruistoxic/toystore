@@ -146,7 +146,7 @@ export const generateOGDescription = (shortDescription: string, description: str
 /**
  * Generate canonical URL
  */
-export const generateCanonicalURL = (slug: string, baseUrl: string = 'https://khandelwaltoystore.com'): string => {
+export const generateCanonicalURL = (slug: string, baseUrl: string = 'https://digidukaanlive.com'): string => {
   return `${baseUrl}/${slug}`;
 };
 

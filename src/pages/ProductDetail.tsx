@@ -32,6 +32,7 @@ import ProductRecommendations from '../components/ProductRecommendations';
 import ProductDetailQuickNav from '../components/ProductDetailQuickNav';
 import { mapDbProductToFrontend } from '../utils/catalogFromDb';
 import { parseYoutubeVideoId, youtubeEmbedUrl, youtubeThumbnailUrl } from '../utils/youtube';
+import { sanitizeRichDescription } from '../utils/safeHtml';
 
 const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -52,7 +53,11 @@ const ProductDetail: React.FC = () => {
     enabled: !!slug,
   });
 
-  const product = dbProduct ? mapDbProductToFrontend(dbProduct) : undefined;
+  /** Stable reference while `dbProduct` is unchanged — avoids infinite loops (e.g. WhatsApp snapshot effect). */
+  const product = useMemo(
+    () => (dbProduct ? mapDbProductToFrontend(dbProduct) : undefined),
+    [dbProduct],
+  );
 
   const productInList = useMemo(
     () => Boolean(product && items.some((l) => l.productId === String(product.id))),
@@ -438,11 +443,16 @@ const ProductDetail: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-700">
-                {product.description}
-              </p>
-            </div>
+            {product.description?.trim() ? (
+              <div className="bg-gray-50 rounded-lg p-4 sm:p-5">
+                <div
+                  className="product-description prose prose-gray max-w-none text-gray-700 prose-p:my-2 prose-headings:font-display prose-headings:text-gray-900 prose-a:text-primary-600 prose-ul:my-2 prose-ol:my-2"
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeRichDescription(product.description),
+                  }}
+                />
+              </div>
+            ) : null}
 
             {/* Location Badge (only for CCTV/Security categories) */}
             {(product.category === 'security' || product.category === 'cctv') && (

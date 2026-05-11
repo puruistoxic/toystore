@@ -8,6 +8,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import EnquiryPopup, { useEnquiryPopup } from './components/EnquiryPopup';
 import ScrollToTop from './components/ScrollToTop';
+import RouteTransitionBar from './components/RouteTransitionBar';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import WhatsAppButton from './components/WhatsAppButton';
 import PageNavigationFX from './components/PageNavigationFX';
@@ -75,6 +76,7 @@ import AdminNotFound from './pages/admin/NotFound';
 import { ProductWhatsAppProvider } from './contexts/ProductWhatsAppContext';
 import { CartProvider } from './contexts/CartContext';
 import { AddToListModalProvider } from './contexts/AddToListModalContext';
+import { ServiceAreaProvider } from './contexts/ServiceAreaContext';
 import CartPage from './pages/CartPage';
 import OrderRequestPage from './pages/OrderRequestPage';
 
@@ -88,10 +90,10 @@ function PublicLayout() {
   const { showPopup, handleClose } = useEnquiryPopup();
 
   return (
+    <ServiceAreaProvider>
     <CartProvider>
       <AddToListModalProvider>
       <ProductWhatsAppProvider>
-        <ScrollToTop />
         <div className="min-h-screen bg-gray-50">
           <Header />
           <PageNavigationFX>
@@ -107,6 +109,7 @@ function PublicLayout() {
       </ProductWhatsAppProvider>
       </AddToListModalProvider>
     </CartProvider>
+    </ServiceAreaProvider>
   );
 }
 
@@ -117,6 +120,8 @@ function App() {
         <AlertProvider>
           <AuthProvider>
             <Router>
+            <ScrollToTop />
+            <RouteTransitionBar />
             <Routes>
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />

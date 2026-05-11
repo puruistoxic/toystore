@@ -6,6 +6,8 @@ const STORAGE_KEY = 'digidukaanlive_enquiry_popup_shown';
 /** Legacy key — still read so frequent visitors aren’t nagged after deploy */
 const STORAGE_KEY_LEGACY = 'wainso_enquiry_popup_shown';
 const DAYS_TO_HIDE = 7;
+/** Wait this long on the public site before the modal may appear (avoids blocking first impressions). */
+const MIN_ENQUIRY_POPUP_DWELL_MS = 25_000;
 
 function readPopupDismissed(): string | null {
   return localStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY_LEGACY);
@@ -397,7 +399,7 @@ export const useEnquiryPopup = () => {
       }
     };
 
-    const timer = setTimeout(checkShouldShow, 1000);
+    const timer = setTimeout(checkShouldShow, MIN_ENQUIRY_POPUP_DWELL_MS);
     return () => clearTimeout(timer);
   }, [popupEnabled]);
 

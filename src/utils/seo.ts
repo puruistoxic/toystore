@@ -14,7 +14,7 @@ export const generateSlug = (text: string): string => {
 export const SITE_ORIGIN = (
   typeof process !== 'undefined' && process.env.REACT_APP_SITE_URL
     ? String(process.env.REACT_APP_SITE_URL).replace(/\/$/, '')
-    : 'https://khandelwaltoystore.com'
+    : 'https://digidukaanlive.com'
 );
 
 export const SITE_NAME = 'DigiDukaanLive';

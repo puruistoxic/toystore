@@ -118,7 +118,6 @@ function filterCatalog(products: Product[], age: ToyFinderAge, style: ToyFinderS
 
 type ToyFinderProps = {
   products: Product[];
-  onViewProduct: (product: Product) => void;
 };
 
 function explorerTitle(specificSteps: number): string {
@@ -128,7 +127,7 @@ function explorerTitle(specificSteps: number): string {
   return 'Open adventurer';
 }
 
-const ToyFinder: React.FC<ToyFinderProps> = ({ products, onViewProduct }) => {
+const ToyFinder: React.FC<ToyFinderProps> = ({ products }) => {
   const [age, setAge] = useState<ToyFinderAge>('any');
   const [style, setStyle] = useState<ToyFinderStyle>('any');
   const [occasion, setOccasion] = useState<ToyFinderOccasion>('any');
@@ -340,7 +339,6 @@ const ToyFinder: React.FC<ToyFinderProps> = ({ products, onViewProduct }) => {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    onViewDetails={onViewProduct}
                     showBestSellerBadge={false}
                   />
                 ))}

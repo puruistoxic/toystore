@@ -37,7 +37,7 @@ const Privacy: React.FC = () => {
               <p className="text-gray-700 leading-relaxed mb-4">
                 <strong>{STORE_NAME}</strong> (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy. This
                 Privacy Policy describes how we collect, use, store, and share information when you visit{' '}
-                <strong>khandelwaltoystore.com</strong> (or related pages we operate), message us (including WhatsApp),
+                <strong>DigiDukaanLive.com</strong> (or related pages we operate), message us (including WhatsApp),
                 call or email us, or <strong>shop at our physical store</strong>.
               </p>
               <p className="text-gray-700 leading-relaxed">

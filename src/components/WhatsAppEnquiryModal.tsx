@@ -6,6 +6,8 @@ import api from '../utils/api';
 import type { Product } from '../types/catalog';
 import { getCanonicalUrl } from '../utils/seo';
 import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
+import { useAlert } from '../contexts/AlertContext';
+import { useServiceArea } from '../contexts/ServiceAreaContext';
 
 interface WhatsAppEnquiryModalProps {
   isOpen: boolean;
@@ -25,13 +27,17 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
   const [formData, setFormData] = useState({
     quantity: 1,
     customMessage: '',
-    customerName: '',
-    customerEmail: '',
-    customerPhone: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showAlert } = useAlert();
+  const {
+    deliveryPincode,
+    deliveryLabel,
+    pinRequired,
+    hasValidDeliveryPincode,
+  } = useServiceArea();
 
   const { data: settings } = useQuery<CompanySettings>({
     queryKey: ['company-settings-public'],
@@ -47,9 +53,6 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
       setFormData({
         quantity: 1,
         customMessage: '',
-        customerName: '',
-        customerEmail: '',
-        customerPhone: ''
       });
       setErrors({});
     }
@@ -80,12 +83,19 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
       newErrors.quantity = 'Quantity must be at least 1';
     }
 
-    if (formData.customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) {
-      newErrors.customerEmail = 'Please enter a valid email address';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const formatApiError = (err: unknown): string => {
+    if (err && typeof err === 'object' && 'response' in err) {
+      const data = (err as { response?: { data?: { message?: string; error?: string } } }).response
+        ?.data;
+      if (data?.message) return String(data.message);
+      if (data?.error) return String(data.error);
+    }
+    if (err instanceof Error) return err.message;
+    return 'Something went wrong. Please try again.';
   };
 
   const buildWhatsAppMessage = () => {
@@ -101,21 +111,15 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
     }
     message += `Product page: ${productPageUrl}\n\n`;
     message += `Quantity: ${formData.quantity} unit(s)\n`;
+    if (hasValidDeliveryPincode && deliveryPincode) {
+      message += `\nDelivery pincode: ${deliveryPincode}`;
+      if (deliveryLabel && deliveryLabel !== deliveryPincode) {
+        message += ` (${deliveryLabel})`;
+      }
+      message += '\n';
+    }
     if (formData.customMessage.trim()) {
       message += `\nMessage: ${formData.customMessage.trim()}\n`;
-    }
-    const extras: string[] = [];
-    if (formData.customerName.trim()) {
-      extras.push(`Name: ${formData.customerName.trim()}`);
-    }
-    if (formData.customerPhone.trim()) {
-      extras.push(`Phone: ${formData.customerPhone.trim()}`);
-    }
-    if (formData.customerEmail.trim()) {
-      extras.push(`Email: ${formData.customerEmail.trim()}`);
-    }
-    if (extras.length) {
-      message += `\n${extras.join('\n')}\n`;
     }
     return message;
   };
@@ -124,6 +128,16 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
     e.preventDefault();
 
     if (!validateForm()) {
+      return;
+    }
+
+    if (pinRequired && !hasValidDeliveryPincode) {
+      await showAlert({
+        type: 'warning',
+        title: 'Choose delivery pincode',
+        message:
+          'Please tap “Deliver to” or “Set delivery pincode” in the header and select your area before sending.',
+      });
       return;
     }
 
@@ -136,17 +150,22 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
         product_id: product.id,
         product_name: product.name,
         product_slug: product.slug,
-        customer_name: formData.customerName.trim() || null,
-        customer_email: formData.customerEmail.trim() || null,
-        customer_phone: formData.customerPhone.trim() || null,
+        customer_name: null,
+        customer_email: null,
+        customer_phone: null,
         quantity: formData.quantity,
         custom_message: formData.customMessage.trim() || null,
         whatsapp_number: cleanNumber,
-        enquiry_type: 'product'
+        enquiry_type: 'product',
+        delivery_pincode: hasValidDeliveryPincode ? deliveryPincode : null,
       });
     } catch (logError) {
       console.error('Failed to log enquiry:', logError);
-      alert('We could not save your enquiry. Please check your connection and try again.');
+      await showAlert({
+        type: 'error',
+        title: 'Could not save enquiry',
+        message: `${formatApiError(logError)}\n\nCheck your connection, or try again in a moment.`,
+      });
       setIsSubmitting(false);
       return;
     }
@@ -159,7 +178,12 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Error opening WhatsApp:', error);
-      alert('Your enquiry was saved. Open WhatsApp manually if the app did not open.');
+      await showAlert({
+        type: 'warning',
+        title: 'WhatsApp did not open',
+        message:
+          'Your enquiry was saved. Open WhatsApp on your phone or desktop and message us with your question, or try the Send button again.',
+      });
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -239,49 +263,6 @@ const WhatsAppEnquiryModal: React.FC<WhatsAppEnquiryModalProps> = ({
                 rows={3}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               />
-            </div>
-
-            <div className="border-t border-gray-200 pt-4 space-y-3">
-              <h3 className="text-sm font-semibold text-gray-900">Contact <span className="text-gray-500 font-normal">(all optional)</span></h3>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your name</label>
-                <input
-                  type="text"
-                  value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  autoComplete="name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone / WhatsApp</label>
-                <input
-                  type="tel"
-                  value={formData.customerPhone}
-                  onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  autoComplete="tel"
-                  placeholder="So we can reach you if needed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={formData.customerEmail}
-                  onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                    errors.customerEmail ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  autoComplete="email"
-                />
-                {errors.customerEmail && (
-                  <p className="mt-1 text-sm text-red-500">{errors.customerEmail}</p>
-                )}
-              </div>
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-gray-200">

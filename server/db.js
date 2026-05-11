@@ -147,6 +147,111 @@ async function initDatabase() {
   return pool;
 }
 
+function isDuplicateColumnError(error) {
+  return (
+    String(error.message || '').includes('Duplicate column name') ||
+    error.code === 'ER_DUP_FIELDNAME'
+  );
+}
+
+function isDuplicateKeyNameError(error) {
+  return (
+    error.code === 'ER_DUP_KEYNAME' ||
+    String(error.message || '').includes('Duplicate key name')
+  );
+}
+
+/**
+ * The legacy `enquiries` table (website popup) uses name/mobile/message.
+ * POST /api/content/enquiries expects product_* and customer_* columns.
+ * The second CREATE in this file never runs if the legacy table already exists,
+ * so we ALTER the live table once `products` exists (for optional FK).
+ */
+async function migrateEnquiriesTableForContentProductEnquiries(connection) {
+  try {
+    const [rows] = await connection.execute(
+      `SELECT COLUMN_NAME AS c FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'enquiries'`,
+    );
+    const cols = new Set(rows.map((r) => r.c));
+    if (cols.has('product_name')) {
+      return;
+    }
+    if (!cols.has('name')) {
+      return;
+    }
+
+    try {
+      await connection.execute(
+        'ALTER TABLE enquiries MODIFY COLUMN name VARCHAR(255) NULL, MODIFY COLUMN mobile VARCHAR(20) NULL',
+      );
+    } catch (e) {
+      console.warn('[Database] enquiries name/mobile NULL migration:', e.message);
+    }
+
+    const addColumnSql = [
+      'ALTER TABLE enquiries ADD COLUMN product_id VARCHAR(50) NULL',
+      'ALTER TABLE enquiries ADD COLUMN product_name VARCHAR(255) NULL',
+      'ALTER TABLE enquiries ADD COLUMN product_slug VARCHAR(255) NULL',
+      'ALTER TABLE enquiries ADD COLUMN customer_name VARCHAR(255) NULL',
+      'ALTER TABLE enquiries ADD COLUMN customer_email VARCHAR(255) NULL',
+      'ALTER TABLE enquiries ADD COLUMN customer_phone VARCHAR(20) NULL',
+      'ALTER TABLE enquiries ADD COLUMN quantity INT NULL',
+      'ALTER TABLE enquiries ADD COLUMN requested_price DECIMAL(10,2) NULL',
+      'ALTER TABLE enquiries ADD COLUMN custom_message TEXT NULL',
+      'ALTER TABLE enquiries ADD COLUMN whatsapp_number VARCHAR(20) NULL',
+      `ALTER TABLE enquiries ADD COLUMN enquiry_type ENUM('product','general') DEFAULT 'product'`,
+      `ALTER TABLE enquiries ADD COLUMN status ENUM('new','contacted','quoted','closed') DEFAULT 'new'`,
+      'ALTER TABLE enquiries ADD COLUMN notes TEXT NULL',
+    ];
+
+    for (const sql of addColumnSql) {
+      try {
+        await connection.execute(sql);
+      } catch (e) {
+        if (!isDuplicateColumnError(e)) {
+          console.warn('[Database] enquiries add column:', e.message);
+        }
+      }
+    }
+
+    for (const sql of [
+      'ALTER TABLE enquiries ADD INDEX idx_enquiries_product_id (product_id)',
+      'ALTER TABLE enquiries ADD INDEX idx_enquiries_product_slug (product_slug)',
+      'ALTER TABLE enquiries ADD INDEX idx_enquiries_status (status)',
+    ]) {
+      try {
+        await connection.execute(sql);
+      } catch (e) {
+        if (!isDuplicateKeyNameError(e)) {
+          console.warn('[Database] enquiries index:', e.message);
+        }
+      }
+    }
+
+    try {
+      await connection.execute(
+        'ALTER TABLE enquiries ADD CONSTRAINT fk_enquiries_product_id FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL',
+      );
+    } catch (e) {
+      if (
+        e.errno === 1826 ||
+        e.code === 'ER_FK_DUP_NAME' ||
+        String(e.message || '').includes('Duplicate foreign key') ||
+        String(e.message || '').includes('already exists')
+      ) {
+        /* ok */
+      } else {
+        console.warn('[Database] enquiries product FK (optional):', e.message);
+      }
+    }
+
+    console.log('[Database] Migrated legacy enquiries table for product / WhatsApp leads');
+  } catch (e) {
+    console.warn('[Database] migrateEnquiriesTableForContentProductEnquiries:', e.message);
+  }
+}
+
 // Initialize database tables
 async function initializeTables() {
   try {
@@ -316,6 +421,8 @@ async function initializeTables() {
         INDEX idx_products_is_deleted (is_deleted)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    await migrateEnquiriesTableForContentProductEnquiries(connection);
 
     // Add price_includes_gst column if it doesn't exist (for existing databases)
     try {
@@ -1090,33 +1197,44 @@ async function initializeTables() {
       }
     }
 
-    // Create enquiries table to log all enquiries
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS enquiries (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(50),
-        product_name VARCHAR(255),
-        product_slug VARCHAR(255),
-        customer_name VARCHAR(255),
-        customer_email VARCHAR(255),
-        customer_phone VARCHAR(20),
-        quantity INT,
-        requested_price DECIMAL(10,2),
-        custom_message TEXT,
-        whatsapp_number VARCHAR(20),
-        enquiry_type ENUM('product', 'general') DEFAULT 'product',
-        status ENUM('new', 'contacted', 'quoted', 'closed') DEFAULT 'new',
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_product_id (product_id),
-        INDEX idx_product_slug (product_slug),
-        INDEX idx_status (status),
-        INDEX idx_created_at (created_at),
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    `);
-    console.log('[Database] Created enquiries table');
+    try {
+      await connection.execute(
+        'ALTER TABLE company_settings ADD COLUMN service_pincodes_json JSON NULL',
+      );
+      console.log('[Database] Added company_settings.service_pincodes_json');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+      } else {
+        console.warn('[Database] Could not add service_pincodes_json:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(
+        'ALTER TABLE cart_enquiries ADD COLUMN delivery_pincode VARCHAR(10) NULL',
+      );
+      console.log('[Database] Added cart_enquiries.delivery_pincode');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+      } else {
+        console.warn('[Database] Could not add cart_enquiries.delivery_pincode:', error.message);
+      }
+    }
+
+    try {
+      await connection.execute(
+        'ALTER TABLE enquiries ADD COLUMN delivery_pincode VARCHAR(10) NULL',
+      );
+      console.log('[Database] Added enquiries.delivery_pincode');
+    } catch (error) {
+      if (error.message.includes('Duplicate column name') || error.code === 'ER_DUP_FIELDNAME') {
+      } else {
+        console.warn('[Database] Could not add enquiries.delivery_pincode:', error.message);
+      }
+    }
+
+    // Product enquiries use the same `enquiries` table as the site popup; see
+    // migrateEnquiriesTableForContentProductEnquiries() after `products` is created.
 
     try {
       await connection.execute(`

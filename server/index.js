@@ -20,11 +20,13 @@ const adminRoutes = require('./routes/admin');
 const contentRoutes = require('./routes/content');
 const uploadRoutes = require('./routes/upload');
 const invoicingRoutes = require('./routes/invoicing');
+const paymentsRoutes = require('./routes/payments');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/invoicing', invoicingRoutes);
+app.use('/api/payments', paymentsRoutes);
 
 // Create SMTP transporter
 const createTransporter = () => {
@@ -524,6 +526,11 @@ app.post('/api/enquiry', async (req, res) => {
       console.log(`  - GET /api/admin/verify`);
       console.log(`  - POST /api/quote-request`);
       console.log(`  - POST /api/enquiry`);
+      console.log(`  - POST /api/payments/create-order`);
+      console.log(`  - POST /api/payments/verify-payment`);
+      console.log(`  - GET  /api/payments/status/:payment_id`);
+      console.log(`  - POST /api/payments/webhook`);
+      console.log(`  - GET  /api/payments/config`);
       console.log(`  - GET /health (liveness)`);
       console.log(`  - GET /health/ready (database)`);
       console.log(`  - All /api/content/* routes`);

@@ -4,12 +4,21 @@ import { MessageCircle } from 'lucide-react';
 import api from '../utils/api';
 import { useProductWhatsApp } from '../contexts/ProductWhatsAppContext';
 import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
+import { useAlert } from '../contexts/AlertContext';
+import { useServiceArea } from '../contexts/ServiceAreaContext';
 
 /**
  * Floating WhatsApp — on a product page, the message includes that product’s name and page link.
  */
 const WhatsAppButton: React.FC = () => {
   const { snapshot } = useProductWhatsApp();
+  const { showAlert } = useAlert();
+  const {
+    pinRequired,
+    hasValidDeliveryPincode,
+    deliveryPincode,
+    deliveryLabel,
+  } = useServiceArea();
   const { data: settings } = useQuery({
     queryKey: ['company-settings-public'],
     queryFn: async () => {
@@ -20,9 +29,26 @@ const WhatsAppButton: React.FC = () => {
 
   const cleanNumber = normalizeWhatsAppDigits(settings?.whatsapp_number);
 
-  const handleWhatsAppClick = () => {
-    const genericMessage = `Hello DigiDukaanLive,
+  const handleWhatsAppClick = async () => {
+    if (pinRequired && !hasValidDeliveryPincode) {
+      await showAlert({
+        type: 'warning',
+        title: 'Choose delivery pincode',
+        message:
+          'Use “Deliver to” in the header to set your pincode before contacting us on WhatsApp.',
+      });
+      return;
+    }
 
+    const pinBlock =
+      hasValidDeliveryPincode && deliveryPincode
+        ? `\nDelivery pincode: ${deliveryPincode}${
+            deliveryLabel !== deliveryPincode ? ` (${deliveryLabel})` : ''
+          }\n`
+        : '';
+
+    const genericMessage = `Hello DigiDukaanLive,
+${pinBlock}
 I'd like to know about toys you have in stock.
 
 Please share:
@@ -34,7 +60,7 @@ Thank you!`;
 
     const productMessage = snapshot
       ? `Hello DigiDukaanLive,
-
+${pinBlock}
 I'm enquiring about this product from your website:
 
 Product: ${snapshot.name}

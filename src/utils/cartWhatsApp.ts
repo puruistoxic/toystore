@@ -5,11 +5,15 @@ export function buildCartEnquiryWhatsAppMessage(
   lines: CartLine[],
   note?: string,
   requestRef?: string | null,
+  deliveryLine?: string | null,
 ): string {
   const totalQty = lines.reduce((s, l) => s + l.quantity, 0);
   let message = `Hello DigiDukaanLive Team,\n\n`;
   if (requestRef?.trim()) {
     message += `Order request reference: ${requestRef.trim()}\n\n`;
+  }
+  if (deliveryLine?.trim()) {
+    message += `${deliveryLine.trim()}\n\n`;
   }
   message += `I'd like to request an order / quote for my buying list (${lines.length} product(s), ${totalQty} item(s) total):\n\n`;
 

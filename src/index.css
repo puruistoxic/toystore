@@ -128,6 +128,11 @@ input[type="submit"] {
   animation: quest-nav-bar-slide 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
+/* Baseline visibility — avoids stuck transparent state if animation is interrupted */
+.page-nfx-shell {
+  opacity: 1;
+}
+
 .page-nfx-shell.page-nfx-play {
   animation: page-quest-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

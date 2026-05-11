@@ -35,7 +35,7 @@ const Terms: React.FC = () => {
                 1. Acceptance of terms
               </h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                By accessing <strong>khandelwaltoystore.com</strong> (or any site we operate), visiting our shop, or buying
+                By accessing <strong>DigiDukaanLive.com</strong> (or any site we operate), visiting our shop, or buying
                 from <strong>{STORE_NAME}</strong> (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), you agree to these
                 Terms of Service (&quot;Terms&quot;). If you do not agree, please do not use our website or services.
               </p>

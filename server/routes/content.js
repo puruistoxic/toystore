@@ -29,6 +29,42 @@ function parseJSON(value) {
 
 const HOME_HERO_BANNER_SLIDE_IDS = new Set(['1', '2', '3', '4']);
 
+function normalizePincodeSix(raw) {
+  if (raw == null || raw === '') return '';
+  const d = String(raw).replace(/\D/g, '').slice(0, 6);
+  return /^\d{6}$/.test(d) ? d : '';
+}
+
+/** @returns {{ entries: { pincode: string, label: string }[], set: Set<string>, required: boolean }} */
+function parseServicePincodesFromSettingsValue(raw) {
+  const parsed = parseJSON(raw);
+  const entries = [];
+  if (Array.isArray(parsed)) {
+    for (const row of parsed) {
+      if (!row || typeof row !== 'object') continue;
+      const pin = normalizePincodeSix(row.pincode);
+      if (!pin) continue;
+      const label = row.label != null ? String(row.label).trim() : '';
+      entries.push({ pincode: pin, label: label || pin });
+    }
+  }
+  const set = new Set(entries.map((e) => e.pincode));
+  return { entries, set, required: set.size > 0 };
+}
+
+async function loadServicePincodesConfig(pool) {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT service_pincodes_json FROM company_settings ORDER BY id DESC LIMIT 1',
+    );
+    if (!rows.length) return { entries: [], set: new Set(), required: false };
+    return parseServicePincodesFromSettingsValue(rows[0].service_pincodes_json);
+  } catch (e) {
+    console.warn('[Content API] loadServicePincodesConfig:', e.message);
+    return { entries: [], set: new Set(), required: false };
+  }
+}
+
 /** Validated list of hero slide ids for homepage product spots */
 function normalizeHomeBannerSlides(body) {
   let raw = body.home_banner_slides;
@@ -2031,22 +2067,35 @@ router.get('/company-settings/public', async (req, res) => {
   try {
     const pool = getPool();
     const [rows] = await pool.execute(
-      'SELECT enable_enquiry_popup, whatsapp_number FROM company_settings ORDER BY id DESC LIMIT 1',
+      'SELECT enable_enquiry_popup, whatsapp_number, service_pincodes_json FROM company_settings ORDER BY id DESC LIMIT 1',
     );
     if (rows.length === 0) {
-      return res.json({ enable_enquiry_popup: true, whatsapp_number: null });
+      return res.json({
+        enable_enquiry_popup: true,
+        whatsapp_number: null,
+        service_pincodes: [],
+        service_area_pin_required: false,
+      });
     }
     const r = rows[0];
+    const { entries, required } = parseServicePincodesFromSettingsValue(r.service_pincodes_json);
     res.json({
       enable_enquiry_popup: r.enable_enquiry_popup !== 0,
       whatsapp_number:
         r.whatsapp_number != null && String(r.whatsapp_number).trim() !== ''
           ? String(r.whatsapp_number).trim()
           : null,
+      service_pincodes: entries,
+      service_area_pin_required: required,
     });
   } catch (error) {
     console.error('[Content API] Get public company settings error:', error);
-    res.json({ enable_enquiry_popup: true, whatsapp_number: null });
+    res.json({
+      enable_enquiry_popup: true,
+      whatsapp_number: null,
+      service_pincodes: [],
+      service_area_pin_required: false,
+    });
   }
 });
 
@@ -2076,7 +2125,8 @@ router.get('/company-settings', authenticateToken, async (req, res) => {
         bank_branch: '',
         footer_text: '',
         terms_and_conditions: '',
-        enable_enquiry_popup: true
+        enable_enquiry_popup: true,
+        service_pincodes_json: null,
       });
     }
     res.json(rows[0]);
@@ -2094,14 +2144,34 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
     // Check if settings exist
     const [existing] = await pool.execute('SELECT id FROM company_settings ORDER BY id DESC LIMIT 1');
 
+    let mergedServicePins;
+    if (Object.prototype.hasOwnProperty.call(data, 'service_pincodes_json')) {
+      if (data.service_pincodes_json == null || data.service_pincodes_json === '') {
+        mergedServicePins = null;
+      } else if (typeof data.service_pincodes_json === 'string') {
+        const t = data.service_pincodes_json.trim();
+        mergedServicePins = t || null;
+      } else {
+        mergedServicePins = JSON.stringify(data.service_pincodes_json);
+      }
+    } else if (existing.length) {
+      const [cur] = await pool.execute(
+        'SELECT service_pincodes_json FROM company_settings WHERE id = ? LIMIT 1',
+        [existing[0].id],
+      );
+      mergedServicePins = cur[0]?.service_pincodes_json ?? null;
+    } else {
+      mergedServicePins = null;
+    }
+
     if (existing.length === 0) {
       // Create new settings
       await pool.execute(
         `INSERT INTO company_settings (
           company_name, logo_url, address_line1, address_line2, address_line3, city, state, postal_code, country,
           phone, phone2, email, website, gstin, pan, bank_name, bank_account_name, bank_account_number, bank_ifsc, bank_branch,
-          footer_text, terms_and_conditions, enable_enquiry_popup, whatsapp_number
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          footer_text, terms_and_conditions, enable_enquiry_popup, whatsapp_number, service_pincodes_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           data.company_name || 'DigiDukaanLive',
           data.logo_url || null,
@@ -2126,7 +2196,8 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
           data.footer_text || null,
           data.terms_and_conditions || null,
           data.enable_enquiry_popup !== undefined ? data.enable_enquiry_popup : true,
-          data.whatsapp_number || null
+          data.whatsapp_number || null,
+          mergedServicePins,
         ]
       );
     } else {
@@ -2136,7 +2207,8 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
           company_name = ?, logo_url = ?, address_line1 = ?, address_line2 = ?, address_line3 = ?,
           city = ?, state = ?, postal_code = ?, country = ?, phone = ?, phone2 = ?, email = ?,
           website = ?, gstin = ?, pan = ?, bank_name = ?, bank_account_name = ?, bank_account_number = ?, bank_ifsc = ?,
-          bank_branch = ?, footer_text = ?, terms_and_conditions = ?, enable_enquiry_popup = ?, whatsapp_number = ?
+          bank_branch = ?, footer_text = ?, terms_and_conditions = ?, enable_enquiry_popup = ?, whatsapp_number = ?,
+          service_pincodes_json = ?
         WHERE id = ?`,
         [
           data.company_name || 'DigiDukaanLive',
@@ -2163,6 +2235,7 @@ router.put('/company-settings', authenticateToken, async (req, res) => {
           data.terms_and_conditions || null,
           data.enable_enquiry_popup !== undefined ? data.enable_enquiry_popup : true,
           data.whatsapp_number || null,
+          mergedServicePins,
           existing[0].id
         ]
       );
@@ -2193,7 +2266,8 @@ router.post('/enquiries', async (req, res) => {
       requested_price,
       custom_message,
       whatsapp_number,
-      enquiry_type = 'product'
+      enquiry_type = 'product',
+      delivery_pincode: deliveryPinRaw,
     } = req.body;
 
     const qty = Math.max(1, parseInt(String(quantity ?? 1), 10) || 1);
@@ -2201,6 +2275,16 @@ router.post('/enquiries', async (req, res) => {
       return res.status(400).json({
         error: 'Missing required fields',
         message: 'Product name is required'
+      });
+    }
+
+    const delivery_pincode = normalizePincodeSix(deliveryPinRaw);
+    const svc = await loadServicePincodesConfig(pool);
+    if (svc.required && (!delivery_pincode || !svc.set.has(delivery_pincode))) {
+      return res.status(400).json({
+        error: 'Invalid delivery pincode',
+        message:
+          'Please set a valid delivery pincode from the areas we serve (use “Deliver to” in the site header), then try again.',
       });
     }
 
@@ -2225,8 +2309,9 @@ router.post('/enquiries', async (req, res) => {
     const [result] = await pool.execute(
       `INSERT INTO enquiries (
         product_id, product_name, product_slug, customer_name, customer_email, customer_phone,
-        quantity, requested_price, custom_message, whatsapp_number, enquiry_type, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`,
+        quantity, requested_price, custom_message, whatsapp_number, enquiry_type, status,
+        delivery_pincode
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)`,
       [
         product_id || null,
         String(product_name).trim(),
@@ -2238,7 +2323,8 @@ router.post('/enquiries', async (req, res) => {
         requested_price != null && requested_price !== '' ? requested_price : null,
         message,
         whatsapp_number || null,
-        enquiry_type
+        enquiry_type,
+        delivery_pincode || null,
       ]
     );
 
@@ -2252,6 +2338,7 @@ router.post('/enquiries', async (req, res) => {
       customer_phone: phone,
       customer_email: email,
       custom_message: message,
+      delivery_pincode: delivery_pincode || null,
     });
 
     res.json({
@@ -2280,7 +2367,18 @@ async function createCartOrderRequest(req, res) {
       customer_phone,
       custom_message,
       whatsapp_number,
+      delivery_pincode: deliveryPinRaw,
     } = req.body;
+
+    const delivery_pincode = normalizePincodeSix(deliveryPinRaw);
+    const svc = await loadServicePincodesConfig(pool);
+    if (svc.required && (!delivery_pincode || !svc.set.has(delivery_pincode))) {
+      return res.status(400).json({
+        error: 'Invalid delivery pincode',
+        message:
+          'Please set a valid delivery pincode from the areas we serve (use “Deliver to” in the site header), then try again.',
+      });
+    }
 
     if (!Array.isArray(rawItems) || rawItems.length === 0) {
       return res.status(400).json({
@@ -2351,9 +2449,9 @@ async function createCartOrderRequest(req, res) {
         const [result] = await pool.execute(
           `INSERT INTO cart_enquiries (
             public_ref, items_json, customer_name, customer_email, customer_phone,
-            custom_message, whatsapp_number, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'new')`,
-          [publicRef, itemsJson, name, email, phone, message, whatsapp_number || null],
+            custom_message, whatsapp_number, status, delivery_pincode
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?)`,
+          [publicRef, itemsJson, name, email, phone, message, whatsapp_number || null, delivery_pincode || null],
         );
         insertId = result.insertId;
         break;
@@ -2389,6 +2487,7 @@ async function createCartOrderRequest(req, res) {
       customer_phone: phone,
       customer_email: email,
       custom_message: message,
+      delivery_pincode: delivery_pincode || null,
     });
 
     res.json({

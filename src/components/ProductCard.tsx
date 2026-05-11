@@ -5,6 +5,7 @@ import type { Product } from '../types/catalog';
 import { useCart } from '../contexts/CartContext';
 import { useAddToListModal } from '../contexts/AddToListModalContext';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
+import { stripHtmlToPlain } from '../utils/safeHtml';
 
 interface ProductCardProps {
   product: Product;
@@ -107,7 +108,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {/* Short Description */}
         {product.description && (
           <p className="text-xs text-gray-600 mb-3 line-clamp-2 min-h-[2rem]">
-            {product.description.length > 80 ? product.description.substring(0, 80) + '...' : product.description}
+            {(() => {
+              const plain = stripHtmlToPlain(product.description);
+              return plain.length > 80 ? `${plain.slice(0, 80)}…` : plain;
+            })()}
           </p>
         )}
         

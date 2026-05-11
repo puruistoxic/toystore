@@ -5,6 +5,7 @@ import { X, MessageCircle, Star, CheckCircle, Package, ShoppingCart, Play } from
 import type { Product } from '../types/catalog';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
 import { getCanonicalUrl } from '../utils/seo';
+import { sanitizeRichDescription, stripHtmlToPlain } from '../utils/safeHtml';
 import { useCart } from '../contexts/CartContext';
 import { useAddToListModal } from '../contexts/AddToListModalContext';
 import { parseYoutubeVideoId, youtubeEmbedUrl, youtubeThumbnailUrl } from '../utils/youtube';
@@ -60,10 +61,11 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   const quickLook = variant === 'quickLook';
   const descriptionText = product.description?.trim() || '';
+  const descriptionPlain = stripHtmlToPlain(descriptionText);
   const descriptionTruncated =
-    quickLook && descriptionText.length > QUICK_DESC_MAX
-      ? `${descriptionText.slice(0, QUICK_DESC_MAX).trim()}…`
-      : descriptionText;
+    quickLook && descriptionPlain.length > QUICK_DESC_MAX
+      ? `${descriptionPlain.slice(0, QUICK_DESC_MAX).trim()}…`
+      : descriptionPlain;
 
   const handleWhatsAppEnquiry = () => {
     const productPageUrl = getCanonicalUrl(`/products/${product.slug}`);
@@ -320,13 +322,22 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   )}
 
                   {/* Description */}
-                  {descriptionText && (
+                  {descriptionPlain && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-900 mb-2">Description</h3>
-                      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                        {descriptionTruncated}
-                      </p>
-                      {quickLook && descriptionText.length > QUICK_DESC_MAX && (
+                      {quickLook ? (
+                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                          {descriptionTruncated}
+                        </p>
+                      ) : (
+                        <div
+                          className="text-sm text-gray-600 leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-a:text-primary-600"
+                          dangerouslySetInnerHTML={{
+                            __html: sanitizeRichDescription(descriptionText),
+                          }}
+                        />
+                      )}
+                      {quickLook && descriptionPlain.length > QUICK_DESC_MAX && (
                         <p className="mt-2 text-xs text-gray-500">
                           Full write-up, specs, and more on the product page.
                         </p>

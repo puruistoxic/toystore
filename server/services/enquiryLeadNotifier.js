@@ -50,6 +50,7 @@ async function notifyAdminProductEnquiry(pool, payload) {
     customer_phone,
     customer_email,
     custom_message,
+    delivery_pincode,
   } = payload;
 
   const subject = `New product lead #${enquiryId}: ${product_name || 'Enquiry'}`;
@@ -59,6 +60,7 @@ async function notifyAdminProductEnquiry(pool, payload) {
     ['Product', escapeHtml(product_name)],
     ['Slug', escapeHtml(product_slug || '—')],
     ['Quantity', String(quantity ?? '—')],
+    ['Delivery pincode', escapeHtml(delivery_pincode || '—')],
     ['Name', escapeHtml(customer_name || '—')],
     ['Phone', escapeHtml(customer_phone || '—')],
     ['Email', escapeHtml(customer_email || '—')],
@@ -82,6 +84,7 @@ async function notifyAdminProductEnquiry(pool, payload) {
   const text = `New product lead #${enquiryId}
 Product: ${product_name}
 Quantity: ${quantity}
+Delivery pincode: ${delivery_pincode || '—'}
 Name: ${customer_name || '—'}
 Phone: ${customer_phone || '—'}
 Email: ${customer_email || '—'}
@@ -144,6 +147,7 @@ async function notifyAdminCartEnquiry(pool, payload) {
     customer_phone,
     customer_email,
     custom_message,
+    delivery_pincode,
   } = payload;
 
   const linesText = (items || [])
@@ -172,6 +176,7 @@ async function notifyAdminCartEnquiry(pool, payload) {
   const metaRows = [
     ['Reference', public_ref ? String(public_ref) : '—'],
     ['Internal ID', String(cartId)],
+    ['Delivery pincode', delivery_pincode || '—'],
     ['Name', customer_name || '—'],
     ['Phone', customer_phone || '—'],
     ['Email', customer_email || '—'],
@@ -194,6 +199,7 @@ async function notifyAdminCartEnquiry(pool, payload) {
   const text = `New order request ${refLabel}
 ${linesText}
 
+Delivery pincode: ${delivery_pincode || '—'}
 Name: ${customer_name || '—'}
 Phone: ${customer_phone || '—'}
 Email: ${customer_email || '—'}

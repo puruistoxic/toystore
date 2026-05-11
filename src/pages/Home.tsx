@@ -11,14 +11,12 @@ import {
   Users,
   Truck,
   ChevronLeft,
-  ChevronRight,
-  Eye
+  ChevronRight
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { contentApi } from '../utils/api';
 import { mapDbProductToFrontend } from '../utils/catalogFromDb';
 import type { Product } from '../types/catalog';
-import ProductDetailModal from '../components/ProductDetailModal';
 import ProductCard from '../components/ProductCard';
 import HeroPromotedProductSlider from '../components/HeroPromotedProductSlider';
 import { filterProductsForHeroSlide } from '../constants/homeHeroBanners';
@@ -91,9 +89,6 @@ const HERO_SLIDE_COUNT = heroSlides.length;
 const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   // Fetch products from database
   const { data: dbProducts = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products', 'bestsellers'],
@@ -138,16 +133,6 @@ const Home: React.FC = () => {
     if (!slideId) return [];
     return filterProductsForHeroSlide(bannerProducts, slideId);
   }, [bannerProducts, currentSlide]);
-
-  const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
-  };
 
   useEffect(() => {
     if (!isAutoPlaying) return;
@@ -555,7 +540,6 @@ const Home: React.FC = () => {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onViewDetails={handleProductClick}
                   showBestSellerBadge={true}
                 />
               ))}
@@ -792,12 +776,6 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Product Detail Modal */}
-      <ProductDetailModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </div>
     </>
   );

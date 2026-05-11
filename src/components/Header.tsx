@@ -14,6 +14,7 @@ import {
   resolveCategoryFilterId,
 } from '../utils/productCategoryFilters';
 import type { Product } from '../types/catalog';
+import DeliveryPincodeControl from './DeliveryPincodeControl';
 
 const MEGA_MENU_PREVIEW = 8;
 
@@ -246,6 +247,7 @@ const Header: React.FC = () => {
 
             {/* Search — pill button (clear target + brand trim) */}
             <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
+              <DeliveryPincodeControl variant={isHomePage && !isScrolled ? 'onDark' : 'default'} />
               <Link
                 to="/cart"
                 onClick={(e) => {

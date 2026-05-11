@@ -12,12 +12,15 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import SEO from '../components/SEO';
+import RazorpayCheckoutButton from '../components/RazorpayCheckoutButton';
 import { useCart } from '../contexts/CartContext';
 import api from '../utils/api';
 import { generatePageTitle, getCanonicalUrl } from '../utils/seo';
 import { buildCartEnquiryWhatsAppMessage } from '../utils/cartWhatsApp';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
 import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
+import { useAlert } from '../contexts/AlertContext';
+import { useServiceArea } from '../contexts/ServiceAreaContext';
 
 function productDetailHref(slug: string): string {
   const path = `/products/${slug}`;
@@ -28,6 +31,13 @@ function productDetailHref(slug: string): string {
 }
 
 const CartPage: React.FC = () => {
+  const { showAlert } = useAlert();
+  const {
+    deliveryPincode,
+    deliveryLabel,
+    pinRequired,
+    hasValidDeliveryPincode,
+  } = useServiceArea();
   const { items, totalItems, setLineQuantity, removeLine, clearCart } = useCart();
   const [note, setNote] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -37,6 +47,11 @@ const CartPage: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
   const [copyDone, setCopyDone] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<
+    | { kind: 'success'; paymentId: string; verified: boolean }
+    | { kind: 'failed'; message: string }
+    | null
+  >(null);
 
   const { data: settings } = useQuery<{ whatsapp_number?: string }>({
     queryKey: ['company-settings-public'],
@@ -73,10 +88,27 @@ const CartPage: React.FC = () => {
     if (items.length === 0) return;
     if (!validate()) return;
 
+    if (pinRequired && !hasValidDeliveryPincode) {
+      await showAlert({
+        type: 'warning',
+        title: 'Choose delivery pincode',
+        message:
+          'Use “Deliver to” in the site header to pick your pincode before sending your order list.',
+      });
+      return;
+    }
+
     const linesSnapshot = items.map((l) => ({ ...l }));
 
     setIsSending(true);
     try {
+      const deliveryLine =
+        hasValidDeliveryPincode && deliveryPincode
+          ? `Delivery pincode: ${deliveryPincode}${
+              deliveryLabel !== deliveryPincode ? ` (${deliveryLabel})` : ''
+            }`
+          : null;
+
       const res = await api.post('/content/order-requests', {
         items: linesSnapshot.map((l) => ({
           product_id: l.productId,
@@ -92,6 +124,7 @@ const CartPage: React.FC = () => {
         customer_phone: customerPhone.trim() || null,
         custom_message: note.trim() || null,
         whatsapp_number: cleanNumber,
+        delivery_pincode: hasValidDeliveryPincode ? deliveryPincode : null,
       });
 
       const requestRef = res.data?.request_ref as string | undefined;
@@ -103,7 +136,7 @@ const CartPage: React.FC = () => {
       setSubmittedRef(requestRef);
 
       try {
-        const text = buildCartEnquiryWhatsAppMessage(linesSnapshot, note, requestRef);
+        const text = buildCartEnquiryWhatsAppMessage(linesSnapshot, note, requestRef, deliveryLine);
         const extras: string[] = [];
         if (customerName.trim()) extras.push(`Name: ${customerName.trim()}`);
         if (customerPhone.trim()) extras.push(`Phone: ${customerPhone.trim()}`);
@@ -126,9 +159,18 @@ const CartPage: React.FC = () => {
       setCustomerEmail('');
     } catch (err) {
       console.error(err);
-      alert(
-        'We could not save your order request. Please check your connection and try again.',
-      );
+      const msg =
+        err && typeof err === 'object' && 'response' in err
+          ? String(
+              (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+                'Please try again.',
+            )
+          : 'We could not save your order request. Please check your connection and try again.';
+      await showAlert({
+        type: 'error',
+        title: 'Could not save request',
+        message: msg,
+      });
     } finally {
       setIsSending(false);
     }
@@ -374,6 +416,18 @@ const CartPage: React.FC = () => {
                   </p>
                 </div>
 
+                {pinRequired && !hasValidDeliveryPincode && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                    Set your <strong>delivery pincode</strong> using <strong>Deliver to</strong> in the
+                    site header before you submit — we currently serve only selected pincodes.
+                  </div>
+                )}
+                {pinRequired && hasValidDeliveryPincode && (
+                  <div className="rounded-xl border border-green-200 bg-green-50/90 px-4 py-3 text-sm text-green-900">
+                    Order for <strong>{deliveryLabel}</strong> ({deliveryPincode})
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Note (optional)
@@ -453,6 +507,101 @@ const CartPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              {indicativeTotal >= 1 && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-display font-bold text-gray-900">
+                      Pay online (optional)
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Prefer to prepay? Pay the indicative subtotal securely via Razorpay
+                      (UPI / cards / netbanking / wallets). You'll still receive the order
+                      reference for confirmation on WhatsApp.
+                    </p>
+                  </div>
+
+                  <div className="flex items-baseline justify-between gap-3 rounded-xl bg-primary-50/60 border border-primary-100 px-4 py-3">
+                    <span className="text-sm font-medium text-primary-900">Amount</span>
+                    <span className="text-xl font-bold text-primary-700 tabular-nums">
+                      ₹{indicativeTotal.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+
+                  {paymentStatus?.kind === 'success' && (
+                    <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+                      <p className="font-semibold">
+                        Payment {paymentStatus.verified ? 'received & verified' : 'received'}
+                      </p>
+                      <p className="text-xs mt-1 text-green-800 break-all">
+                        Payment ID: <code className="font-mono">{paymentStatus.paymentId}</code>
+                      </p>
+                      {!paymentStatus.verified && (
+                        <p className="text-xs mt-1 text-amber-800">
+                          Signature could not be verified automatically. Our team will reconcile
+                          this payment manually.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {paymentStatus?.kind === 'failed' && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                      {paymentStatus.message}
+                    </div>
+                  )}
+
+                  <RazorpayCheckoutButton
+                    amount={indicativeTotal}
+                    amountInRupees
+                    name="DigiDukaanLive"
+                    description={`Cart prepayment · ${totalItems} item${totalItems !== 1 ? 's' : ''}`}
+                    receipt={submittedRef ?? undefined}
+                    notes={{
+                      ...(submittedRef ? { order_ref: submittedRef } : {}),
+                      ...(customerName.trim() ? { customer_name: customerName.trim() } : {}),
+                      items: String(totalItems),
+                    }}
+                    prefill={{
+                      name: customerName.trim() || undefined,
+                      email: customerEmail.trim() || undefined,
+                      contact: customerPhone.trim() || undefined,
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 min-h-[52px] rounded-xl bg-primary-600 text-white font-display font-semibold hover:bg-primary-700 disabled:opacity-50 shadow-md px-6 transition-colors"
+                    onPaid={(response, verified) => {
+                      setPaymentStatus({
+                        kind: 'success',
+                        paymentId: response.razorpay_payment_id,
+                        verified,
+                      });
+                    }}
+                    onFailed={(response) => {
+                      setPaymentStatus({
+                        kind: 'failed',
+                        message:
+                          response?.error?.description ||
+                          'Payment failed. Please try again or use another method.',
+                      });
+                    }}
+                    onDismiss={() => {
+                      setPaymentStatus(null);
+                    }}
+                    onError={(err) => {
+                      const message =
+                        (err as { response?: { data?: { error?: string } }; message?: string })
+                          ?.response?.data?.error ||
+                        (err as Error)?.message ||
+                        'Could not start Razorpay checkout. Please try again.';
+                      setPaymentStatus({ kind: 'failed', message });
+                    }}
+                  />
+
+                  <p className="text-xs text-gray-500">
+                    Payments are processed securely by Razorpay. We never store your card or
+                    bank details on our servers.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

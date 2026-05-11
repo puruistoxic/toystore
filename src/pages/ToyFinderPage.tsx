@@ -1,16 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import SEO from '../components/SEO';
 import ToyFinder from '../components/ToyFinder';
-import ProductDetailModal from '../components/ProductDetailModal';
 import { contentApi } from '../utils/api';
 import { mapDbProductToFrontend } from '../utils/catalogFromDb';
-import type { Product } from '../types/catalog';
 
 const ToyFinderPage: React.FC = () => {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   const { data: dbProducts = [] } = useQuery({
     queryKey: ['products', 'public'],
     queryFn: async () => {
@@ -25,16 +20,6 @@ const ToyFinderPage: React.FC = () => {
     [dbProducts]
   );
 
-  const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
-  };
-
   return (
     <>
       <SEO
@@ -45,14 +30,8 @@ const ToyFinderPage: React.FC = () => {
         keywords="product finder, find gifts by age, gift ideas, DigiDukaanLive, online store India"
       />
       <div className="min-h-screen bg-gray-50">
-        <ToyFinder products={allCatalogProducts} onViewProduct={handleProductClick} />
+        <ToyFinder products={allCatalogProducts} />
       </div>
-
-      <ProductDetailModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </>
   );
 };
