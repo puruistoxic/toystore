@@ -208,7 +208,7 @@ router.get('/status/:payment_id', async (req, res) => {
 router.post(
   '/webhook',
   express.raw({ type: 'application/json' }),
-  (req, res) => {
+  async (req, res) => {
     try {
       const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
       if (!webhookSecret) {
@@ -255,16 +255,32 @@ router.post(
         `[Razorpay] webhook ${eventName} payment=${payment && payment.id} order=${payment && payment.order_id} status=${payment && payment.status} amount=${payment && payment.amount}`,
       );
 
-      // TODO: hook your own fulfilment here. Suggested pattern:
-      //   if (eventName === 'payment.captured') {
-      //     await markOrderRequestPaid({
-      //       order_ref: payment.notes && payment.notes.order_ref,
-      //       payment_id: payment.id,
-      //       amount: payment.amount,
-      //     });
-      //   }
-      //
-      // Make it idempotent (same payment.id may arrive multiple times).
+      // Mark our internal `orders` row as paid when Razorpay confirms capture.
+      // Idempotent \u2014 the helper short-circuits if the order is already 'paid',
+      // so receiving the same event twice is harmless.
+      if (eventName === 'payment.captured' || eventName === 'order.paid') {
+        try {
+          const { getPool } = require('../db');
+          const { markOrderPaidByRazorpayOrderId } = require('./orders');
+          const pool = getPool();
+          const razorpayOrderId = payment && payment.order_id;
+          const razorpayPaymentId = payment && payment.id;
+          if (razorpayOrderId && razorpayPaymentId && typeof markOrderPaidByRazorpayOrderId === 'function') {
+            const result = await markOrderPaidByRazorpayOrderId(pool, {
+              razorpayOrderId,
+              razorpayPaymentId,
+              method: payment.method || null,
+            });
+            console.log(
+              `[Razorpay] webhook fulfilment: order=${result.public_ref || '-'} updated=${result.updated} reason=${result.reason || 'ok'}`,
+            );
+          }
+        } catch (err) {
+          console.error('[Razorpay] webhook fulfilment failed:', err.message);
+          // Still 2xx \u2014 Razorpay will retry, but we don't want to retry on a
+          // bug in our DB layer. Inspect logs.
+        }
+      }
 
       return res.status(200).json({ received: true });
     } catch (err) {

@@ -1,17 +1,26 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Store } from 'lucide-react';
 import SEO from '../components/SEO';
 
-const STORE_EMAIL = 'wainsogps@gmail.com';
-const STORE_PHONE_PRIMARY = '+91 98998 60975';
-const STORE_PHONE_SECONDARY = '+91 82927 17044';
+/** Match `Footer.tsx` / storefront contact */
+const STORE_EMAIL = 'shop@digidukaanlive.com';
+const STORE_EMAIL_DISPLAY = 'shop@DigiDukaanLive.com';
+const STORE_PHONE = '+91 88515 77973';
+const STORE_PHONE_TEL = 'tel:+918851577973';
+const STORE_ADDRESS_LINES = [
+  'Room No-9, 1st Floor, Yadav Complex',
+  'Near Block Chawck, Block Chowk',
+  'Ramgarh Cantt - 829122',
+  'Jharkhand, India',
+] as const;
 
 const Refund: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
         title="Refund & exchange policy | DigiDukaanLive"
-        description="How refunds, exchanges, and replacements work for our store — in-store pickup, inspection at the counter, and replacement conditions."
+        description="How refunds, exchanges, and replacements work for DigiDukaanLive — in-store pickup, inspection at the counter, and how to reach us at shop@digidukaanlive.com or +91 88515 77973."
         path="/refund"
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -145,6 +154,25 @@ const Refund: React.FC = () => {
                   time of booking; any refund of advance amounts is at our discretion unless otherwise mandated.
                 </li>
               </ul>
+              <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-3">Online prepaid orders (website checkout)</h3>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                When you pay online through our website, we capture payment through a licensed payment gateway (currently{' '}
+                <strong>Razorpay</strong>). Refund timing, partial-refund deductions for non-recoverable processing fees,
+                cancellation before or after capture, and chargeback procedures are set out in our{' '}
+                <Link to="/policies" className="text-primary-600 hover:underline">
+                  Payment, refund &amp; cancellation
+                </Link>{' '}
+                page. That page is part of the same overall policy framework as this document.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>Before dispatch / pickup:</strong> If you cancel before we fulfil, we may refund the paid amount
+                subject to gateway rules and any deductions described in the payment policy.
+              </p>
+              <p className="text-gray-700 leading-relaxed">
+                <strong>After you receive the goods:</strong> Our in-store return and exchange rules in the other sections of
+                this policy still apply; online payment does not extend a &quot;no questions&quot; return window beyond what
+                the law and our written policies allow.
+              </p>
             </section>
 
             <section className="mb-8">
@@ -192,17 +220,13 @@ const Refund: React.FC = () => {
                 <li>
                   Email:{' '}
                   <a href={`mailto:${STORE_EMAIL}`} className="text-primary-600 hover:underline">
-                    {STORE_EMAIL}
+                    {STORE_EMAIL_DISPLAY}
                   </a>
                 </li>
                 <li>
-                  Phone:{' '}
-                  <a href="tel:+919911484404" className="text-primary-600 hover:underline">
-                    {STORE_PHONE_PRIMARY}
-                  </a>
-                  {', '}
-                  <a href="tel:+918292717044" className="text-primary-600 hover:underline">
-                    {STORE_PHONE_SECONDARY}
+                  Phone / WhatsApp:{' '}
+                  <a href={STORE_PHONE_TEL} className="text-primary-600 hover:underline">
+                    {STORE_PHONE}
                   </a>
                 </li>
                 <li>Include your <strong>bill number / date</strong> and clear photos only if we ask for them first.</li>
@@ -219,7 +243,19 @@ const Refund: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">6.3 In-store returns only (default)</h3>
               <p className="text-gray-700 leading-relaxed mb-3">
                 Unless we have agreed otherwise in writing, <strong>we do not operate a mail-in returns centre</strong>.
-                Please assume all eligible returns and exchanges happen <strong>at our store</strong> in Ramgarh Cantt.
+                Eligible returns and exchanges happen <strong>in person at our store</strong> in Ramgarh Cantt:
+              </p>
+              <ul className="list-disc pl-6 text-gray-700 space-y-1 mb-3">
+                {STORE_ADDRESS_LINES.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <p className="text-gray-700 leading-relaxed text-sm">
+                Full directions and hours are on our{' '}
+                <Link to="/contact" className="text-primary-600 font-semibold hover:underline">
+                  Contact
+                </Link>{' '}
+                page.
               </p>
             </section>
 
@@ -263,18 +299,24 @@ const Refund: React.FC = () => {
                 <p className="text-gray-700 mb-1">
                   Email:{' '}
                   <a href={`mailto:${STORE_EMAIL}`} className="text-primary-600 hover:underline">
-                    {STORE_EMAIL}
+                    {STORE_EMAIL_DISPLAY}
                   </a>
                 </p>
                 <p className="text-gray-700 mb-1">
-                  Phone:{' '}
-                  <a href="tel:+919911484404" className="text-primary-600 hover:underline">
-                    {STORE_PHONE_PRIMARY}
+                  Phone / WhatsApp:{' '}
+                  <a href={STORE_PHONE_TEL} className="text-primary-600 hover:underline">
+                    {STORE_PHONE}
                   </a>
-                  {', '}
-                  <a href="tel:+918292717044" className="text-primary-600 hover:underline">
-                    {STORE_PHONE_SECONDARY}
-                  </a>
+                </p>
+                <p className="text-gray-700 mb-1 mt-3 text-sm leading-relaxed">
+                  <span className="font-semibold text-gray-900">Store address</span>
+                  <br />
+                  {STORE_ADDRESS_LINES.map((line, i) => (
+                    <React.Fragment key={line}>
+                      {i > 0 && <br />}
+                      {line}
+                    </React.Fragment>
+                  ))}
                 </p>
                 <p className="text-gray-700 mt-4 text-sm">
                   <strong>Tip:</strong> Put &quot;Exchange / refund&quot; in the subject line of emails so we can route your

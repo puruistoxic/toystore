@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { usersApi } from '../../utils/api';
 import { ArrowLeft } from 'lucide-react';
+import { ROLE_OPTIONS } from '../../utils/roles';
 
 export default function UserNew() {
   const navigate = useNavigate();
@@ -178,7 +179,7 @@ export default function UserNew() {
               />
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Role <span className="text-red-500">*</span>
               </label>
@@ -187,12 +188,17 @@ export default function UserNew() {
                 value={formData.role}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
-                <option value="admin">Admin</option>
-                <option value="editor">Editor</option>
-                <option value="viewer">Viewer</option>
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
               </select>
+              <p className="mt-1.5 text-xs text-gray-500">
+                {ROLE_OPTIONS.find((r) => r.value === formData.role)?.description}
+              </p>
             </div>
 
             <div className="md:col-span-2">

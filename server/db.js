@@ -1399,6 +1399,284 @@ async function initializeTables() {
       console.log('[Database] Default templates created');
     }
 
+    // ----------------------------------------------------------------------
+    // Customer accounts + orders schema (storefront-facing).
+    // Distinct from admin_users (backoffice). Storefront customers can
+    // sign in via email magic link, Google OAuth, or WhatsApp OTP.
+    // ----------------------------------------------------------------------
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NULL UNIQUE,
+        phone VARCHAR(20) NULL UNIQUE,
+        full_name VARCHAR(255) NULL,
+        google_sub VARCHAR(255) NULL UNIQUE,
+        email_verified TINYINT(1) NOT NULL DEFAULT 0,
+        phone_verified TINYINT(1) NOT NULL DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        last_login_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_customers_email (email),
+        INDEX idx_customers_phone (phone),
+        INDEX idx_customers_google_sub (google_sub)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS customer_addresses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        customer_id INT NOT NULL,
+        label VARCHAR(50) NULL,
+        full_name VARCHAR(255) NOT NULL,
+        phone VARCHAR(20) NOT NULL,
+        line1 VARCHAR(255) NOT NULL,
+        line2 VARCHAR(255) NULL,
+        landmark VARCHAR(255) NULL,
+        city VARCHAR(120) NOT NULL,
+        state VARCHAR(120) NOT NULL,
+        postal_code VARCHAR(20) NOT NULL,
+        country VARCHAR(120) NOT NULL DEFAULT 'India',
+        is_default TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_customer_addresses_customer (customer_id),
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS magic_link_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        token_hash CHAR(64) NOT NULL UNIQUE,
+        purpose ENUM('login','signup') NOT NULL DEFAULT 'login',
+        expires_at TIMESTAMP NOT NULL,
+        consumed_at TIMESTAMP NULL,
+        ip VARCHAR(64) NULL,
+        user_agent VARCHAR(512) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_magic_link_email (email),
+        INDEX idx_magic_link_expires (expires_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS oauth_states (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        state CHAR(64) NOT NULL UNIQUE,
+        provider ENUM('google') NOT NULL DEFAULT 'google',
+        redirect_to VARCHAR(500) NULL,
+        nonce CHAR(64) NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_oauth_states_expires (expires_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS whatsapp_otp_codes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        phone VARCHAR(20) NOT NULL,
+        code_hash CHAR(64) NOT NULL,
+        attempts INT NOT NULL DEFAULT 0,
+        expires_at TIMESTAMP NOT NULL,
+        consumed_at TIMESTAMP NULL,
+        ip VARCHAR(64) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_otp_phone (phone),
+        INDEX idx_otp_expires (expires_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        public_ref VARCHAR(32) NOT NULL UNIQUE,
+        customer_id INT NULL,
+        contact_email VARCHAR(255) NULL,
+        contact_phone VARCHAR(20) NULL,
+        contact_name VARCHAR(255) NULL,
+
+        ship_full_name VARCHAR(255) NULL,
+        ship_phone VARCHAR(20) NULL,
+        ship_line1 VARCHAR(255) NULL,
+        ship_line2 VARCHAR(255) NULL,
+        ship_landmark VARCHAR(255) NULL,
+        ship_city VARCHAR(120) NULL,
+        ship_state VARCHAR(120) NULL,
+        ship_postal_code VARCHAR(20) NULL,
+        ship_country VARCHAR(120) NOT NULL DEFAULT 'India',
+
+        subtotal_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+        shipping_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+        discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+        tax_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+        total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+        currency VARCHAR(8) NOT NULL DEFAULT 'INR',
+
+        status ENUM(
+          'pending_payment','paid','processing','shipped',
+          'out_for_delivery','delivered','cancelled','refunded','failed'
+        ) NOT NULL DEFAULT 'pending_payment',
+        payment_status ENUM('unpaid','paid','failed','refunded') NOT NULL DEFAULT 'unpaid',
+        payment_method VARCHAR(60) NULL,
+        razorpay_order_id VARCHAR(64) NULL,
+        razorpay_payment_id VARCHAR(64) NULL,
+        razorpay_signature VARCHAR(255) NULL,
+
+        notes TEXT NULL,
+        custom_message TEXT NULL,
+        delivery_pincode VARCHAR(20) NULL,
+
+        paid_at TIMESTAMP NULL,
+        shipped_at TIMESTAMP NULL,
+        delivered_at TIMESTAMP NULL,
+        cancelled_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+        INDEX idx_orders_customer (customer_id),
+        INDEX idx_orders_status (status),
+        INDEX idx_orders_payment_status (payment_status),
+        INDEX idx_orders_rzp_order (razorpay_order_id),
+        INDEX idx_orders_rzp_payment (razorpay_payment_id),
+        INDEX idx_orders_created (created_at),
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS order_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id INT NOT NULL,
+        product_id VARCHAR(50) NULL,
+        product_slug VARCHAR(255) NULL,
+        product_name VARCHAR(500) NOT NULL,
+        brand VARCHAR(255) NULL,
+        unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+        quantity INT NOT NULL DEFAULT 1,
+        line_total DECIMAL(12,2) NOT NULL DEFAULT 0,
+        image_url VARCHAR(500) NULL,
+        line_note VARCHAR(500) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_order_items_order (order_id),
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS order_events (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id INT NOT NULL,
+        event_type VARCHAR(80) NOT NULL,
+        message VARCHAR(500) NULL,
+        meta_json JSON NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_order_events_order (order_id),
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // -- Migration: shipping tracking columns on orders -------------------
+    const orderColumnMigrations = [
+      "ALTER TABLE orders ADD COLUMN shipping_carrier VARCHAR(120) NULL AFTER ship_country",
+      "ALTER TABLE orders ADD COLUMN tracking_number VARCHAR(120) NULL AFTER shipping_carrier",
+      "ALTER TABLE orders ADD COLUMN tracking_url VARCHAR(500) NULL AFTER tracking_number",
+      "ALTER TABLE orders ADD COLUMN refund_amount DECIMAL(12,2) NULL AFTER tracking_url",
+      "ALTER TABLE orders ADD COLUMN refund_reason VARCHAR(500) NULL AFTER refund_amount",
+      "ALTER TABLE orders ADD COLUMN refunded_at TIMESTAMP NULL AFTER refund_reason",
+    ];
+    for (const sql of orderColumnMigrations) {
+      try {
+        await connection.execute(sql);
+      } catch (e) {
+        // Duplicate column errors are expected on re-runs; ignore silently.
+        if (e && e.code !== 'ER_DUP_FIELDNAME') {
+          console.warn('[Database] orders column migration:', e.message);
+        }
+      }
+    }
+
+    console.log('[Database] Customer + orders tables ensured');
+
+    // ----------------------------------------------------------------------
+    // lead_logs — central activity stream for *all* outreach (WhatsApp clicks,
+    // quote requests, contact form, product enquiries, support pings, etc.).
+    // Source-of-truth tables (enquiries / cart_enquiries / orders) still exist
+    // for their own flows; this one is the "every lead is logged" ledger that
+    // makes nothing slip through the cracks.
+    // ----------------------------------------------------------------------
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS lead_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        public_ref VARCHAR(40) NOT NULL UNIQUE,
+        channel ENUM(
+          'whatsapp','email','phone','contact_form','quote_request',
+          'product_enquiry','cart_enquiry','order','other'
+        ) NOT NULL,
+        source VARCHAR(120) NULL,
+        intent VARCHAR(120) NULL,
+        product_id VARCHAR(50) NULL,
+        product_name VARCHAR(500) NULL,
+        product_slug VARCHAR(255) NULL,
+        customer_name VARCHAR(255) NULL,
+        customer_email VARCHAR(255) NULL,
+        customer_phone VARCHAR(20) NULL,
+        whatsapp_number VARCHAR(20) NULL,
+        message_preview TEXT NULL,
+        page_url VARCHAR(800) NULL,
+        referrer VARCHAR(800) NULL,
+        delivery_pincode VARCHAR(10) NULL,
+        related_type VARCHAR(40) NULL,
+        related_ref VARCHAR(64) NULL,
+        context_json JSON NULL,
+        ip VARCHAR(64) NULL,
+        user_agent VARCHAR(800) NULL,
+        customer_id INT NULL,
+        status ENUM('new','followed_up','closed') NOT NULL DEFAULT 'new',
+        notes TEXT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_lead_channel (channel),
+        INDEX idx_lead_intent (intent),
+        INDEX idx_lead_status (status),
+        INDEX idx_lead_created (created_at),
+        INDEX idx_lead_related (related_type, related_ref),
+        INDEX idx_lead_customer (customer_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log('[Database] lead_logs table ensured');
+
+    // ----------------------------------------------------------------------
+    // site_activity_logs — storefront & visitor actions (sign-in, profile,
+    // addresses, payment confirmed, etc.) for the unified admin activity feed.
+    // ----------------------------------------------------------------------
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS site_activity_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        customer_id INT NULL,
+        email VARCHAR(255) NULL,
+        phone VARCHAR(32) NULL,
+        actor_label VARCHAR(255) NULL,
+        action VARCHAR(80) NOT NULL,
+        category VARCHAR(40) NOT NULL,
+        summary VARCHAR(500) NULL,
+        entity_type VARCHAR(40) NULL,
+        entity_id VARCHAR(64) NULL,
+        meta_json JSON NULL,
+        ip VARCHAR(64) NULL,
+        user_agent VARCHAR(800) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_site_activity_created (created_at),
+        INDEX idx_site_activity_customer (customer_id),
+        INDEX idx_site_activity_category (category),
+        INDEX idx_site_activity_action (action)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log('[Database] site_activity_logs table ensured');
+
     // Create default admin user if not exists
     const bcrypt = require('bcrypt');
     const [adminUsers] = await connection.execute('SELECT id FROM admin_users WHERE username = ?', ['admin']);

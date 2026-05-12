@@ -79,7 +79,12 @@ const Privacy: React.FC = () => {
                 </li>
                 <li>
                   <strong>Transaction data:</strong> items purchased, date, amount, payment method type (card/UPI/cash as
-                  applicable); card or UPI details are handled by banks or payment providers where electronic payment is used
+                  applicable); card or UPI details are handled by banks or payment providers where electronic payment is used.
+                  For rules on refunds, fees, and cancellations on website checkout, see our{' '}
+                  <Link to="/policies" className="text-primary-600 hover:underline">
+                    payment &amp; cancellation policy
+                  </Link>
+                  .
                 </li>
                 <li>
                   <strong>Records:</strong> copies of messages or emails needed to respond to you or support warranty /

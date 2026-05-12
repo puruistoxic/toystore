@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { getPool } = require('../db');
-const { authenticateToken, JWT_SECRET } = require('../middleware/auth');
+const { authenticateToken, requireRole, JWT_SECRET } = require('../middleware/auth');
 const { logAudit } = require('../middleware/auditLog');
 
 const router = express.Router();
@@ -77,6 +77,24 @@ router.post('/login', async (req, res) => {
 
     console.log(`[Admin API] ✅ Login successful for user "${trimmedUsername}" (ID: ${user.id})`);
 
+    try {
+      const ipAddress =
+        req.ip ||
+        req.connection?.remoteAddress ||
+        String(req.headers['x-forwarded-for'] || '')
+          .split(',')[0]
+          .trim() ||
+        'unknown';
+      const userAgent = req.headers['user-agent'] || null;
+      await pool.execute(
+        `INSERT INTO audit_logs (user_id, username, action, entity_type, entity_id, entity_name, changes, ip_address, user_agent)
+         VALUES (?, ?, 'LOGIN', 'admin_session', ?, ?, NULL, ?, ?)`,
+        [user.id, user.username, String(user.id), trimmedUsername, ipAddress, userAgent],
+      );
+    } catch (auditErr) {
+      console.warn('[Admin API] login audit log failed:', auditErr.message);
+    }
+
     res.json({
       success: true,
       token,
@@ -124,7 +142,226 @@ router.get('/verify', authenticateToken, async (req, res) => {
   }
 });
 
+/* ---------------------------------------------------------------------------
+ *  GET /admin/activity-feed
+ *
+ *  Unified timeline: admin audit_logs + storefront site_activity_logs +
+ *  outreach lead_logs. Query params: scope=all|admin|website, page, limit,
+ *  q, action, entity_type, username (admin filters).
+ * -------------------------------------------------------------------------*/
+router.get('/activity-feed', authenticateToken, async (req, res) => {
+  try {
+    const { queryActivityFeed } = require('../services/activityFeed');
+    const out = await queryActivityFeed(req.query || {});
+    res.json({
+      activities: out.rows,
+      pagination: {
+        page: out.page,
+        limit: out.limit,
+        total: out.total,
+        totalPages: out.totalPages,
+      },
+    });
+  } catch (err) {
+    console.error('[Admin API] activity-feed error:', err);
+    res.status(500).json({ error: 'Failed to load activity', message: err.message });
+  }
+});
+
 // ==================== USER MANAGEMENT ====================
+
+/* ---------------------------------------------------------------------------
+ *  GET /admin/users/directory
+ *
+ *  Unified view across every "person" the system knows about:
+ *    - source = 'admin'    → admin_users (back-office accounts)
+ *    - source = 'customer' → customers (signed-in storefront accounts)
+ *    - source = 'guest'    → aggregated outreach (lead_logs) where the
+ *                            contact has no matching customer record
+ *
+ *  This must be declared BEFORE the `/users/:id` route below so it isn't
+ *  swallowed as a param. Same trick we used for /orders/stats.
+ * -------------------------------------------------------------------------*/
+router.get('/users/directory', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const type = String(req.query.type || 'all').toLowerCase();
+    const q = String(req.query.q || '').trim();
+    const status = String(req.query.status || '').toLowerCase();
+    const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit || '100'), 10) || 100));
+    const offset = Math.max(0, parseInt(String(req.query.offset || '0'), 10) || 0);
+    const like = q ? `%${q.replace(/%/g, '')}%` : null;
+
+    const rows = [];
+
+    // ---- Admins ----------------------------------------------------------
+    if (type === 'all' || type === 'admin') {
+      const where = [];
+      const params = [];
+      if (like) {
+        where.push('(username LIKE ? OR email LIKE ? OR full_name LIKE ?)');
+        params.push(like, like, like);
+      }
+      if (status === 'active') where.push('is_active = 1');
+      else if (status === 'inactive') where.push('is_active = 0');
+      const sql = `
+        SELECT id, username, email, full_name, role, is_active,
+               last_login, created_at
+        FROM admin_users
+        ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}`;
+      const [adminRows] = await pool.execute(sql, params);
+      for (const a of adminRows) {
+        rows.push({
+          source: 'admin',
+          id: a.id,
+          ref: `admin:${a.id}`,
+          username: a.username,
+          name: a.full_name || null,
+          email: a.email,
+          phone: null,
+          role: a.role,
+          email_verified: true,
+          phone_verified: null,
+          is_active: !!a.is_active,
+          last_seen_at: a.last_login,
+          created_at: a.created_at,
+          order_count: 0,
+          lead_count: 0,
+        });
+      }
+    }
+
+    // ---- Storefront customers -------------------------------------------
+    if (type === 'all' || type === 'customer') {
+      const where = [];
+      const params = [];
+      if (like) {
+        where.push('(c.full_name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?)');
+        params.push(like, like, like);
+      }
+      if (status === 'active') where.push('c.is_active = 1');
+      else if (status === 'inactive') where.push('c.is_active = 0');
+      const sql = `
+        SELECT c.id, c.full_name, c.email, c.phone, c.email_verified,
+               c.phone_verified, c.is_active, c.last_login_at, c.created_at,
+               (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) AS order_count,
+               (SELECT COUNT(*) FROM lead_logs l WHERE l.customer_id = c.id) AS lead_count
+        FROM customers c
+        ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+        ORDER BY c.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}`;
+      const [custRows] = await pool.execute(sql, params);
+      for (const c of custRows) {
+        rows.push({
+          source: 'customer',
+          id: c.id,
+          ref: `customer:${c.id}`,
+          username: null,
+          name: c.full_name,
+          email: c.email,
+          phone: c.phone,
+          role: 'customer',
+          email_verified: !!c.email_verified,
+          phone_verified: !!c.phone_verified,
+          is_active: !!c.is_active,
+          last_seen_at: c.last_login_at,
+          created_at: c.created_at,
+          order_count: Number(c.order_count) || 0,
+          lead_count: Number(c.lead_count) || 0,
+        });
+      }
+    }
+
+    // ---- Guest contacts (lead_logs without a customer link) -------------
+    //
+    //  Group by email when present, else by the last 10 digits of phone.
+    //  Filter out anything that already maps to a registered customer.
+    if (type === 'all' || type === 'guest') {
+      const phoneDigits = `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(l.customer_phone,''),' ',''),'+',''),'-',''),'(',''),')','')`;
+      const where = ['l.customer_id IS NULL'];
+      const params = [];
+      if (like) {
+        where.push('(l.customer_name LIKE ? OR l.customer_email LIKE ? OR l.customer_phone LIKE ?)');
+        params.push(like, like, like);
+      }
+      // Need an email OR phone to dedupe by something
+      where.push("(l.customer_email IS NOT NULL OR l.customer_phone IS NOT NULL)");
+      const sql = `
+        SELECT
+          COALESCE(LOWER(NULLIF(l.customer_email,'')), CONCAT('p:', RIGHT(${phoneDigits}, 10))) AS contact_key,
+          MAX(l.customer_name)  AS name,
+          MAX(l.customer_email) AS email,
+          MAX(l.customer_phone) AS phone,
+          COUNT(*)               AS lead_count,
+          MAX(l.created_at)      AS last_seen_at,
+          MIN(l.created_at)      AS first_seen_at,
+          MAX(l.related_type)    AS last_related_type,
+          MAX(l.related_ref)     AS last_related_ref
+        FROM lead_logs l
+        LEFT JOIN customers ce
+          ON ce.email IS NOT NULL
+         AND LOWER(ce.email) = LOWER(l.customer_email)
+        LEFT JOIN customers cp
+          ON cp.phone IS NOT NULL
+         AND RIGHT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(cp.phone,' ',''),'+',''),'-',''),'(',''),')',''), 10)
+             = RIGHT(${phoneDigits}, 10)
+        WHERE ${where.join(' AND ')}
+          AND ce.id IS NULL
+          AND cp.id IS NULL
+        GROUP BY contact_key
+        ORDER BY last_seen_at DESC
+        LIMIT ${limit} OFFSET ${offset}`;
+      try {
+        const [guestRows] = await pool.execute(sql, params);
+        for (const g of guestRows) {
+          rows.push({
+            source: 'guest',
+            id: g.contact_key,
+            ref: `guest:${g.contact_key}`,
+            username: null,
+            name: g.name || null,
+            email: g.email || null,
+            phone: g.phone || null,
+            role: 'guest',
+            email_verified: null,
+            phone_verified: null,
+            is_active: true,
+            last_seen_at: g.last_seen_at,
+            created_at: g.first_seen_at,
+            order_count: 0,
+            lead_count: Number(g.lead_count) || 0,
+            last_related_type: g.last_related_type || null,
+            last_related_ref: g.last_related_ref || null,
+          });
+        }
+      } catch (gErr) {
+        // Guest aggregation is best-effort — never let it fail the directory.
+        console.warn('[Admin API] users/directory guest aggregation failed:', gErr.message);
+      }
+    }
+
+    // Sort newest-activity-first across sources
+    rows.sort((a, b) => {
+      const ta = a.last_seen_at ? new Date(a.last_seen_at).getTime() : 0;
+      const tb = b.last_seen_at ? new Date(b.last_seen_at).getTime() : 0;
+      if (tb !== ta) return tb - ta;
+      return (
+        new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      );
+    });
+
+    // Aggregate counts by source for the UI tabs
+    const counts = { admin: 0, customer: 0, guest: 0 };
+    for (const r of rows) counts[r.source]++;
+
+    res.json({ users: rows, counts, total: rows.length });
+  } catch (err) {
+    console.error('[Admin API] users/directory error:', err);
+    res.status(500).json({ error: 'Failed to load user directory', message: err.message });
+  }
+});
 
 // Get all users
 router.get('/users', authenticateToken, async (req, res) => {
@@ -186,7 +423,7 @@ router.get('/users/:id', authenticateToken, async (req, res) => {
 });
 
 // Create user
-router.post('/users', authenticateToken, async (req, res) => {
+router.post('/users', authenticateToken, requireRole(), async (req, res) => {
   try {
     const { username, email, password, full_name, role, is_active } = req.body;
 
@@ -232,7 +469,7 @@ router.post('/users', authenticateToken, async (req, res) => {
 });
 
 // Update user
-router.put('/users/:id', authenticateToken, async (req, res) => {
+router.put('/users/:id', authenticateToken, requireRole(), async (req, res) => {
   try {
     const userId = req.params.id;
     const { username, email, password, full_name, role, is_active } = req.body;
@@ -318,7 +555,7 @@ router.put('/users/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete user (soft delete by setting is_active to false)
-router.delete('/users/:id', authenticateToken, async (req, res) => {
+router.delete('/users/:id', authenticateToken, requireRole(), async (req, res) => {
   try {
     const userId = req.params.id;
     const currentUserId = req.user.userId || req.user.id;

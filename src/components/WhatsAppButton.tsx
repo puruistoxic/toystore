@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MessageCircle } from 'lucide-react';
 import api from '../utils/api';
+import { logLead } from '../utils/leadLogger';
 import { useProductWhatsApp } from '../contexts/ProductWhatsAppContext';
 import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
 import { useAlert } from '../contexts/AlertContext';
@@ -71,6 +72,16 @@ Please confirm stock, price, and how I can order or visit.
 
 Thank you!`
       : genericMessage;
+
+    void logLead({
+      channel: 'whatsapp',
+      source: 'WhatsAppButton-floating',
+      intent: snapshot ? 'product_enquiry' : 'general_enquiry',
+      product: snapshot ? { name: snapshot.name, slug: snapshot.slug } : undefined,
+      whatsapp_number: cleanNumber || null,
+      message: productMessage,
+      delivery_pincode: hasValidDeliveryPincode ? deliveryPincode : null,
+    });
 
     const encodedMessage = encodeURIComponent(productMessage);
     const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;

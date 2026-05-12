@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
@@ -25,6 +25,7 @@ import QuoteRequest from './pages/QuoteRequest';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Refund from './pages/Refund';
+import OnlineShopPolicies from './pages/OnlineShopPolicies';
 import Locations from './pages/Locations';
 import LocationDetail from './pages/LocationDetail';
 import Brands from './pages/Brands';
@@ -58,27 +59,37 @@ import BrandEdit from './pages/admin/BrandEdit';
 import AdminTemplates from './pages/admin/Templates';
 import TemplateNew from './pages/admin/TemplateNew';
 import TemplateEdit from './pages/admin/TemplateEdit';
-import AdminClients from './pages/admin/Clients';
-import ClientNew from './pages/admin/ClientNew';
-import ClientEdit from './pages/admin/ClientEdit';
-import AdminProposals from './pages/admin/Proposals';
-import ProposalNew from './pages/admin/ProposalNew';
-import ProposalEdit from './pages/admin/ProposalEdit';
-import AdminInvoices from './pages/admin/Invoices';
-import InvoiceNew from './pages/admin/InvoiceNew';
-import InvoiceEdit from './pages/admin/InvoiceEdit';
 import AdminUsers from './pages/admin/Users';
 import UserNew from './pages/admin/UserNew';
 import UserEdit from './pages/admin/UserEdit';
 import CompanySettings from './pages/admin/CompanySettings';
 import NotFound from './pages/NotFound';
 import AdminNotFound from './pages/admin/NotFound';
+import StoreOrdersPage from './pages/admin/StoreOrdersPage';
+import StoreOrderDetailPage from './pages/admin/StoreOrderDetailPage';
+import StoreCustomersPage from './pages/admin/StoreCustomersPage';
+import StoreCustomerDetailPage from './pages/admin/StoreCustomerDetailPage';
+import StoreOrderRequestsPage from './pages/admin/StoreOrderRequestsPage';
+import StoreOrderRequestDetailPage from './pages/admin/StoreOrderRequestDetailPage';
+import StoreLeadsPage from './pages/admin/StoreLeadsPage';
+import StoreLeadDetailPage from './pages/admin/StoreLeadDetailPage';
 import { ProductWhatsAppProvider } from './contexts/ProductWhatsAppContext';
 import { CartProvider } from './contexts/CartContext';
 import { AddToListModalProvider } from './contexts/AddToListModalContext';
 import { ServiceAreaProvider } from './contexts/ServiceAreaContext';
+import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 import CartPage from './pages/CartPage';
 import OrderRequestPage from './pages/OrderRequestPage';
+import CheckoutPage from './pages/CheckoutPage';
+import LoginPage from './pages/account/LoginPage';
+import MagicLinkVerifyPage from './pages/account/MagicLinkVerifyPage';
+import AccountLayout from './pages/account/AccountLayout';
+import OverviewPage from './pages/account/OverviewPage';
+import OrdersPage from './pages/account/OrdersPage';
+import AddressesPage from './pages/account/AddressesPage';
+import ProfilePage from './pages/account/ProfilePage';
+import SecurityPage from './pages/account/SecurityPage';
+import OrderTrackPage from './pages/account/OrderTrackPage';
 
 const queryClient = new QueryClient();
 
@@ -90,6 +101,7 @@ function PublicLayout() {
   const { showPopup, handleClose } = useEnquiryPopup();
 
   return (
+    <CustomerAuthProvider>
     <ServiceAreaProvider>
     <CartProvider>
       <AddToListModalProvider>
@@ -110,6 +122,7 @@ function PublicLayout() {
       </AddToListModalProvider>
     </CartProvider>
     </ServiceAreaProvider>
+    </CustomerAuthProvider>
   );
 }
 
@@ -125,6 +138,7 @@ function App() {
             <Routes>
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               {/* Categories before other admin routes so their sub-routes match first */}
               <Route
                 path="/admin/categories"
@@ -310,84 +324,76 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Web store (checkout + customers + cart requests + leads) */}
+              <Route
+                path="/admin/store/leads/:id"
+                element={
+                  <ProtectedRoute>
+                    <StoreLeadDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/store/leads"
+                element={
+                  <ProtectedRoute>
+                    <StoreLeadsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/store/order-requests/:id"
+                element={
+                  <ProtectedRoute>
+                    <StoreOrderRequestDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/store/order-requests"
+                element={
+                  <ProtectedRoute>
+                    <StoreOrderRequestsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/store/customers/:id"
+                element={
+                  <ProtectedRoute>
+                    <StoreCustomerDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/store/customers"
+                element={
+                  <ProtectedRoute>
+                    <StoreCustomersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/store/orders/:publicRef"
+                element={
+                  <ProtectedRoute>
+                    <StoreOrderDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/store/orders"
+                element={
+                  <ProtectedRoute>
+                    <StoreOrdersPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/admin/audit-logs"
                 element={
                   <ProtectedRoute>
                     <AdminAuditLogs />
-                  </ProtectedRoute>
-                }
-              />
-              {/* Invoicing Routes */}
-              <Route
-                path="/admin/clients"
-                element={
-                  <ProtectedRoute>
-                    <AdminClients />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/clients/new"
-                element={
-                  <ProtectedRoute>
-                    <ClientNew />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/clients/:id/edit"
-                element={
-                  <ProtectedRoute>
-                    <ClientEdit />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/proposals"
-                element={
-                  <ProtectedRoute>
-                    <AdminProposals />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/proposals/new"
-                element={
-                  <ProtectedRoute>
-                    <ProposalNew />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/proposals/:id/edit"
-                element={
-                  <ProtectedRoute>
-                    <ProposalEdit />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/invoices"
-                element={
-                  <ProtectedRoute>
-                    <AdminInvoices />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/invoices/new"
-                element={
-                  <ProtectedRoute>
-                    <InvoiceNew />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/invoices/:id/edit"
-                element={
-                  <ProtectedRoute>
-                    <InvoiceEdit />
                   </ProtectedRoute>
                 }
               />
@@ -431,7 +437,23 @@ function App() {
               <Route element={<PublicLayout />}>
                 <Route index element={<Home />} />
                 <Route path="cart" element={<CartPage />} />
+                <Route path="checkout" element={<CheckoutPage />} />
                 <Route path="order-request/:publicRef" element={<OrderRequestPage />} />
+                <Route path="account/login" element={<LoginPage />} />
+                <Route path="account/verify" element={<MagicLinkVerifyPage />} />
+                {/*
+                  Order detail by public_ref stays outside the auth-guarded
+                  layout — the link itself is the credential, so a shared
+                  order page works whether the user is signed in or not.
+                */}
+                <Route path="account/orders/:publicRef" element={<OrderTrackPage />} />
+                <Route path="account" element={<AccountLayout />}>
+                  <Route index element={<OverviewPage />} />
+                  <Route path="orders" element={<OrdersPage />} />
+                  <Route path="addresses" element={<AddressesPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="security" element={<SecurityPage />} />
+                </Route>
                 <Route path="services/:slug" element={<ServiceDetail />} />
                 <Route path="services" element={<Services />} />
                 <Route path="products/category/:categorySlug" element={<Products />} />
@@ -452,6 +474,7 @@ function App() {
                 <Route path="privacy" element={<Privacy />} />
                 <Route path="terms" element={<Terms />} />
                 <Route path="refund" element={<Refund />} />
+                <Route path="policies" element={<OnlineShopPolicies />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>

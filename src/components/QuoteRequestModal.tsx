@@ -5,6 +5,7 @@ import { contentApi } from '../utils/api';
 import type { Product, Service } from '../types/catalog';
 import api from '../utils/api';
 import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
+import { logLead } from '../utils/leadLogger';
 
 type QuoteChannel = 'whatsapp' | 'email';
 
@@ -197,6 +198,23 @@ const QuoteRequestModal: React.FC<QuoteRequestModalProps> = ({
 
     if (preferredChannel === 'whatsapp') {
       const wa = normalizeWhatsAppDigits(companyPublic?.whatsapp_number);
+      void logLead({
+        channel: 'whatsapp',
+        source: 'QuoteRequestModal',
+        intent: 'quote_request',
+        product: { name: formData.itemName || target?.data.name || null },
+        contact: { name: formData.name, email: formData.email, phone: formData.phone },
+        whatsapp_number: wa || null,
+        message: quoteMessage,
+        context: {
+          itemType: formData.itemType,
+          category: formData.category,
+          location: formData.location,
+          industry: formData.industry,
+          quantity: formData.quantity,
+          company: formData.company,
+        },
+      });
       const url = `https://wa.me/${wa}?text=${encodeURIComponent(quoteMessage)}`;
       window.open(url, '_blank', 'noopener,noreferrer');
       confirmSubmission('whatsapp');

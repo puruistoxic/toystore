@@ -11,6 +11,7 @@ import { useAddToListModal } from '../contexts/AddToListModalContext';
 import { parseYoutubeVideoId, youtubeEmbedUrl, youtubeThumbnailUrl } from '../utils/youtube';
 import api from '../utils/api';
 import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
+import { logLead } from '../utils/leadLogger';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -86,8 +87,18 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       '',
       'Thank you!',
     ].filter(Boolean);
-    const message = encodeURIComponent(lines.join('\n'));
+    const messageText = lines.join('\n');
     const wa = normalizeWhatsAppDigits(companyPublic?.whatsapp_number);
+    void logLead({
+      channel: 'whatsapp',
+      source: 'ProductDetailModal',
+      intent: 'product_enquiry',
+      product: { id: product.id, name: product.name, slug: product.slug },
+      whatsapp_number: wa || null,
+      message: messageText,
+      context: { quantity, brand: product.brand || null },
+    });
+    const message = encodeURIComponent(messageText);
     window.open(`https://wa.me/${wa}?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 

@@ -19,14 +19,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const adminRoutes = require('./routes/admin');
 const contentRoutes = require('./routes/content');
 const uploadRoutes = require('./routes/upload');
-const invoicingRoutes = require('./routes/invoicing');
 const paymentsRoutes = require('./routes/payments');
+const customerAuthRoutes = require('./routes/customerAuth');
+const ordersRoutes = require('./routes/orders');
 
 app.use('/api/admin', adminRoutes);
+const adminStorefrontRoutes = require('./routes/adminStorefront');
+app.use('/api/admin', adminStorefrontRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/invoicing', invoicingRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/customer/auth', customerAuthRoutes);
+app.use('/api/orders', ordersRoutes);
 
 // Create SMTP transporter
 const createTransporter = () => {
@@ -341,6 +345,41 @@ app.post('/api/quote-request', async (req, res) => {
       console.log(`[Email API] Email sent successfully but database save failed for ${name} (${phone})`);
     }
 
+    try {
+      const { logLead } = require('./services/leadLogger');
+      await logLead({
+        channel: 'quote_request',
+        source: 'api:/quote-request',
+        intent: 'quote_request',
+        product: { name: itemName || null },
+        contact: { name, email, phone },
+        message,
+        context: { itemType, category, budget, timeline, location, industry, quantity, notes, company },
+        req,
+      });
+    } catch (logErr) {
+      console.warn('[leadLogger] quote-request mirror failed:', logErr.message);
+    }
+
+    try {
+      const { logSiteActivity } = require('./services/siteActivityLog');
+      void logSiteActivity({
+        customer_id: null,
+        email: email || null,
+        phone: phone || null,
+        actor_label: name,
+        action: 'quote_request',
+        category: 'enquiry',
+        summary: itemName ? `Quote: ${itemName}` : 'Quote request (email)',
+        entity_type: 'quote_request',
+        entity_id: null,
+        meta: { itemType, category, company },
+        req,
+      });
+    } catch (e) {
+      /* non-fatal */
+    }
+
     res.json({
       success: true,
       message: 'Quote request sent successfully'
@@ -463,12 +502,45 @@ app.post('/api/enquiry', async (req, res) => {
 
     // Store enquiry in database
     const pool = getPool();
-    await pool.execute(
+    const [insEnq] = await pool.execute(
       'INSERT INTO enquiries (name, mobile, email, message, source) VALUES (?, ?, ?, ?, ?)',
       [name, mobile, email || null, messageText || null, 'Website Popup Enquiry']
     );
 
     console.log(`[Email API] Enquiry email sent successfully from ${name} (${mobile}) to wainsogps@gmail.com`);
+
+    try {
+      const { logLead } = require('./services/leadLogger');
+      await logLead({
+        channel: 'contact_form',
+        source: 'api:/enquiry',
+        intent: 'popup_enquiry',
+        contact: { name, email, phone: mobile },
+        message: messageText || null,
+        req,
+      });
+    } catch (logErr) {
+      console.warn('[leadLogger] popup enquiry mirror failed:', logErr.message);
+    }
+
+    try {
+      const { logSiteActivity } = require('./services/siteActivityLog');
+      void logSiteActivity({
+        customer_id: null,
+        email: email || null,
+        phone: mobile || null,
+        actor_label: name,
+        action: 'popup_enquiry',
+        category: 'enquiry',
+        summary: 'Website popup enquiry',
+        entity_type: 'legacy_enquiry',
+        entity_id: insEnq.insertId ? String(insEnq.insertId) : null,
+        meta: { source: 'Website Popup Enquiry' },
+        req,
+      });
+    } catch (e) {
+      /* non-fatal */
+    }
 
     res.json({
       success: true,
@@ -531,6 +603,15 @@ app.post('/api/enquiry', async (req, res) => {
       console.log(`  - GET  /api/payments/status/:payment_id`);
       console.log(`  - POST /api/payments/webhook`);
       console.log(`  - GET  /api/payments/config`);
+      console.log(`  - POST /api/orders/checkout`);
+      console.log(`  - POST /api/orders/:ref/pay`);
+      console.log(`  - POST /api/orders/:ref/confirm`);
+      console.log(`  - GET  /api/orders/:ref (public tracking)`);
+      console.log(`  - GET  /api/orders (auth'd customer list)`);
+      console.log(`  - POST /api/customer/auth/magic-link/request`);
+      console.log(`  - POST /api/customer/auth/magic-link/verify`);
+      console.log(`  - GET  /api/customer/auth/google/start (if configured)`);
+      console.log(`  - GET  /api/customer/auth/me`);
       console.log(`  - GET /health (liveness)`);
       console.log(`  - GET /health/ready (database)`);
       console.log(`  - All /api/content/* routes`);

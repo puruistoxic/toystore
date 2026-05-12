@@ -1,7 +1,16 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { OrderRequestPdfInput } from '../types/orderRequest';
-import { Invoice, Proposal } from '../types/invoicing';
+
+/**
+ * @deprecated Legacy invoicing types — the invoicing module was removed.
+ * Aliased to `any` so the old PDF helpers below still compile. They are no
+ * longer referenced anywhere in the app and can be deleted in a future pass.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Invoice = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Proposal = any;
 
 export interface CompanySettings {
   company_name?: string;
@@ -244,8 +253,8 @@ function drawInvoiceHeader(
   doc.setFont('helvetica', 'normal');
   
   if (invoice.client_address) {
-    const addressLines = invoice.client_address.split('\n').filter(Boolean);
-    addressLines.forEach((line) => {
+    const addressLines = String(invoice.client_address).split('\n').filter(Boolean);
+    addressLines.forEach((line: string) => {
       doc.text(line.toUpperCase(), leftX, toYPos);
       toYPos += 4;
     });
@@ -718,8 +727,8 @@ function drawProposalHeader(
   doc.setFont('helvetica', 'normal');
   
   if (proposal.client_address) {
-    const addressLines = proposal.client_address.split('\n').filter(Boolean);
-    addressLines.forEach((line) => {
+    const addressLines = String(proposal.client_address).split('\n').filter(Boolean);
+    addressLines.forEach((line: string) => {
       doc.text(line.toUpperCase(), leftX, toYPos);
       toYPos += 4;
     });

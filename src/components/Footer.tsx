@@ -145,9 +145,8 @@ const Footer: React.FC = () => {
               <p>
                 © {year} DigiDukaanLive. All rights reserved.
               </p>
-              <p className="mt-1 text-xs">Local & online retail | Walk-in welcome</p>
             </div>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center md:justify-end mt-4 md:mt-0">
               <Link to="/privacy" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
                 Privacy Policy
               </Link>
@@ -156,6 +155,9 @@ const Footer: React.FC = () => {
               </Link>
               <Link to="/refund" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
                 Refund &amp; exchange
+              </Link>
+              <Link to="/policies" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
+                Payment &amp; cancellation
               </Link>
             </div>
           </div>

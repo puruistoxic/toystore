@@ -4,16 +4,24 @@ import { FileText, Scale, AlertCircle, CheckCircle, Package, Store } from 'lucid
 import SEO from '../components/SEO';
 
 const STORE_NAME = 'DigiDukaanLive';
-const STORE_EMAIL = 'wainsogps@gmail.com';
-const STORE_PHONE_PRIMARY = '+91 98998 60975';
-const STORE_PHONE_SECONDARY = '+91 82927 17044';
+/** Match `Footer.tsx` / storefront contact */
+const STORE_EMAIL = 'shop@digidukaanlive.com';
+const STORE_EMAIL_DISPLAY = 'shop@DigiDukaanLive.com';
+const STORE_PHONE = '+91 88515 77973';
+const STORE_PHONE_TEL = 'tel:+918851577973';
+const STORE_ADDRESS_LINES = [
+  'Room No-9, 1st Floor, Yadav Complex',
+  'Near Block Chawck, Block Chowk',
+  'Ramgarh Cantt - 829122',
+  'Jharkhand, India',
+] as const;
 
 const Terms: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
         title="Terms of Service | DigiDukaanLive"
-        description="Terms for using the DigiDukaanLive website and shopping at our store — pickup, product information, payments, and policies."
+        description="Terms for using the DigiDukaanLive website and shopping at our store — pickup, payments, and how to reach us at shop@digidukaanlive.com or +91 88515 77973."
         path="/terms"
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -114,9 +122,28 @@ const Terms: React.FC = () => {
                 <strong>4.3 Payment:</strong> Payment is normally in <strong>Indian Rupees (INR)</strong> at the time of
                 purchase. We may accept cash, UPI, cards, or other methods as displayed or agreed at the counter.
               </p>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-gray-700 leading-relaxed mb-3">
                 <strong>4.4 Deposits / holds:</strong> If we offer to hold or order-in an item, any deposit, timeline, and
                 cancellation rules will be explained at that time and may be confirmed in writing or on your receipt.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>4.5 Website checkout (card / UPI / etc.):</strong> Where we offer secure online payment through our
+                website, the contract steps, payment timing, cancellations, processing-fee treatment on refunds, and
+                chargeback rules are described in our dedicated{' '}
+                <Link to="/policies" className="text-primary-600 hover:underline">
+                  Payment, refund &amp; cancellation
+                </Link>{' '}
+                policy. That policy supplements these Terms for online transactions.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>4.6 Price confirmation:</strong> For online checkout, the amount you authorise on the payment screen
+                is the price you agree to pay for the items and charges shown at that moment, subject to correction of
+                obvious errors (section 3.4).
+              </p>
+              <p className="text-gray-700 leading-relaxed">
+                <strong>4.7 Third-party processors:</strong> Electronic payments are processed by regulated payment partners
+                (currently Razorpay). Their terms and privacy notices also apply to how they handle your payment
+                credentials.
               </p>
             </section>
 
@@ -205,6 +232,14 @@ const Terms: React.FC = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Cancellations, exchanges, and refunds</h2>
               <p className="text-gray-700 leading-relaxed mb-3">
+                <strong>10.0 Website checkout:</strong> Orders placed and paid (or awaiting payment) through our website are
+                also subject to our{' '}
+                <Link to="/policies" className="text-primary-600 hover:underline">
+                  Payment, refund &amp; cancellation
+                </Link>{' '}
+                policy (Razorpay, processing fees, chargebacks, and online-specific cancellation rules).
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-3">
                 <strong>10.1 In-store sales:</strong> {STORE_NAME} primarily sells toys for{' '}
                 <strong>local pickup at our shop</strong>. You are encouraged to inspect products before leaving. Full details
                 on exchanges, replacements, and refunds are in our{' '}
@@ -277,22 +312,28 @@ const Terms: React.FC = () => {
                 <p className="text-gray-700 mb-1">
                   Email:{' '}
                   <a href={`mailto:${STORE_EMAIL}`} className="text-primary-600 hover:underline">
-                    {STORE_EMAIL}
+                    {STORE_EMAIL_DISPLAY}
                   </a>
                 </p>
                 <p className="text-gray-700 mb-1">
-                  Phone:{' '}
-                  <a href="tel:+919911484404" className="text-primary-600 hover:underline">
-                    {STORE_PHONE_PRIMARY}
-                  </a>
-                  {', '}
-                  <a href="tel:+918292717044" className="text-primary-600 hover:underline">
-                    {STORE_PHONE_SECONDARY}
+                  Phone / WhatsApp:{' '}
+                  <a href={STORE_PHONE_TEL} className="text-primary-600 hover:underline">
+                    {STORE_PHONE}
                   </a>
                 </p>
+                <p className="text-gray-700 mb-1 mt-3 text-sm leading-relaxed">
+                  <span className="font-semibold text-gray-900">Store address</span>
+                  <br />
+                  {STORE_ADDRESS_LINES.map((line, i) => (
+                    <React.Fragment key={line}>
+                      {i > 0 && <br />}
+                      {line}
+                    </React.Fragment>
+                  ))}
+                </p>
                 <p className="text-gray-700 mt-3 text-sm">
-                  Store address and hours: see our{' '}
-                  <Link to="/contact" className="text-primary-600 hover:underline">
+                  Directions and hours: see our{' '}
+                  <Link to="/contact" className="text-primary-600 font-semibold hover:underline">
                     Contact
                   </Link>{' '}
                   page.

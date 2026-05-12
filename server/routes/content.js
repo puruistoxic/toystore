@@ -2029,8 +2029,8 @@ router.get('/audit-logs', authenticateToken, async (req, res) => {
       `SELECT COUNT(*) as total FROM audit_logs ${whereClause}`,
       params
     );
-    const total = countResult[0].total;
-    
+    const total = Number(countResult[0].total) || 0;
+
     // Get logs - LIMIT and OFFSET must be integers, not placeholders
     const limitInt = parseInt(limit.toString(), 10);
     const offsetInt = parseInt(offset.toString(), 10);
@@ -2038,11 +2038,11 @@ router.get('/audit-logs', authenticateToken, async (req, res) => {
       `SELECT * FROM audit_logs ${whereClause} ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`,
       params
     );
-    
-    // Parse JSON fields
-    const logs = rows.map(row => ({
+
+    // mysql2 may return JSON columns as objects already — never JSON.parse blindly
+    const logs = rows.map((row) => ({
       ...row,
-      changes: row.changes ? JSON.parse(row.changes) : null
+      changes: parseJSON(row.changes),
     }));
     
     res.json({
@@ -2341,6 +2341,49 @@ router.post('/enquiries', async (req, res) => {
       delivery_pincode: delivery_pincode || null,
     });
 
+    try {
+      const { logLead: _logLead } = require('../services/leadLogger');
+      await _logLead({
+        channel: enquiry_type === 'general' ? 'contact_form' : 'product_enquiry',
+        source: 'api:/content/enquiries',
+        intent: enquiry_type === 'general' ? 'general_enquiry' : 'product_enquiry',
+        product: {
+          id: product_id || null,
+          name: String(product_name).trim(),
+          slug: product_slug || null,
+        },
+        contact: { name, email, phone },
+        whatsapp_number: whatsapp_number || null,
+        message,
+        delivery_pincode: delivery_pincode || null,
+        related_type: 'enquiry',
+        related_ref: String(enquiryId),
+        context: { quantity: qty, requested_price: requested_price || null },
+        req,
+      });
+    } catch (e) {
+      console.warn('[leadLogger] product enquiry mirror failed:', e.message);
+    }
+
+    try {
+      const { logSiteActivity } = require('../services/siteActivityLog');
+      void logSiteActivity({
+        customer_id: null,
+        email: email || null,
+        phone: phone || null,
+        actor_label: name,
+        action: enquiry_type === 'general' ? 'general_enquiry' : 'product_enquiry',
+        category: 'enquiry',
+        summary: `${String(product_name).trim()} · qty ${qty}`,
+        entity_type: 'enquiry',
+        entity_id: String(enquiryId),
+        meta: { product_slug: product_slug || null, enquiry_type },
+        req,
+      });
+    } catch (e) {
+      /* non-fatal */
+    }
+
     res.json({
       success: true,
       message: 'Enquiry logged successfully',
@@ -2490,6 +2533,43 @@ async function createCartOrderRequest(req, res) {
       delivery_pincode: delivery_pincode || null,
     });
 
+    try {
+      const { logLead: _logLead } = require('../services/leadLogger');
+      await _logLead({
+        channel: 'cart_enquiry',
+        source: 'api:/content/order-requests',
+        intent: 'cart_outreach',
+        contact: { name, email, phone },
+        message,
+        delivery_pincode: delivery_pincode || null,
+        related_type: 'cart_enquiry',
+        related_ref: refOut,
+        context: { item_count: items.length },
+        req,
+      });
+    } catch (e) {
+      console.warn('[leadLogger] cart enquiry mirror failed:', e.message);
+    }
+
+    try {
+      const { logSiteActivity } = require('../services/siteActivityLog');
+      void logSiteActivity({
+        customer_id: null,
+        email: email || null,
+        phone: phone || null,
+        actor_label: name,
+        action: 'cart_order_request',
+        category: 'enquiry',
+        summary: `Multi-item cart request ${refOut} (${items.length} lines)`,
+        entity_type: 'cart_enquiry',
+        entity_id: refOut,
+        meta: { item_count: items.length },
+        req,
+      });
+    } catch (e) {
+      /* non-fatal */
+    }
+
     res.json({
       success: true,
       message: 'Order request received. Use your reference to track this request.',
@@ -2509,6 +2589,45 @@ async function createCartOrderRequest(req, res) {
 
 router.post('/cart-enquiries', createCartOrderRequest);
 router.post('/order-requests', createCartOrderRequest);
+
+/* --- lead_logs: lightweight client-side outreach beacon --------------------
+ *  Public, no-auth (it's the same trust level as opening a wa.me link). We
+ *  rely on the server to clip every field and reject obvious junk. Failure
+ *  is *non-fatal* on the client side — the action (open WhatsApp / send
+ *  email) always proceeds. -------------------------------------------------*/
+const { logLead, ALLOWED_CHANNELS } = require('../services/leadLogger');
+
+router.post('/lead-logs', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const channel = String(body.channel || 'other');
+    if (!ALLOWED_CHANNELS.has(channel)) {
+      return res.status(400).json({ error: 'Invalid channel' });
+    }
+    const out = await logLead({
+      channel,
+      source: body.source,
+      intent: body.intent,
+      product: body.product,
+      contact: body.contact,
+      whatsapp_number: body.whatsapp_number,
+      message: body.message,
+      page_url: body.page_url,
+      referrer: body.referrer,
+      delivery_pincode: body.delivery_pincode,
+      related_type: body.related_type,
+      related_ref: body.related_ref,
+      context: body.context,
+      customer_id: body.customer_id,
+      req,
+    });
+    if (!out) return res.json({ success: false });
+    res.json({ success: true, id: out.id, public_ref: out.public_ref });
+  } catch (err) {
+    console.error('[Content API] /lead-logs error:', err);
+    res.status(500).json({ error: 'Failed to log lead', message: err.message });
+  }
+});
 
 // Public: look up a saved order request by reference (for customer tracking + PDF)
 router.get('/order-requests/:publicRef', async (req, res) => {
@@ -2567,7 +2686,9 @@ router.get('/order-requests/:publicRef', async (req, res) => {
 router.get('/enquiries', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
-    const { status, product_id, limit = 50, offset = 0 } = req.query;
+    const { status, product_id } = req.query;
+    const limit = Math.min(500, Math.max(1, parseInt(String(req.query.limit || '50'), 10) || 50));
+    const offset = Math.max(0, parseInt(String(req.query.offset || '0'), 10) || 0);
 
     let query = 'SELECT * FROM enquiries WHERE 1=1';
     const params = [];
@@ -2582,8 +2703,7 @@ router.get('/enquiries', authenticateToken, async (req, res) => {
       params.push(product_id);
     }
 
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
+    query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
     const [enquiries] = await pool.execute(query, params);
 

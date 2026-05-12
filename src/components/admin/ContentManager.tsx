@@ -119,46 +119,35 @@ export default function ContentManager({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center rounded-2xl border border-gray-200 bg-white py-20 shadow-sm">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-primary-600 border-t-transparent" />
+          <p className="mt-4 text-sm text-gray-600">Loading…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/admin/dashboard"
-                className="text-gray-600 hover:text-gray-900 flex-shrink-0"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">Manage {title.toLowerCase()}</p>
-              </div>
-            </div>
-            <Link
-              to={`${basePath}/new`}
-              className="flex items-center justify-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
-            >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>Add New</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50/80 to-white">
+        <Link
+          to="/admin/dashboard"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-700 transition-colors w-fit"
+        >
+          <ArrowLeft className="w-4 h-4 shrink-0" />
+          Back to dashboard
+        </Link>
+        <Link
+          to={`${basePath}/new`}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-sm font-display font-bold shadow-sm w-full sm:w-auto"
+        >
+          <Plus className="w-4 h-4 shrink-0" />
+          Add new
+        </Link>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="px-4 sm:px-6 pt-4 pb-6">
         {message && (
           <div
             className={`mb-6 p-4 rounded-lg flex items-start ${
@@ -193,7 +182,7 @@ export default function ContentManager({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={`Search ${title.toLowerCase()}...`}
-              className="block w-full pl-9 sm:pl-10 pr-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="block w-full pl-9 sm:pl-10 pr-3 py-2 text-sm sm:text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
           {filters && (
@@ -204,10 +193,10 @@ export default function ContentManager({
         </div>
 
         {/* Desktop Table View */}
-        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="hidden lg:block border-t border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50/80">
                 <tr>
                   {displayFields.map((field) => (
                     <th
@@ -248,7 +237,7 @@ export default function ContentManager({
                         <div className="flex items-center justify-end space-x-2">
                           <Link
                             to={`${basePath}/${item.id}/edit`}
-                            className="text-teal-600 hover:text-teal-900 p-1 rounded hover:bg-teal-50 transition-colors"
+                            className="text-primary-600 hover:text-primary-800 p-1 rounded-lg hover:bg-primary-50 transition-colors"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
@@ -311,7 +300,7 @@ export default function ContentManager({
                 <div className="flex items-center justify-end gap-2 sm:gap-3 pt-3 border-t border-gray-200">
                   <Link
                     to={`${basePath}/${item.id}/edit`}
-                    className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-teal-600 hover:text-teal-900 hover:bg-teal-50 rounded-lg transition-colors touch-manipulation"
+                    className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-colors touch-manipulation"
                   >
                     <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span>Edit</span>
@@ -381,7 +370,7 @@ export default function ContentManager({
                           onClick={() => setCurrentPage(page)}
                           className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                             page === currentPage
-                              ? 'z-10 bg-teal-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600'
+                              ? 'z-10 bg-primary-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600'
                               : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                           }`}
                         >
@@ -440,8 +429,7 @@ export default function ContentManager({
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
-

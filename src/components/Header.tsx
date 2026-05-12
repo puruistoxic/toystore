@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { MessageCircle, Menu, X, ChevronRight, Search, Sparkles, ShoppingCart } from 'lucide-react';
+import { MessageCircle, Menu, X, ChevronRight, Search, Sparkles, ShoppingCart, User } from 'lucide-react';
+import { useCustomerAuth } from '../contexts/CustomerAuthContext';
 import { useCart } from '../contexts/CartContext';
 import ProductSearchBar from './ProductSearchBar';
 import DigiDukaanLiveLogo from './DigiDukaanLiveLogo';
@@ -22,6 +23,7 @@ type ProductWithCategoryFilter = Product & { categoryFilterId: string | null };
 
 const Header: React.FC = () => {
   const { totalItems: cartCount } = useCart();
+  const { customer } = useCustomerAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -266,6 +268,25 @@ const Header: React.FC = () => {
                   <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 flex items-center justify-center rounded-full bg-primary-600 text-white text-[10px] font-bold leading-none border-2 border-white">
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>
+                )}
+              </Link>
+              <Link
+                to={customer ? '/account' : '/account/login'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeMegaMenu();
+                }}
+                className={`relative z-[120] hidden sm:inline-flex touch-manipulation items-center justify-center rounded-full p-2.5 min-h-[44px] min-w-[44px] border-2 shadow-md transition-all font-display ${
+                  isHomePage && !isScrolled
+                    ? 'bg-white/20 text-white border-brand-sunshine/90 hover:bg-white/30'
+                    : 'bg-white text-primary-600 border-primary-200 hover:bg-primary-50 hover:border-primary-400'
+                }`}
+                aria-label={customer ? 'My account' : 'Sign in'}
+                title={customer ? `Signed in as ${customer.email || customer.phone || 'you'}` : 'Sign in'}
+              >
+                <User className="h-5 w-5 shrink-0" strokeWidth={2.5} aria-hidden />
+                {customer && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" aria-hidden />
                 )}
               </Link>
               <button

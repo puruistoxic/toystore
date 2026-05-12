@@ -12,13 +12,13 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import SEO from '../components/SEO';
-import RazorpayCheckoutButton from '../components/RazorpayCheckoutButton';
 import { useCart } from '../contexts/CartContext';
 import api from '../utils/api';
 import { generatePageTitle, getCanonicalUrl } from '../utils/seo';
 import { buildCartEnquiryWhatsAppMessage } from '../utils/cartWhatsApp';
 import { getPlaceholderImage, handleImageError } from '../utils/imagePlaceholder';
 import { normalizeWhatsAppDigits } from '../utils/whatsappNumber';
+import { logLead } from '../utils/leadLogger';
 import { useAlert } from '../contexts/AlertContext';
 import { useServiceArea } from '../contexts/ServiceAreaContext';
 
@@ -47,11 +47,6 @@ const CartPage: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
   const [copyDone, setCopyDone] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<
-    | { kind: 'success'; paymentId: string; verified: boolean }
-    | { kind: 'failed'; message: string }
-    | null
-  >(null);
 
   const { data: settings } = useQuery<{ whatsapp_number?: string }>({
     queryKey: ['company-settings-public'],
@@ -143,6 +138,22 @@ const CartPage: React.FC = () => {
         if (customerEmail.trim()) extras.push(`Email: ${customerEmail.trim()}`);
         const full =
           extras.length > 0 ? `${text}\n\n---\n${extras.join('\n')}` : text;
+        void logLead({
+          channel: 'whatsapp',
+          source: 'CartPage-send-via-whatsapp',
+          intent: 'cart_outreach',
+          contact: {
+            name: customerName.trim() || null,
+            email: customerEmail.trim() || null,
+            phone: customerPhone.trim() || null,
+          },
+          whatsapp_number: cleanNumber || null,
+          message: full,
+          delivery_pincode: hasValidDeliveryPincode ? deliveryPincode : null,
+          related_type: 'cart_enquiry',
+          related_ref: requestRef,
+          context: { item_count: linesSnapshot.length },
+        });
         window.open(
           `https://wa.me/${cleanNumber}?text=${encodeURIComponent(full)}`,
           '_blank',
@@ -509,96 +520,33 @@ const CartPage: React.FC = () => {
               </div>
 
               {indicativeTotal >= 1 && (
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-4">
+                <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-2xl shadow-lg p-6 sm:p-8 space-y-4">
                   <div>
-                    <h2 className="text-lg font-display font-bold text-gray-900">
-                      Pay online (optional)
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Prefer to prepay? Pay the indicative subtotal securely via Razorpay
-                      (UPI / cards / netbanking / wallets). You'll still receive the order
-                      reference for confirmation on WhatsApp.
+                    <h2 className="text-xl font-display font-bold">Ready to checkout?</h2>
+                    <p className="text-sm text-primary-100 mt-1">
+                      Add your delivery address and pay securely. We&apos;ll create your
+                      account from your email so you can track this order later.
                     </p>
                   </div>
-
-                  <div className="flex items-baseline justify-between gap-3 rounded-xl bg-primary-50/60 border border-primary-100 px-4 py-3">
-                    <span className="text-sm font-medium text-primary-900">Amount</span>
-                    <span className="text-xl font-bold text-primary-700 tabular-nums">
+                  <div className="flex items-baseline justify-between gap-3 rounded-xl bg-white/10 border border-white/20 px-4 py-3">
+                    <span className="text-sm font-medium">Order total</span>
+                    <span className="text-2xl font-bold tabular-nums">
                       ₹{indicativeTotal.toLocaleString('en-IN')}
                     </span>
                   </div>
-
-                  {paymentStatus?.kind === 'success' && (
-                    <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
-                      <p className="font-semibold">
-                        Payment {paymentStatus.verified ? 'received & verified' : 'received'}
-                      </p>
-                      <p className="text-xs mt-1 text-green-800 break-all">
-                        Payment ID: <code className="font-mono">{paymentStatus.paymentId}</code>
-                      </p>
-                      {!paymentStatus.verified && (
-                        <p className="text-xs mt-1 text-amber-800">
-                          Signature could not be verified automatically. Our team will reconcile
-                          this payment manually.
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {paymentStatus?.kind === 'failed' && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                      {paymentStatus.message}
-                    </div>
-                  )}
-
-                  <RazorpayCheckoutButton
-                    amount={indicativeTotal}
-                    amountInRupees
-                    name="DigiDukaanLive"
-                    description={`Cart prepayment · ${totalItems} item${totalItems !== 1 ? 's' : ''}`}
-                    receipt={submittedRef ?? undefined}
-                    notes={{
-                      ...(submittedRef ? { order_ref: submittedRef } : {}),
-                      ...(customerName.trim() ? { customer_name: customerName.trim() } : {}),
-                      items: String(totalItems),
-                    }}
-                    prefill={{
-                      name: customerName.trim() || undefined,
-                      email: customerEmail.trim() || undefined,
-                      contact: customerPhone.trim() || undefined,
-                    }}
-                    className="w-full inline-flex items-center justify-center gap-2 min-h-[52px] rounded-xl bg-primary-600 text-white font-display font-semibold hover:bg-primary-700 disabled:opacity-50 shadow-md px-6 transition-colors"
-                    onPaid={(response, verified) => {
-                      setPaymentStatus({
-                        kind: 'success',
-                        paymentId: response.razorpay_payment_id,
-                        verified,
-                      });
-                    }}
-                    onFailed={(response) => {
-                      setPaymentStatus({
-                        kind: 'failed',
-                        message:
-                          response?.error?.description ||
-                          'Payment failed. Please try again or use another method.',
-                      });
-                    }}
-                    onDismiss={() => {
-                      setPaymentStatus(null);
-                    }}
-                    onError={(err) => {
-                      const message =
-                        (err as { response?: { data?: { error?: string } }; message?: string })
-                          ?.response?.data?.error ||
-                        (err as Error)?.message ||
-                        'Could not start Razorpay checkout. Please try again.';
-                      setPaymentStatus({ kind: 'failed', message });
-                    }}
-                  />
-
-                  <p className="text-xs text-gray-500">
-                    Payments are processed securely by Razorpay. We never store your card or
-                    bank details on our servers.
+                  <Link
+                    to="/checkout"
+                    className="w-full inline-flex items-center justify-center gap-2 min-h-[52px] rounded-xl bg-white text-primary-700 font-display font-bold hover:bg-primary-50 shadow-md px-6 transition-colors"
+                  >
+                    Proceed to checkout
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                  <p className="text-xs text-primary-100">
+                    Secured by Razorpay · UPI / Cards / Netbanking / Wallets. By paying you agree to our{' '}
+                    <Link to="/policies" className="underline font-semibold text-white hover:text-primary-50">
+                      payment &amp; cancellation policy
+                    </Link>
+                    .
                   </p>
                 </div>
               )}

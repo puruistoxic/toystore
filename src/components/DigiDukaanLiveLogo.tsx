@@ -7,6 +7,8 @@ export type DigiDukaanLiveLogoProps = {
   size?: 'sm' | 'md' | 'footer';
   /** High-contrast text for dark bars (footer) — default uses ink + gold on light */
   variant?: 'default' | 'onDark';
+  /** Set false in admin chrome for a tighter mark + wordmark (no “Browse · order · collect”). */
+  showTagline?: boolean;
 };
 
 /** Pixel-grid mark + live pulse — digital retail palette */
@@ -34,6 +36,7 @@ const DigiDukaanLiveLogo: React.FC<DigiDukaanLiveLogoProps> = ({
   className = '',
   size = 'md',
   variant = 'default',
+  showTagline = true,
 }) => {
   const onDark = variant === 'onDark';
   const markClass =
@@ -65,11 +68,15 @@ const DigiDukaanLiveLogo: React.FC<DigiDukaanLiveLogoProps> = ({
 
   return (
     <div
-      className={`flex items-center gap-3 sm:gap-3.5 ${size === 'footer' ? 'flex-nowrap' : ''} ${className}`}
+      className={`flex gap-3 sm:gap-3.5 ${showTagline ? 'items-start' : 'items-center'} ${
+        size === 'footer' ? 'flex-nowrap' : ''
+      } ${className}`}
     >
       <LogoMark className={markClass} />
       <div
-        className={`flex flex-col items-start text-left ${size === 'footer' ? 'min-w-0 flex-1' : 'min-w-0'}`}
+        className={`flex flex-col items-start justify-center text-left ${
+          size === 'footer' ? 'min-w-0 flex-1' : 'min-w-0'
+        }`}
       >
         <span
           className={`font-display font-extrabold uppercase ${titleClass}`}
@@ -78,12 +85,14 @@ const DigiDukaanLiveLogo: React.FC<DigiDukaanLiveLogoProps> = ({
           DigiDukaan
           <span style={{ color: liveColor }}>Live</span>
         </span>
-        <span
-          className={`font-logoTagline font-semibold uppercase ${tagClass}`}
-          style={{ color: taglineColor }}
-        >
-          Browse · order · collect
-        </span>
+        {showTagline && (
+          <span
+            className={`font-logoTagline font-semibold uppercase ${tagClass}`}
+            style={{ color: taglineColor }}
+          >
+            Browse · order · collect
+          </span>
+        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "test:routes": "node scripts/test-routes.js",
     "init-db": "node scripts/init-db.js",
     "check-env": "node scripts/check-env.js",
     "test-login": "node scripts/test-login.js",
@@ -19,6 +20,7 @@
     "update-hsn": "node scripts/update-product-hsn.js"
   },
   "dependencies": {
+    "@zavudev/sdk": "^0.38.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
